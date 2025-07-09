@@ -20,22 +20,23 @@ The unsubscribe system supports multiple workflows:
 
 ## Generate Unsubscribe Code
 
-Create an unsubscribe code for a specific phone number:
+Create an unsubscribe code for a specific phone number and instance:
 
 <CodeGroup>
 
 ```bash cURL
-curl -X POST "https://cloud.weblix.co.il/unsubscribe/generate-code" \
+curl -X POST "https://cloud.weblix.co.il/unsubscribe/create" \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
     "phone_number": "+1234567890",
-    "expires_at": "2024-12-31T23:59:59Z"
+    "instance_id": "550e8400-e29b-41d4-a716-446655440000",
+    "source": "manual"
   }'
 ```
 
 ```javascript JavaScript
-const response = await fetch('https://cloud.weblix.co.il/unsubscribe/generate-code', {
+const response = await fetch('https://cloud.weblix.co.il/unsubscribe/create', {
   method: 'POST',
   headers: {
     'Authorization': 'Bearer YOUR_TOKEN',
@@ -43,7 +44,8 @@ const response = await fetch('https://cloud.weblix.co.il/unsubscribe/generate-co
   },
   body: JSON.stringify({
     phone_number: '+1234567890',
-    expires_at: '2024-12-31T23:59:59Z'
+    instance_id: '550e8400-e29b-41d4-a716-446655440000',
+    source: 'manual'
   })
 });
 
@@ -55,11 +57,12 @@ console.log('Unsubscribe code:', result.code);
 import requests
 
 response = requests.post(
-    'https://cloud.weblix.co.il/unsubscribe/generate-code',
+    'https://cloud.weblix.co.il/unsubscribe/create',
     headers={'Authorization': 'Bearer YOUR_TOKEN'},
     json={
         'phone_number': '+1234567890',
-        'expires_at': '2024-12-31T23:59:59Z'
+        'instance_id': '550e8400-e29b-41d4-a716-446655440000',
+        'source': 'manual'
     }
 )
 
@@ -73,54 +76,40 @@ print(f"Unsubscribe code: {result['code']}")
 
 ```json
 {
-  "code": "unsub_abc123def456ghi789",
-  "phone_number": "+1234567890",
-  "unsubscribe_url": "https://cloud.weblix.co.il/unsubscribe/page/unsub_abc123def456ghi789",
-  "expires_at": "2024-12-31T23:59:59Z",
-  "created_at": "2024-01-15T10:30:00Z"
+  "success": true,
+  "unsubscribe_code": "unsub_abc123def456ghi789",
+  "unsubscribe_url": "https://cloud.weblix.co.il/api/whatsapp-cloud-api/unsubscribe/unsub_abc123def456ghi789",
+  "contact_id": "550e8400-e29b-41d4-a716-446655440000",
+  "contact_created": false,
+  "message": "Unsubscribe code created successfully"
 }
 ```
 
-## Generate Code for Contact
+## Get Code for Contact
 
-Create an unsubscribe code for an existing contact:
+Get or create an unsubscribe code for an existing contact:
 
 <CodeGroup>
 
 ```bash cURL
-curl -X POST "https://cloud.weblix.co.il/unsubscribe/generate-code-for-contact" \
-  -H "Authorization: Bearer YOUR_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "contact_id": "550e8400-e29b-41d4-a716-446655440000",
-    "expires_at": "2024-12-31T23:59:59Z"
-  }'
+curl -X GET "https://cloud.weblix.co.il/unsubscribe/contact/550e8400-e29b-41d4-a716-446655440000/code" \
+  -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
 ```javascript JavaScript
-const response = await fetch('https://cloud.weblix.co.il/unsubscribe/generate-code-for-contact', {
-  method: 'POST',
+const response = await fetch('https://cloud.weblix.co.il/unsubscribe/contact/550e8400-e29b-41d4-a716-446655440000/code', {
   headers: {
-    'Authorization': 'Bearer YOUR_TOKEN',
-    'Content-Type': 'application/json'
-  },
-  body: JSON.stringify({
-    contact_id: '550e8400-e29b-41d4-a716-446655440000',
-    expires_at: '2024-12-31T23:59:59Z'
-  })
+    'Authorization': 'Bearer YOUR_TOKEN'
+  }
 });
 
 const result = await response.json();
 ```
 
 ```python Python
-response = requests.post(
-    'https://cloud.weblix.co.il/unsubscribe/generate-code-for-contact',
-    headers={'Authorization': 'Bearer YOUR_TOKEN'},
-    json={
-        'contact_id': '550e8400-e29b-41d4-a716-446655440000',
-        'expires_at': '2024-12-31T23:59:59Z'
-    }
+response = requests.get(
+    'https://cloud.weblix.co.il/unsubscribe/contact/550e8400-e29b-41d4-a716-446655440000/code',
+    headers={'Authorization': 'Bearer YOUR_TOKEN'}
 )
 ```
 
@@ -128,33 +117,21 @@ response = requests.post(
 
 ## Process Unsubscribe
 
-Handle unsubscribe requests programmatically:
+Handle unsubscribe requests programmatically via API:
 
 <CodeGroup>
 
 ```bash cURL
-curl -X POST "https://cloud.weblix.co.il/unsubscribe/process" \
-  -H "Authorization: Bearer YOUR_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "code": "unsub_abc123def456ghi789",
-    "user_agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 14_7_1 like Mac OS X)",
-    "ip_address": "192.168.1.100"
-  }'
+curl -X POST "https://cloud.weblix.co.il/unsubscribe/process/unsub_abc123def456ghi789" \
+  -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
 ```javascript JavaScript
-const response = await fetch('https://cloud.weblix.co.il/unsubscribe/process', {
+const response = await fetch('https://cloud.weblix.co.il/unsubscribe/process/unsub_abc123def456ghi789', {
   method: 'POST',
   headers: {
-    'Authorization': 'Bearer YOUR_TOKEN',
-    'Content-Type': 'application/json'
-  },
-  body: JSON.stringify({
-    code: 'unsub_abc123def456ghi789',
-    user_agent: navigator.userAgent,
-    ip_address: '192.168.1.100'
-  })
+    'Authorization': 'Bearer YOUR_TOKEN'
+  }
 });
 
 const result = await response.json();
@@ -162,13 +139,8 @@ const result = await response.json();
 
 ```python Python
 response = requests.post(
-    'https://cloud.weblix.co.il/unsubscribe/process',
-    headers={'Authorization': 'Bearer YOUR_TOKEN'},
-    json={
-        'code': 'unsub_abc123def456ghi789',
-        'user_agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
-        'ip_address': '192.168.1.100'
-    }
+    'https://cloud.weblix.co.il/unsubscribe/process/unsub_abc123def456ghi789',
+    headers={'Authorization': 'Bearer YOUR_TOKEN'}
 )
 ```
 
@@ -179,59 +151,52 @@ response = requests.post(
 ```json
 {
   "success": true,
+  "message": "Successfully unsubscribed from WhatsApp messaging",
   "phone_number": "+1234567890",
-  "unsubscribed_at": "2024-01-15T10:45:00Z",
-  "message": "Successfully unsubscribed from WhatsApp messaging"
+  "contact_id": "550e8400-e29b-41d4-a716-446655440000"
 }
 ```
 
-## Get Unsubscribe Page
+## Public Unsubscribe Page
 
-Retrieve information about an unsubscribe page (used for rendering custom pages):
+The public unsubscribe endpoint that customers use directly in their browser. This returns an HTML page, not JSON:
 
 <CodeGroup>
 
 ```bash cURL
-curl -X GET "https://cloud.weblix.co.il/unsubscribe/page/unsub_abc123def456ghi789" \
-  -H "Authorization: Bearer YOUR_TOKEN"
+curl -X GET "https://cloud.weblix.co.il/unsubscribe/unsub_abc123def456ghi789"
 ```
 
-```javascript JavaScript
-const response = await fetch('https://cloud.weblix.co.il/unsubscribe/page/unsub_abc123def456ghi789', {
-  headers: {
-    'Authorization': 'Bearer YOUR_TOKEN'
-  }
-});
+```javascript Browser
+// Direct browser navigation
+window.location.href = 'https://cloud.weblix.co.il/unsubscribe/unsub_abc123def456ghi789';
 
-const pageData = await response.json();
+// Or fetch the HTML content
+const response = await fetch('https://cloud.weblix.co.il/unsubscribe/unsub_abc123def456ghi789');
+const htmlContent = await response.text();
 ```
 
 ```python Python
+import requests
+
+# This returns HTML content, not JSON
 response = requests.get(
-    'https://cloud.weblix.co.il/unsubscribe/page/unsub_abc123def456ghi789',
-    headers={'Authorization': 'Bearer YOUR_TOKEN'}
+    'https://cloud.weblix.co.il/unsubscribe/unsub_abc123def456ghi789'
 )
 
-page_data = response.json()
+html_content = response.text
 ```
 
 </CodeGroup>
 
 ### Response
 
-```json
-{
-  "code": "unsub_abc123def456ghi789",
-  "phone_number": "+1234567890",
-  "contact_name": "John Doe",
-  "business_name": "Your Business Name",
-  "is_valid": true,
-  "expires_at": "2024-12-31T23:59:59Z",
-  "already_unsubscribed": false,
-  "page_title": "Unsubscribe from WhatsApp Messages",
-  "page_description": "Click below to stop receiving WhatsApp messages from Your Business Name"
-}
-```
+This endpoint returns a styled HTML page that automatically processes the unsubscribe and shows a success or error message to the user. The page includes:
+
+- Success confirmation with the unsubscribed phone number
+- Professional styling and responsive design
+- Error handling for invalid or expired codes
+- User-friendly messaging
 
 ## Contact Blocking
 
@@ -242,36 +207,33 @@ Prevent a contact from receiving future messages:
 <CodeGroup>
 
 ```bash cURL
-curl -X POST "https://cloud.weblix.co.il/contacts/550e8400-e29b-41d4-a716-446655440000/block" \
+curl -X POST "https://cloud.weblix.co.il/unsubscribe/contact/550e8400-e29b-41d4-a716-446655440000/block" \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
-    "reason": "Customer requested to be blocked",
-    "notify_contact": false
+    "reason": "Customer requested to be blocked"
   }'
 ```
 
 ```javascript JavaScript
-const response = await fetch('https://cloud.weblix.co.il/contacts/550e8400-e29b-41d4-a716-446655440000/block', {
+const response = await fetch('https://cloud.weblix.co.il/unsubscribe/contact/550e8400-e29b-41d4-a716-446655440000/block', {
   method: 'POST',
   headers: {
     'Authorization': 'Bearer YOUR_TOKEN',
     'Content-Type': 'application/json'
   },
   body: JSON.stringify({
-    reason: 'Customer requested to be blocked',
-    notify_contact: false
+    reason: 'Customer requested to be blocked'
   })
 });
 ```
 
 ```python Python
 response = requests.post(
-    'https://cloud.weblix.co.il/contacts/550e8400-e29b-41d4-a716-446655440000/block',
+    'https://cloud.weblix.co.il/unsubscribe/contact/550e8400-e29b-41d4-a716-446655440000/block',
     headers={'Authorization': 'Bearer YOUR_TOKEN'},
     json={
-        'reason': 'Customer requested to be blocked',
-        'notify_contact': False
+        'reason': 'Customer requested to be blocked'
     }
 )
 ```
@@ -285,36 +247,33 @@ Allow a previously blocked contact to receive messages again:
 <CodeGroup>
 
 ```bash cURL
-curl -X POST "https://cloud.weblix.co.il/contacts/550e8400-e29b-41d4-a716-446655440000/unblock" \
+curl -X POST "https://cloud.weblix.co.il/unsubscribe/contact/550e8400-e29b-41d4-a716-446655440000/unblock" \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
-    "reason": "Customer requested to be unblocked",
-    "notify_contact": true
+    "reason": "Customer requested to be unblocked"
   }'
 ```
 
 ```javascript JavaScript
-const response = await fetch('https://cloud.weblix.co.il/contacts/550e8400-e29b-41d4-a716-446655440000/unblock', {
+const response = await fetch('https://cloud.weblix.co.il/unsubscribe/contact/550e8400-e29b-41d4-a716-446655440000/unblock', {
   method: 'POST',
   headers: {
     'Authorization': 'Bearer YOUR_TOKEN',
     'Content-Type': 'application/json'
   },
   body: JSON.stringify({
-    reason: 'Customer requested to be unblocked',
-    notify_contact: true
+    reason: 'Customer requested to be unblocked'
   })
 });
 ```
 
 ```python Python
 response = requests.post(
-    'https://cloud.weblix.co.il/contacts/550e8400-e29b-41d4-a716-446655440000/unblock',
+    'https://cloud.weblix.co.il/unsubscribe/contact/550e8400-e29b-41d4-a716-446655440000/unblock',
     headers={'Authorization': 'Bearer YOUR_TOKEN'},
     json={
-        'reason': 'Customer requested to be unblocked',
-        'notify_contact': True
+        'reason': 'Customer requested to be unblocked'
     }
 )
 ```
@@ -335,8 +294,8 @@ class UnsubscribeManager {
   }
 
   // Generate unsubscribe code when sending marketing messages
-  async generateUnsubscribeCode(phoneNumber) {
-    const response = await fetch(`${this.baseUrl}/unsubscribe/generate-code`, {
+  async generateUnsubscribeCode(phoneNumber, instanceId, source = 'manual') {
+    const response = await fetch(`${this.baseUrl}/unsubscribe/create`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${this.apiToken}`,
@@ -344,7 +303,8 @@ class UnsubscribeManager {
       },
       body: JSON.stringify({
         phone_number: phoneNumber,
-        expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() // 30 days
+        instance_id: instanceId,
+        source: source
       })
     });
 
@@ -357,27 +317,21 @@ class UnsubscribeManager {
   }
 
   // Process unsubscribe from webhook or web page
-  async processUnsubscribe(code, userAgent, ipAddress) {
-    const response = await fetch(`${this.baseUrl}/unsubscribe/process`, {
+  async processUnsubscribe(code) {
+    const response = await fetch(`${this.baseUrl}/unsubscribe/process/${code}`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${this.apiToken}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        code,
-        user_agent: userAgent,
-        ip_address: ipAddress
-      })
+        'Authorization': `Bearer ${this.apiToken}`
+      }
     });
 
     return response.json();
   }
 
   // Send marketing message with unsubscribe option
-  async sendMarketingMessage(phoneNumber, messageText) {
+  async sendMarketingMessage(phoneNumber, messageText, instanceId) {
     // Generate unsubscribe code
-    const unsubData = await this.generateUnsubscribeCode(phoneNumber);
+    const unsubData = await this.generateUnsubscribeCode(phoneNumber, instanceId, 'marketing');
     
     // Add unsubscribe link to message
     const messageWithUnsub = this.addUnsubscribeLink(messageText, unsubData.unsubscribe_url);
@@ -390,7 +344,7 @@ class UnsubscribeManager {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        instance_id: 'your-instance-id',
+        instance_id: instanceId,
         recipient: phoneNumber,
         message_type: 'text',
         text: messageWithUnsub
@@ -407,7 +361,8 @@ const unsubManager = new UnsubscribeManager('your-api-token');
 // Send marketing message with unsubscribe option
 await unsubManager.sendMarketingMessage(
   '+1234567890',
-  '🎉 Special offer! Get 50% off today only!'
+  '🎉 Special offer! Get 50% off today only!',
+  'your-instance-id'
 );
 ```
 
@@ -421,11 +376,11 @@ app.use(express.json());
 
 // Handle unsubscribe webhook
 app.post('/webhook/unsubscribe', async (req, res) => {
-  const { code, user_agent, ip_address } = req.body;
+  const { code } = req.body;
   
   try {
     const unsubManager = new UnsubscribeManager(process.env.MEGASEND_TOKEN);
-    const result = await unsubManager.processUnsubscribe(code, user_agent, ip_address);
+    const result = await unsubManager.processUnsubscribe(code);
     
     if (result.success) {
       console.log(`Successfully unsubscribed: ${result.phone_number}`);
@@ -482,14 +437,11 @@ Create a custom unsubscribe page for better brand consistency:
         
         document.getElementById('unsubscribeBtn').addEventListener('click', async () => {
             try {
-                const response = await fetch('https://cloud.weblix.co.il/unsubscribe/process', {
+                const response = await fetch(`https://cloud.weblix.co.il/unsubscribe/process/${code}`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        code: code,
-                        user_agent: navigator.userAgent,
-                        ip_address: 'client-ip' // You'd get this server-side
-                    })
+                    headers: { 
+                        'Authorization': 'Bearer YOUR_TOKEN' // You'd need to pass this from server-side
+                    }
                 });
                 
                 const result = await response.json();
