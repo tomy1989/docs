@@ -1,0 +1,110 @@
+{
+  "$schema": "https://mintlify.com/docs.json",
+  "theme": "mint",
+  "name": "MegaSend API",
+  "logo": {
+    "light": "/logo/light.svg",
+    "dark": "/logo/dark.svg"
+  },
+  "favicon": "/favicon.svg",
+  "colors": {
+    "primary": "#25D366",
+    "light": "#40E884",
+    "dark": "#128C7E"
+  },
+  "topbarLinks": [
+    {
+      "name": "Support",
+      "url": "mailto:support@megasend.co"
+    }
+  ],
+  "navigation": [
+    "introduction",
+    "authentication",
+    "quickstart",
+    {
+      "group": "Guides",
+      "pages": [
+        "messages/send",
+        "messages/bulk-send",
+        "templates/create",
+        "templates/list",
+        "instances/list",
+        "chats/conversations"
+      ]
+    },
+    {
+      "group": "API Reference",
+      "pages": [
+        "api-reference/introduction",
+        {
+          "group": "Authentication",
+          "pages": [
+            "api-reference/auth/login",
+            "api-reference/auth/tokens"
+          ]
+        },
+        {
+          "group": "Messages",
+          "pages": [
+            "api-reference/messages/send",
+            "api-reference/messages/bulk-send",
+            "api-reference/messages/responses"
+          ]
+        },
+        {
+          "group": "Templates",
+          "pages": [
+            "api-reference/templates/create",
+            "api-reference/templates/list",
+            "api-reference/templates/get",
+            "api-reference/templates/update",
+            "api-reference/templates/delete"
+          ]
+        },
+        {
+          "group": "Instances",
+          "pages": [
+            "api-reference/instances/list",
+            "api-reference/instances/create",
+            "api-reference/instances/get",
+            "api-reference/instances/update"
+          ]
+        },
+        {
+          "group": "Chats",
+          "pages": [
+            "api-reference/chats/conversations",
+            "api-reference/chats/messages",
+            "api-reference/chats/send"
+          ]
+        },
+        {
+          "group": "Analytics",
+          "pages": [
+            "api-reference/analytics/overview",
+            "api-reference/analytics/meta",
+            "api-reference/analytics/templates"
+          ]
+        },
+        {
+          "group": "Webhooks",
+          "pages": [
+            "api-reference/webhooks/verify",
+            "api-reference/webhooks/receive"
+          ]
+        }
+      ]
+    }
+  ],
+  "footerSocials": {
+    "website": "https://megasend.co"
+  },
+  "api": {
+    "baseUrl": "https://api.megasend.co",
+    "auth": {
+      "method": "bearer"
+    }
+  },
+  "openapi": "/openapi.json"
+}
