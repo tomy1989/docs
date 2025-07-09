@@ -13,7 +13,7 @@ Send the same message to multiple recipients:
 <CodeGroup>
 
 ```bash cURL
-curl -X POST "https://api.megasend.co/messages/send-bulk" \
+curl -X POST "https://cloud.weblix.co.il/messages/send-bulk" \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -32,7 +32,7 @@ const bulkMessage = {
   text: '🎉 Big Sale Alert! Get 50% off all products today only. Use code SAVE50 at checkout. Shop now: https://example.com/sale'
 };
 
-const response = await fetch('https://api.megasend.co/messages/send-bulk', {
+const response = await fetch('https://cloud.weblix.co.il/messages/send-bulk', {
   method: 'POST',
   headers: {
     'Authorization': 'Bearer YOUR_TOKEN',
@@ -56,7 +56,7 @@ bulk_message = {
 }
 
 response = requests.post(
-    'https://api.megasend.co/messages/send-bulk',
+    'https://cloud.weblix.co.il/messages/send-bulk',
     headers={'Authorization': 'Bearer YOUR_TOKEN'},
     json=bulk_message
 )
@@ -74,7 +74,7 @@ $bulkMessage = [
     'text' => '🎉 Big Sale Alert! Get 50% off all products today only. Use code SAVE50 at checkout. Shop now: https://example.com/sale'
 ];
 
-$response = file_get_contents('https://api.megasend.co/messages/send-bulk', false, stream_context_create([
+$response = file_get_contents('https://cloud.weblix.co.il/messages/send-bulk', false, stream_context_create([
     'http' => [
         'method' => 'POST',
         'header' => [
@@ -98,7 +98,7 @@ Send template messages to multiple recipients with personalized parameters:
 <CodeGroup>
 
 ```bash cURL
-curl -X POST "https://api.megasend.co/messages/send-bulk" \
+curl -X POST "https://cloud.weblix.co.il/messages/send-bulk" \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -157,7 +157,7 @@ const bulkTemplateMessage = {
   }
 };
 
-const response = await fetch('https://api.megasend.co/messages/send-bulk', {
+const response = await fetch('https://cloud.weblix.co.il/messages/send-bulk', {
   method: 'POST',
   headers: {
     'Authorization': 'Bearer YOUR_TOKEN',
@@ -196,7 +196,7 @@ bulk_template_message = {
 }
 
 response = requests.post(
-    'https://api.megasend.co/messages/send-bulk',
+    'https://cloud.weblix.co.il/messages/send-bulk',
     headers={'Authorization': 'Bearer YOUR_TOKEN'},
     json=bulk_template_message
 )
@@ -211,7 +211,7 @@ Send images, documents, or other media to multiple recipients:
 <CodeGroup>
 
 ```bash cURL
-curl -X POST "https://api.megasend.co/messages/send-bulk" \
+curl -X POST "https://cloud.weblix.co.il/messages/send-bulk" \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -248,7 +248,7 @@ Schedule bulk messages to be sent at a specific time:
 <CodeGroup>
 
 ```bash cURL
-curl -X POST "https://api.megasend.co/messages/send-bulk" \
+curl -X POST "https://cloud.weblix.co.il/messages/send-bulk" \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -279,7 +279,7 @@ Control the sending speed to respect WhatsApp rate limits:
 <CodeGroup>
 
 ```bash cURL
-curl -X POST "https://api.megasend.co/messages/send-bulk" \
+curl -X POST "https://cloud.weblix.co.il/messages/send-bulk" \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -344,12 +344,12 @@ Check the status of your bulk messaging job:
 <CodeGroup>
 
 ```bash cURL
-curl -X GET "https://api.megasend.co/messages/bulk-jobs/bulk_job_abc123def456" \
+curl -X GET "https://cloud.weblix.co.il/messages/bulk-jobs/bulk_job_abc123def456" \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
 ```javascript JavaScript
-const response = await fetch('https://api.megasend.co/messages/bulk-jobs/bulk_job_abc123def456', {
+const response = await fetch('https://cloud.weblix.co.il/messages/bulk-jobs/bulk_job_abc123def456', {
   headers: {
     'Authorization': 'Bearer YOUR_TOKEN'
   }
@@ -361,7 +361,7 @@ console.log('Job progress:', jobStatus.progress);
 
 ```python Python
 response = requests.get(
-    'https://api.megasend.co/messages/bulk-jobs/bulk_job_abc123def456',
+    'https://cloud.weblix.co.il/messages/bulk-jobs/bulk_job_abc123def456',
     headers={'Authorization': 'Bearer YOUR_TOKEN'}
 )
 
@@ -408,12 +408,12 @@ Get a list of all your bulk messaging jobs:
 <CodeGroup>
 
 ```bash cURL
-curl -X GET "https://api.megasend.co/messages/bulk-jobs?limit=20&status=completed" \
+curl -X GET "https://cloud.weblix.co.il/messages/bulk-jobs?limit=20&status=completed" \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
 ```javascript JavaScript
-const response = await fetch('https://api.megasend.co/messages/bulk-jobs?limit=20&status=completed', {
+const response = await fetch('https://cloud.weblix.co.il/messages/bulk-jobs?limit=20&status=completed', {
   headers: {
     'Authorization': 'Bearer YOUR_TOKEN'
   }
@@ -431,12 +431,12 @@ Cancel a bulk job that's still processing:
 <CodeGroup>
 
 ```bash cURL
-curl -X POST "https://api.megasend.co/messages/bulk-jobs/bulk_job_abc123def456/cancel" \
+curl -X POST "https://cloud.weblix.co.il/messages/bulk-jobs/bulk_job_abc123def456/cancel" \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
 ```javascript JavaScript
-const response = await fetch('https://api.megasend.co/messages/bulk-jobs/bulk_job_abc123def456/cancel', {
+const response = await fetch('https://cloud.weblix.co.il/messages/bulk-jobs/bulk_job_abc123def456/cancel', {
   method: 'POST',
   headers: {
     'Authorization': 'Bearer YOUR_TOKEN'
@@ -567,7 +567,7 @@ Common bulk messaging errors and solutions:
 
 ```javascript
 try {
-  const response = await fetch('https://api.megasend.co/messages/send-bulk', {
+  const response = await fetch('https://cloud.weblix.co.il/messages/send-bulk', {
     method: 'POST',
     headers: {
       'Authorization': 'Bearer YOUR_TOKEN',

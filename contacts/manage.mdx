@@ -1,0 +1,913 @@
+---
+title: 'Contact Management'
+description: 'Complete guide to managing WhatsApp contacts, preferences, and engagement tracking'
+icon: 'address-book'
+---
+
+# Contact Management
+
+The MegaSend Contact Management API provides comprehensive tools for organizing, tracking, and managing your WhatsApp contacts. Keep detailed records of customer interactions, preferences, and engagement metrics to deliver personalized messaging experiences.
+
+## Overview
+
+Contact management features include:
+
+- **Contact Profiles**: Store detailed customer information
+- **Engagement Tracking**: Monitor message history and response rates
+- **Preference Management**: Handle opt-ins, opt-outs, and communication preferences
+- **Segmentation**: Organize contacts into groups and categories
+- **Custom Fields**: Add business-specific contact attributes
+
+## Create Contact
+
+Add a new contact to your system:
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST "https://cloud.weblix.co.il/contacts" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "phone_number": "+1234567890",
+    "name": "John Doe",
+    "email": "john@example.com",
+    "tags": ["customer", "premium"],
+    "custom_fields": {
+      "company": "Acme Corp",
+      "lead_source": "website",
+      "birthday": "1990-05-15"
+    },
+    "preferences": {
+      "marketing_opted_in": true,
+      "notifications_enabled": true,
+      "preferred_language": "en"
+    }
+  }'
+```
+
+```javascript JavaScript
+const newContact = {
+  phone_number: '+1234567890',
+  name: 'John Doe',
+  email: 'john@example.com',
+  tags: ['customer', 'premium'],
+  custom_fields: {
+    company: 'Acme Corp',
+    lead_source: 'website',
+    birthday: '1990-05-15'
+  },
+  preferences: {
+    marketing_opted_in: true,
+    notifications_enabled: true,
+    preferred_language: 'en'
+  }
+};
+
+const response = await fetch('https://cloud.weblix.co.il/contacts', {
+  method: 'POST',
+  headers: {
+    'Authorization': 'Bearer YOUR_TOKEN',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify(newContact)
+});
+
+const contact = await response.json();
+```
+
+```python Python
+import requests
+
+new_contact = {
+    'phone_number': '+1234567890',
+    'name': 'John Doe',
+    'email': 'john@example.com',
+    'tags': ['customer', 'premium'],
+    'custom_fields': {
+        'company': 'Acme Corp',
+        'lead_source': 'website',
+        'birthday': '1990-05-15'
+    },
+    'preferences': {
+        'marketing_opted_in': True,
+        'notifications_enabled': True,
+        'preferred_language': 'en'
+    }
+}
+
+response = requests.post(
+    'https://cloud.weblix.co.il/contacts',
+    headers={'Authorization': 'Bearer YOUR_TOKEN'},
+    json=new_contact
+)
+
+contact = response.json()
+```
+
+</CodeGroup>
+
+### Response
+
+```json
+{
+  "id": "550e8400-e29b-41d4-a716-446655440000",
+  "phone_number": "+1234567890",
+  "name": "John Doe",
+  "email": "john@example.com",
+  "tags": ["customer", "premium"],
+  "custom_fields": {
+    "company": "Acme Corp",
+    "lead_source": "website",
+    "birthday": "1990-05-15"
+  },
+  "preferences": {
+    "marketing_opted_in": true,
+    "notifications_enabled": true,
+    "preferred_language": "en"
+  },
+  "engagement": {
+    "total_messages_sent": 0,
+    "total_messages_received": 0,
+    "last_interaction": null,
+    "response_rate": 0.0
+  },
+  "status": "active",
+  "created_at": "2024-01-15T10:30:00Z",
+  "updated_at": "2024-01-15T10:30:00Z"
+}
+```
+
+## List Contacts
+
+Retrieve all contacts with filtering and pagination:
+
+<CodeGroup>
+
+```bash cURL
+curl -X GET "https://cloud.weblix.co.il/contacts?limit=20&tags=customer&status=active" \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+```javascript JavaScript
+const response = await fetch('https://cloud.weblix.co.il/contacts?limit=20&tags=customer&status=active', {
+  headers: {
+    'Authorization': 'Bearer YOUR_TOKEN'
+  }
+});
+
+const contacts = await response.json();
+```
+
+```python Python
+response = requests.get(
+    'https://cloud.weblix.co.il/contacts?limit=20&tags=customer&status=active',
+    headers={'Authorization': 'Bearer YOUR_TOKEN'}
+)
+
+contacts = response.json()
+```
+
+</CodeGroup>
+
+### Query Parameters
+
+- `limit` - Number of contacts to return (default: 20, max: 100)
+- `offset` - Number of contacts to skip for pagination
+- `tags` - Filter by specific tags (comma-separated)
+- `status` - Filter by status: `active`, `blocked`, `unsubscribed`
+- `search` - Search by name, phone number, or email
+- `sort` - Sort field: `name`, `created_at`, `last_interaction`
+- `order` - Sort order: `asc` or `desc`
+
+### Response
+
+```json
+{
+  "contacts": [
+    {
+      "id": "550e8400-e29b-41d4-a716-446655440000",
+      "phone_number": "+1234567890",
+      "name": "John Doe",
+      "email": "john@example.com",
+      "tags": ["customer", "premium"],
+      "status": "active",
+      "last_interaction": "2024-01-15T14:30:00Z",
+      "engagement": {
+        "total_messages_sent": 25,
+        "total_messages_received": 18,
+        "response_rate": 0.72
+      }
+    }
+  ],
+  "pagination": {
+    "total": 150,
+    "limit": 20,
+    "offset": 0,
+    "has_more": true
+  }
+}
+```
+
+## Get Contact Details
+
+Retrieve detailed information about a specific contact:
+
+<CodeGroup>
+
+```bash cURL
+curl -X GET "https://cloud.weblix.co.il/contacts/550e8400-e29b-41d4-a716-446655440000" \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+```javascript JavaScript
+const response = await fetch('https://cloud.weblix.co.il/contacts/550e8400-e29b-41d4-a716-446655440000', {
+  headers: {
+    'Authorization': 'Bearer YOUR_TOKEN'
+  }
+});
+
+const contact = await response.json();
+```
+
+```python Python
+response = requests.get(
+    'https://cloud.weblix.co.il/contacts/550e8400-e29b-41d4-a716-446655440000',
+    headers={'Authorization': 'Bearer YOUR_TOKEN'}
+)
+
+contact = response.json()
+```
+
+</CodeGroup>
+
+## Update Contact
+
+Modify contact information and preferences:
+
+<CodeGroup>
+
+```bash cURL
+curl -X PUT "https://cloud.weblix.co.il/contacts/550e8400-e29b-41d4-a716-446655440000" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "John Smith",
+    "email": "johnsmith@example.com",
+    "tags": ["customer", "premium", "loyal"],
+    "custom_fields": {
+      "company": "Acme Corp",
+      "lead_source": "referral",
+      "birthday": "1990-05-15",
+      "customer_since": "2023-01-01"
+    },
+    "preferences": {
+      "marketing_opted_in": true,
+      "notifications_enabled": false,
+      "preferred_language": "es"
+    }
+  }'
+```
+
+```javascript JavaScript
+const updates = {
+  name: 'John Smith',
+  email: 'johnsmith@example.com',
+  tags: ['customer', 'premium', 'loyal'],
+  custom_fields: {
+    company: 'Acme Corp',
+    lead_source: 'referral',
+    birthday: '1990-05-15',
+    customer_since: '2023-01-01'
+  },
+  preferences: {
+    marketing_opted_in: true,
+    notifications_enabled: false,
+    preferred_language: 'es'
+  }
+};
+
+const response = await fetch('https://cloud.weblix.co.il/contacts/550e8400-e29b-41d4-a716-446655440000', {
+  method: 'PUT',
+  headers: {
+    'Authorization': 'Bearer YOUR_TOKEN',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify(updates)
+});
+```
+
+</CodeGroup>
+
+## Contact Engagement Tracking
+
+### Get Message History
+
+Retrieve conversation history for a contact:
+
+<CodeGroup>
+
+```bash cURL
+curl -X GET "https://cloud.weblix.co.il/contacts/550e8400-e29b-41d4-a716-446655440000/messages?limit=50" \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+```javascript JavaScript
+const response = await fetch('https://cloud.weblix.co.il/contacts/550e8400-e29b-41d4-a716-446655440000/messages?limit=50', {
+  headers: {
+    'Authorization': 'Bearer YOUR_TOKEN'
+  }
+});
+
+const messages = await response.json();
+```
+
+</CodeGroup>
+
+### Response
+
+```json
+{
+  "messages": [
+    {
+      "id": "msg_abc123",
+      "direction": "outbound",
+      "message_type": "text",
+      "content": "Thank you for your order!",
+      "status": "delivered",
+      "sent_at": "2024-01-15T10:30:00Z",
+      "delivered_at": "2024-01-15T10:30:03Z"
+    },
+    {
+      "id": "msg_def456",
+      "direction": "inbound",
+      "message_type": "text",
+      "content": "When will it arrive?",
+      "received_at": "2024-01-15T10:32:00Z"
+    }
+  ],
+  "pagination": {
+    "total": 25,
+    "limit": 50,
+    "offset": 0,
+    "has_more": false
+  }
+}
+```
+
+### Get Engagement Metrics
+
+Retrieve detailed engagement analytics for a contact:
+
+<CodeGroup>
+
+```bash cURL
+curl -X GET "https://cloud.weblix.co.il/contacts/550e8400-e29b-41d4-a716-446655440000/engagement" \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+```javascript JavaScript
+const response = await fetch('https://cloud.weblix.co.il/contacts/550e8400-e29b-41d4-a716-446655440000/engagement', {
+  headers: {
+    'Authorization': 'Bearer YOUR_TOKEN'
+  }
+});
+
+const engagement = await response.json();
+```
+
+</CodeGroup>
+
+### Response
+
+```json
+{
+  "contact_id": "550e8400-e29b-41d4-a716-446655440000",
+  "total_messages_sent": 45,
+  "total_messages_received": 32,
+  "response_rate": 0.71,
+  "average_response_time": "2h 15m",
+  "last_interaction": "2024-01-15T14:30:00Z",
+  "engagement_score": 85,
+  "interaction_timeline": [
+    {
+      "date": "2024-01-15",
+      "messages_sent": 3,
+      "messages_received": 2
+    },
+    {
+      "date": "2024-01-14", 
+      "messages_sent": 1,
+      "messages_received": 1
+    }
+  ],
+  "message_type_breakdown": {
+    "text": 40,
+    "image": 3,
+    "document": 2
+  }
+}
+```
+
+## Contact Segmentation
+
+### Create Contact Group
+
+Organize contacts into groups for targeted messaging:
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST "https://cloud.weblix.co.il/contacts/groups" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Premium Customers",
+    "description": "High-value customers with premium subscriptions",
+    "tags": ["premium", "customer"],
+    "filters": {
+      "custom_fields.customer_tier": "premium",
+      "preferences.marketing_opted_in": true
+    }
+  }'
+```
+
+```javascript JavaScript
+const newGroup = {
+  name: 'Premium Customers',
+  description: 'High-value customers with premium subscriptions',
+  tags: ['premium', 'customer'],
+  filters: {
+    'custom_fields.customer_tier': 'premium',
+    'preferences.marketing_opted_in': true
+  }
+};
+
+const response = await fetch('https://cloud.weblix.co.il/contacts/groups', {
+  method: 'POST',
+  headers: {
+    'Authorization': 'Bearer YOUR_TOKEN',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify(newGroup)
+});
+```
+
+</CodeGroup>
+
+### Add Contact to Group
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST "https://cloud.weblix.co.il/contacts/groups/group_123/members" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "contact_ids": [
+      "550e8400-e29b-41d4-a716-446655440000",
+      "660f9511-f3ac-52e5-b827-557766551111"
+    ]
+  }'
+```
+
+```javascript JavaScript
+const response = await fetch('https://cloud.weblix.co.il/contacts/groups/group_123/members', {
+  method: 'POST',
+  headers: {
+    'Authorization': 'Bearer YOUR_TOKEN',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    contact_ids: [
+      '550e8400-e29b-41d4-a716-446655440000',
+      '660f9511-f3ac-52e5-b827-557766551111'
+    ]
+  })
+});
+```
+
+</CodeGroup>
+
+## Contact Preferences Management
+
+### Update Communication Preferences
+
+<CodeGroup>
+
+```bash cURL
+curl -X PUT "https://cloud.weblix.co.il/contacts/550e8400-e29b-41d4-a716-446655440000/preferences" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "marketing_opted_in": false,
+    "notifications_enabled": true,
+    "preferred_language": "en",
+    "communication_frequency": "weekly",
+    "topics_of_interest": ["tech", "business", "offers"]
+  }'
+```
+
+```javascript JavaScript
+const preferences = {
+  marketing_opted_in: false,
+  notifications_enabled: true,
+  preferred_language: 'en',
+  communication_frequency: 'weekly',
+  topics_of_interest: ['tech', 'business', 'offers']
+};
+
+const response = await fetch('https://cloud.weblix.co.il/contacts/550e8400-e29b-41d4-a716-446655440000/preferences', {
+  method: 'PUT',
+  headers: {
+    'Authorization': 'Bearer YOUR_TOKEN',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify(preferences)
+});
+```
+
+</CodeGroup>
+
+## Contact Import/Export
+
+### Bulk Import Contacts
+
+Import multiple contacts from CSV or JSON:
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST "https://cloud.weblix.co.il/contacts/import" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "contacts": [
+      {
+        "phone_number": "+1234567890",
+        "name": "John Doe",
+        "email": "john@example.com",
+        "tags": ["imported", "customer"]
+      },
+      {
+        "phone_number": "+1987654321",
+        "name": "Jane Smith",
+        "email": "jane@example.com",
+        "tags": ["imported", "prospect"]
+      }
+    ],
+    "options": {
+      "skip_duplicates": true,
+      "update_existing": false,
+      "default_tags": ["import_2024"]
+    }
+  }'
+```
+
+```javascript JavaScript
+const importData = {
+  contacts: [
+    {
+      phone_number: '+1234567890',
+      name: 'John Doe',
+      email: 'john@example.com',
+      tags: ['imported', 'customer']
+    },
+    {
+      phone_number: '+1987654321',
+      name: 'Jane Smith',
+      email: 'jane@example.com',
+      tags: ['imported', 'prospect']
+    }
+  ],
+  options: {
+    skip_duplicates: true,
+    update_existing: false,
+    default_tags: ['import_2024']
+  }
+};
+
+const response = await fetch('https://cloud.weblix.co.il/contacts/import', {
+  method: 'POST',
+  headers: {
+    'Authorization': 'Bearer YOUR_TOKEN',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify(importData)
+});
+```
+
+</CodeGroup>
+
+### Export Contacts
+
+Export contacts to CSV or JSON format:
+
+<CodeGroup>
+
+```bash cURL
+curl -X GET "https://cloud.weblix.co.il/contacts/export?format=csv&tags=customer&include_engagement=true" \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+```javascript JavaScript
+const response = await fetch('https://cloud.weblix.co.il/contacts/export?format=csv&tags=customer&include_engagement=true', {
+  headers: {
+    'Authorization': 'Bearer YOUR_TOKEN'
+  }
+});
+
+const exportData = await response.blob();
+```
+
+</CodeGroup>
+
+## Contact Search & Filtering
+
+### Advanced Search
+
+Perform complex searches across contact data:
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST "https://cloud.weblix.co.il/contacts/search" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "query": {
+      "and": [
+        {
+          "field": "tags",
+          "operator": "contains",
+          "value": "customer"
+        },
+        {
+          "field": "custom_fields.customer_tier",
+          "operator": "equals",
+          "value": "premium"
+        },
+        {
+          "field": "engagement.response_rate",
+          "operator": "greater_than",
+          "value": 0.5
+        }
+      ]
+    },
+    "sort": [
+      {
+        "field": "engagement.total_messages_sent",
+        "order": "desc"
+      }
+    ],
+    "limit": 50
+  }'
+```
+
+```javascript JavaScript
+const searchQuery = {
+  query: {
+    and: [
+      {
+        field: 'tags',
+        operator: 'contains',
+        value: 'customer'
+      },
+      {
+        field: 'custom_fields.customer_tier',
+        operator: 'equals',
+        value: 'premium'
+      },
+      {
+        field: 'engagement.response_rate',
+        operator: 'greater_than',
+        value: 0.5
+      }
+    ]
+  },
+  sort: [
+    {
+      field: 'engagement.total_messages_sent',
+      order: 'desc'
+    }
+  ],
+  limit: 50
+};
+
+const response = await fetch('https://cloud.weblix.co.il/contacts/search', {
+  method: 'POST',
+  headers: {
+    'Authorization': 'Bearer YOUR_TOKEN',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify(searchQuery)
+});
+```
+
+</CodeGroup>
+
+## Implementation Examples
+
+### Contact Management Class
+
+```javascript
+class ContactManager {
+  constructor(apiToken) {
+    this.apiToken = apiToken;
+    this.baseUrl = 'https://cloud.weblix.co.il';
+  }
+
+  async createContact(contactData) {
+    const response = await fetch(`${this.baseUrl}/contacts`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${this.apiToken}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(contactData)
+    });
+
+    return response.json();
+  }
+
+  async findOrCreateContact(phoneNumber, defaultData = {}) {
+    // Try to find existing contact
+    const searchResponse = await fetch(`${this.baseUrl}/contacts?search=${phoneNumber}`, {
+      headers: {
+        'Authorization': `Bearer ${this.apiToken}`
+      }
+    });
+
+    const searchResults = await searchResponse.json();
+    
+    if (searchResults.contacts.length > 0) {
+      return searchResults.contacts[0];
+    }
+
+    // Create new contact if not found
+    return this.createContact({
+      phone_number: phoneNumber,
+      ...defaultData
+    });
+  }
+
+  async updateEngagement(contactId, messageData) {
+    // Update contact engagement metrics after sending/receiving messages
+    const response = await fetch(`${this.baseUrl}/contacts/${contactId}/engagement`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${this.apiToken}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(messageData)
+    });
+
+    return response.json();
+  }
+
+  async segmentContacts(criteria) {
+    const response = await fetch(`${this.baseUrl}/contacts/search`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${this.apiToken}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ query: criteria })
+    });
+
+    return response.json();
+  }
+}
+
+// Usage example
+const contactManager = new ContactManager('your-api-token');
+
+// Find or create contact before sending message
+const contact = await contactManager.findOrCreateContact('+1234567890', {
+  name: 'John Doe',
+  tags: ['new_customer']
+});
+
+// Send message and update engagement
+await sendMessage(contact.phone_number, 'Welcome to our service!');
+await contactManager.updateEngagement(contact.id, {
+  message_type: 'text',
+  direction: 'outbound'
+});
+```
+
+### CRM Integration
+
+```javascript
+class CRMIntegration {
+  constructor(megasendToken, crmApiKey) {
+    this.contactManager = new ContactManager(megasendToken);
+    this.crmApiKey = crmApiKey;
+  }
+
+  async syncContactFromCRM(crmContactId) {
+    // Fetch contact from your CRM
+    const crmContact = await this.fetchFromCRM(crmContactId);
+    
+    // Map CRM fields to MegaSend contact format
+    const megasendContact = {
+      phone_number: crmContact.phone,
+      name: `${crmContact.first_name} ${crmContact.last_name}`,
+      email: crmContact.email,
+      custom_fields: {
+        crm_id: crmContact.id,
+        company: crmContact.company,
+        deal_stage: crmContact.deal_stage,
+        lead_source: crmContact.source
+      },
+      tags: this.mapCRMTagsToMegaSend(crmContact.tags)
+    };
+
+    // Create or update in MegaSend
+    const contact = await this.contactManager.findOrCreateContact(
+      megasendContact.phone_number, 
+      megasendContact
+    );
+
+    return contact;
+  }
+
+  async syncEngagementToCRM(contactId, engagementData) {
+    // Get MegaSend contact
+    const contact = await this.contactManager.getContact(contactId);
+    
+    if (contact.custom_fields?.crm_id) {
+      // Update engagement metrics in CRM
+      await this.updateCRMEngagement(contact.custom_fields.crm_id, engagementData);
+    }
+  }
+
+  mapCRMTagsToMegaSend(crmTags) {
+    const tagMapping = {
+      'hot_lead': 'high_priority',
+      'customer': 'customer',
+      'vip': 'premium'
+    };
+
+    return crmTags.map(tag => tagMapping[tag] || tag);
+  }
+}
+```
+
+## Best Practices
+
+### Data Management
+
+1. **Consistent Data Format** - Use standardized phone number formats (+1234567890)
+2. **Regular Cleanup** - Remove inactive or invalid contacts periodically
+3. **Custom Fields** - Use consistent naming conventions for custom fields
+4. **Tag Management** - Establish clear tagging conventions and hierarchies
+
+### Privacy & Compliance
+
+1. **Consent Tracking** - Always track marketing consent and opt-in dates
+2. **Data Retention** - Implement policies for data retention and deletion
+3. **Access Control** - Limit access to contact data based on user roles
+4. **Audit Logs** - Maintain logs of contact data changes
+
+### Performance Optimization
+
+1. **Pagination** - Use pagination for large contact lists
+2. **Indexing** - Index frequently searched fields in your local database
+3. **Caching** - Cache frequently accessed contact data
+4. **Batch Operations** - Use bulk operations for importing/updating large datasets
+
+## Error Handling
+
+Common contact management errors:
+
+```javascript
+async function handleContactErrors(response) {
+  if (!response.ok) {
+    const error = await response.json();
+    
+    switch (response.status) {
+      case 400:
+        if (error.detail.includes('phone_number')) {
+          throw new Error('Invalid phone number format. Use international format (+1234567890)');
+        }
+        break;
+      case 409:
+        throw new Error('Contact with this phone number already exists');
+      case 422:
+        throw new Error(`Validation error: ${error.detail}`);
+      default:
+        throw new Error(`Unexpected error: ${error.detail}`);
+    }
+  }
+  
+  return await response.json();
+}
+```
+
+## Next Steps
+
+- [Send targeted messages](/messages/send) to specific contact segments
+- [Set up webhooks](/webhooks/setup) to track contact interactions
+- [Monitor analytics](/analytics/overview) to understand contact engagement
+- [Manage unsubscribes](/unsubscribe/manage) to handle opt-out requests 

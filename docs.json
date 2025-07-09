@@ -15,7 +15,7 @@
   "topbarLinks": [
     {
       "name": "Support",
-      "url": "mailto:support@megasend.co"
+      "url": "mailto:support@megasend.com"
     }
   ],
   "navigation": {
@@ -35,7 +35,10 @@
           "messages/bulk-send",
           "templates/create",
           "instances/manage",
-          "webhooks/setup"
+          "webhooks/setup",
+          "analytics/overview",
+          "contacts/manage",
+          "unsubscribe/manage"
         ]
       },
       {
@@ -50,7 +53,7 @@
     "website": "https://megasend.co"
   },
   "api": {
-    "baseUrl": "https://api.megasend.co",
+    "baseUrl": "https://cloud.weblix.co.il",
     "auth": {
       "method": "bearer"
     }

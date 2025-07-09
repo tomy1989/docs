@@ -24,7 +24,7 @@ Create a new WhatsApp Business instance:
 <CodeGroup>
 
 ```bash cURL
-curl -X POST "https://api.megasend.co/instances/create" \
+curl -X POST "https://cloud.weblix.co.il/instances/create" \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -51,7 +51,7 @@ const instanceConfig = {
   }
 };
 
-const response = await fetch('https://api.megasend.co/instances/create', {
+const response = await fetch('https://cloud.weblix.co.il/instances/create', {
   method: 'POST',
   headers: {
     'Authorization': 'Bearer YOUR_TOKEN',
@@ -79,7 +79,7 @@ instance_config = {
 }
 
 response = requests.post(
-    'https://api.megasend.co/instances/create',
+    'https://cloud.weblix.co.il/instances/create',
     headers={'Authorization': 'Bearer YOUR_TOKEN'},
     json=instance_config
 )
@@ -127,7 +127,7 @@ function displayQRCode(qrCodeData) {
 
 // Check connection status
 async function checkConnectionStatus(instanceId) {
-  const response = await fetch(`https://api.megasend.co/instances/${instanceId}/status`, {
+  const response = await fetch(`https://cloud.weblix.co.il/instances/${instanceId}/status`, {
     headers: {
       'Authorization': 'Bearer YOUR_TOKEN'
     }
@@ -155,7 +155,7 @@ Configure automatic reconnection settings:
 <CodeGroup>
 
 ```bash cURL
-curl -X PUT "https://api.megasend.co/instances/550e8400-e29b-41d4-a716-446655440000/settings" \
+curl -X PUT "https://cloud.weblix.co.il/instances/550e8400-e29b-41d4-a716-446655440000/settings" \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -172,7 +172,7 @@ const settings = {
   reconnect_interval: 300
 };
 
-await fetch('https://api.megasend.co/instances/550e8400-e29b-41d4-a716-446655440000/settings', {
+await fetch('https://cloud.weblix.co.il/instances/550e8400-e29b-41d4-a716-446655440000/settings', {
   method: 'PUT',
   headers: {
     'Authorization': 'Bearer YOUR_TOKEN',
@@ -193,12 +193,12 @@ Get all your WhatsApp Business instances:
 <CodeGroup>
 
 ```bash cURL
-curl -X GET "https://api.megasend.co/instances?status=connected&limit=20" \
+curl -X GET "https://cloud.weblix.co.il/instances?status=connected&limit=20" \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
 ```javascript JavaScript
-const response = await fetch('https://api.megasend.co/instances?status=connected&limit=20', {
+const response = await fetch('https://cloud.weblix.co.il/instances?status=connected&limit=20', {
   headers: {
     'Authorization': 'Bearer YOUR_TOKEN'
   }
@@ -210,7 +210,7 @@ console.log('Connected instances:', instances.length);
 
 ```python Python
 response = requests.get(
-    'https://api.megasend.co/instances?status=connected&limit=20',
+    'https://cloud.weblix.co.il/instances?status=connected&limit=20',
     headers={'Authorization': 'Bearer YOUR_TOKEN'}
 )
 
@@ -227,12 +227,12 @@ Retrieve detailed information about a specific instance:
 <CodeGroup>
 
 ```bash cURL
-curl -X GET "https://api.megasend.co/instances/550e8400-e29b-41d4-a716-446655440000" \
+curl -X GET "https://cloud.weblix.co.il/instances/550e8400-e29b-41d4-a716-446655440000" \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
 ```javascript JavaScript
-const response = await fetch('https://api.megasend.co/instances/550e8400-e29b-41d4-a716-446655440000', {
+const response = await fetch('https://cloud.weblix.co.il/instances/550e8400-e29b-41d4-a716-446655440000', {
   headers: {
     'Authorization': 'Bearer YOUR_TOKEN'
   }
@@ -251,7 +251,7 @@ Modify instance settings and business profile:
 <CodeGroup>
 
 ```bash cURL
-curl -X PUT "https://api.megasend.co/instances/550e8400-e29b-41d4-a716-446655440000" \
+curl -X PUT "https://cloud.weblix.co.il/instances/550e8400-e29b-41d4-a716-446655440000" \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -278,7 +278,7 @@ const updates = {
   }
 };
 
-const response = await fetch('https://api.megasend.co/instances/550e8400-e29b-41d4-a716-446655440000', {
+const response = await fetch('https://cloud.weblix.co.il/instances/550e8400-e29b-41d4-a716-446655440000', {
   method: 'PUT',
   headers: {
     'Authorization': 'Bearer YOUR_TOKEN',
@@ -299,13 +299,13 @@ Monitor instance health and connectivity:
 <CodeGroup>
 
 ```bash cURL
-curl -X GET "https://api.megasend.co/instances/550e8400-e29b-41d4-a716-446655440000/status" \
+curl -X GET "https://cloud.weblix.co.il/instances/550e8400-e29b-41d4-a716-446655440000/status" \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
 ```javascript JavaScript
 async function monitorInstanceStatus(instanceId) {
-  const response = await fetch(`https://api.megasend.co/instances/${instanceId}/status`, {
+  const response = await fetch(`https://cloud.weblix.co.il/instances/${instanceId}/status`, {
     headers: {
       'Authorization': 'Bearer YOUR_TOKEN'
     }
@@ -362,7 +362,7 @@ Configure your WhatsApp Business profile:
 <CodeGroup>
 
 ```bash cURL
-curl -X PUT "https://api.megasend.co/instances/550e8400-e29b-41d4-a716-446655440000/profile" \
+curl -X PUT "https://cloud.weblix.co.il/instances/550e8400-e29b-41d4-a716-446655440000/profile" \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -415,7 +415,7 @@ const profileUpdate = {
   }
 };
 
-const response = await fetch('https://api.megasend.co/instances/550e8400-e29b-41d4-a716-446655440000/profile', {
+const response = await fetch('https://cloud.weblix.co.il/instances/550e8400-e29b-41d4-a716-446655440000/profile', {
   method: 'PUT',
   headers: {
     'Authorization': 'Bearer YOUR_TOKEN',
@@ -434,7 +434,7 @@ Update your business profile picture:
 <CodeGroup>
 
 ```bash cURL
-curl -X POST "https://api.megasend.co/instances/550e8400-e29b-41d4-a716-446655440000/profile/picture" \
+curl -X POST "https://cloud.weblix.co.il/instances/550e8400-e29b-41d4-a716-446655440000/profile/picture" \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -447,7 +447,7 @@ const profilePicture = {
   image_url: 'https://yourbusiness.com/logo.jpg'
 };
 
-const response = await fetch('https://api.megasend.co/instances/550e8400-e29b-41d4-a716-446655440000/profile/picture', {
+const response = await fetch('https://cloud.weblix.co.il/instances/550e8400-e29b-41d4-a716-446655440000/profile/picture', {
   method: 'POST',
   headers: {
     'Authorization': 'Bearer YOUR_TOKEN',
@@ -468,7 +468,7 @@ Configure webhooks for specific instances:
 <CodeGroup>
 
 ```bash cURL
-curl -X PUT "https://api.megasend.co/instances/550e8400-e29b-41d4-a716-446655440000/webhooks" \
+curl -X PUT "https://cloud.weblix.co.il/instances/550e8400-e29b-41d4-a716-446655440000/webhooks" \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -491,7 +491,7 @@ const webhookConfig = {
   ]
 };
 
-await fetch('https://api.megasend.co/instances/550e8400-e29b-41d4-a716-446655440000/webhooks', {
+await fetch('https://cloud.weblix.co.il/instances/550e8400-e29b-41d4-a716-446655440000/webhooks', {
   method: 'PUT',
   headers: {
     'Authorization': 'Bearer YOUR_TOKEN',
@@ -510,7 +510,7 @@ Configure message behavior settings:
 <CodeGroup>
 
 ```bash cURL
-curl -X PUT "https://api.megasend.co/instances/550e8400-e29b-41d4-a716-446655440000/message-settings" \
+curl -X PUT "https://cloud.weblix.co.il/instances/550e8400-e29b-41d4-a716-446655440000/message-settings" \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -549,12 +549,12 @@ Monitor your messaging quotas and rate limits:
 <CodeGroup>
 
 ```bash cURL
-curl -X GET "https://api.megasend.co/instances/550e8400-e29b-41d4-a716-446655440000/limits" \
+curl -X GET "https://cloud.weblix.co.il/instances/550e8400-e29b-41d4-a716-446655440000/limits" \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
 ```javascript JavaScript
-const response = await fetch('https://api.megasend.co/instances/550e8400-e29b-41d4-a716-446655440000/limits', {
+const response = await fetch('https://cloud.weblix.co.il/instances/550e8400-e29b-41d4-a716-446655440000/limits', {
   headers: {
     'Authorization': 'Bearer YOUR_TOKEN'
   }
@@ -605,7 +605,7 @@ Common connection problems and solutions:
 ```javascript
 async function handleExpiredQR(instanceId) {
   // Generate new QR code
-  const response = await fetch(`https://api.megasend.co/instances/${instanceId}/regenerate-qr`, {
+  const response = await fetch(`https://cloud.weblix.co.il/instances/${instanceId}/regenerate-qr`, {
     method: 'POST',
     headers: {
       'Authorization': 'Bearer YOUR_TOKEN'
@@ -673,7 +673,7 @@ class InstanceMonitor {
   }
   
   async checkStatus() {
-    const response = await fetch(`https://api.megasend.co/instances/${this.instanceId}/status`, {
+    const response = await fetch(`https://cloud.weblix.co.il/instances/${this.instanceId}/status`, {
       headers: {
         'Authorization': `Bearer ${this.token}`
       }
@@ -694,7 +694,7 @@ class InstanceMonitor {
   }
   
   async triggerReconnection() {
-    await fetch(`https://api.megasend.co/instances/${this.instanceId}/reconnect`, {
+    await fetch(`https://cloud.weblix.co.il/instances/${this.instanceId}/reconnect`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${this.token}`
@@ -740,12 +740,12 @@ Temporarily disable an instance:
 <CodeGroup>
 
 ```bash cURL
-curl -X PUT "https://api.megasend.co/instances/550e8400-e29b-41d4-a716-446655440000/disable" \
+curl -X PUT "https://cloud.weblix.co.il/instances/550e8400-e29b-41d4-a716-446655440000/disable" \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
 ```javascript JavaScript
-await fetch('https://api.megasend.co/instances/550e8400-e29b-41d4-a716-446655440000/disable', {
+await fetch('https://cloud.weblix.co.il/instances/550e8400-e29b-41d4-a716-446655440000/disable', {
   method: 'PUT',
   headers: {
     'Authorization': 'Bearer YOUR_TOKEN'
@@ -762,12 +762,12 @@ Permanently remove an instance:
 <CodeGroup>
 
 ```bash cURL
-curl -X DELETE "https://api.megasend.co/instances/550e8400-e29b-41d4-a716-446655440000" \
+curl -X DELETE "https://cloud.weblix.co.il/instances/550e8400-e29b-41d4-a716-446655440000" \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
 ```javascript JavaScript
-await fetch('https://api.megasend.co/instances/550e8400-e29b-41d4-a716-446655440000', {
+await fetch('https://cloud.weblix.co.il/instances/550e8400-e29b-41d4-a716-446655440000', {
   method: 'DELETE',
   headers: {
     'Authorization': 'Bearer YOUR_TOKEN'

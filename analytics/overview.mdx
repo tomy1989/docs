@@ -1,0 +1,804 @@
+---
+title: 'Analytics Overview'
+description: 'Comprehensive analytics and reporting for WhatsApp messaging performance, engagement, and business insights'
+icon: 'chart-line'
+---
+
+# Analytics Overview
+
+The MegaSend Analytics API provides comprehensive insights into your WhatsApp messaging performance, customer engagement, and business metrics. Track everything from message delivery rates to conversation analytics and ROI measurements.
+
+## Overview
+
+Analytics features include:
+
+- **Message Analytics**: Delivery rates, read receipts, and response metrics
+- **Engagement Tracking**: Customer interaction patterns and conversation flows
+- **Performance Metrics**: Instance health, rate limits, and system performance
+- **Business Intelligence**: ROI tracking, conversion metrics, and revenue attribution
+- **Real-time Dashboards**: Live monitoring and alerting capabilities
+
+## Message Analytics
+
+### Basic Message Metrics
+
+Get comprehensive message delivery and engagement statistics:
+
+<CodeGroup>
+
+```bash cURL
+curl -X GET "https://cloud.weblix.co.il/analytics/messages?start_date=2024-01-01&end_date=2024-01-31&instance_id=550e8400-e29b-41d4-a716-446655440000" \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+```javascript JavaScript
+const response = await fetch('https://cloud.weblix.co.il/analytics/messages?start_date=2024-01-01&end_date=2024-01-31&instance_id=550e8400-e29b-41d4-a716-446655440000', {
+  headers: {
+    'Authorization': 'Bearer YOUR_TOKEN'
+  }
+});
+
+const analytics = await response.json();
+console.log('Message Analytics:', analytics);
+```
+
+```python Python
+import requests
+
+response = requests.get(
+    'https://cloud.weblix.co.il/analytics/messages?start_date=2024-01-01&end_date=2024-01-31&instance_id=550e8400-e29b-41d4-a716-446655440000',
+    headers={'Authorization': 'Bearer YOUR_TOKEN'}
+)
+
+analytics = response.json()
+print(f"Messages sent: {analytics['total_messages_sent']}")
+```
+
+</CodeGroup>
+
+### Response Format
+
+```json
+{
+  "summary": {
+    "total_messages_sent": 15420,
+    "total_messages_delivered": 14891,
+    "total_messages_read": 12567,
+    "delivery_rate": 0.966,
+    "read_rate": 0.844,
+    "failed_messages": 529,
+    "average_delivery_time": "2.3s"
+  },
+  "by_message_type": {
+    "text": {
+      "sent": 12500,
+      "delivered": 12089,
+      "read": 10234,
+      "delivery_rate": 0.967
+    },
+    "image": {
+      "sent": 1820,
+      "delivered": 1756,
+      "read": 1432,
+      "delivery_rate": 0.965
+    },
+    "template": {
+      "sent": 900,
+      "delivered": 846,
+      "read": 701,
+      "delivery_rate": 0.940
+    }
+  },
+  "timeline": [
+    {
+      "date": "2024-01-01",
+      "sent": 450,
+      "delivered": 435,
+      "read": 378,
+      "failed": 15
+    }
+  ],
+  "top_failure_reasons": [
+    {
+      "reason": "Invalid phone number",
+      "count": 234,
+      "percentage": 0.44
+    },
+    {
+      "reason": "Rate limit exceeded",
+      "count": 156,
+      "percentage": 0.29
+    }
+  ]
+}
+```
+
+### Message Type Analytics
+
+Analyze performance by message type:
+
+<CodeGroup>
+
+```bash cURL
+curl -X GET "https://cloud.weblix.co.il/analytics/messages/by-type?start_date=2024-01-01&end_date=2024-01-31" \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+```javascript JavaScript
+const response = await fetch('https://cloud.weblix.co.il/analytics/messages/by-type?start_date=2024-01-01&end_date=2024-01-31', {
+  headers: {
+    'Authorization': 'Bearer YOUR_TOKEN'
+  }
+});
+
+const typeAnalytics = await response.json();
+```
+
+</CodeGroup>
+
+## Conversation Analytics
+
+### Conversation Flow Metrics
+
+Track conversation patterns and customer journeys:
+
+<CodeGroup>
+
+```bash cURL
+curl -X GET "https://cloud.weblix.co.il/analytics/conversations?start_date=2024-01-01&end_date=2024-01-31&group_by=day" \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+```javascript JavaScript
+const response = await fetch('https://cloud.weblix.co.il/analytics/conversations?start_date=2024-01-01&end_date=2024-01-31&group_by=day', {
+  headers: {
+    'Authorization': 'Bearer YOUR_TOKEN'
+  }
+});
+
+const conversationAnalytics = await response.json();
+```
+
+```python Python
+response = requests.get(
+    'https://cloud.weblix.co.il/analytics/conversations?start_date=2024-01-01&end_date=2024-01-31&group_by=day',
+    headers={'Authorization': 'Bearer YOUR_TOKEN'}
+)
+
+conversation_analytics = response.json()
+```
+
+</CodeGroup>
+
+### Response Format
+
+```json
+{
+  "summary": {
+    "total_conversations": 3456,
+    "new_conversations": 1234,
+    "active_conversations": 2890,
+    "average_conversation_length": 4.2,
+    "average_response_time": "1h 23m",
+    "resolution_rate": 0.89
+  },
+  "conversation_stages": {
+    "initiated": 3456,
+    "first_response": 3124,
+    "engaged": 2890,
+    "resolved": 3078,
+    "abandoned": 378
+  },
+  "response_time_distribution": {
+    "under_1_hour": 0.45,
+    "1_to_4_hours": 0.32,
+    "4_to_24_hours": 0.18,
+    "over_24_hours": 0.05
+  },
+  "timeline": [
+    {
+      "date": "2024-01-01",
+      "conversations": 112,
+      "new_conversations": 45,
+      "avg_response_time": "1h 15m"
+    }
+  ]
+}
+```
+
+## Instance Performance Analytics
+
+### Instance Health Metrics
+
+Monitor WhatsApp instance performance and reliability:
+
+<CodeGroup>
+
+```bash cURL
+curl -X GET "https://cloud.weblix.co.il/analytics/instances/550e8400-e29b-41d4-a716-446655440000/performance?start_date=2024-01-01&end_date=2024-01-31" \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+```javascript JavaScript
+const response = await fetch('https://cloud.weblix.co.il/analytics/instances/550e8400-e29b-41d4-a716-446655440000/performance?start_date=2024-01-01&end_date=2024-01-31', {
+  headers: {
+    'Authorization': 'Bearer YOUR_TOKEN'
+  }
+});
+
+const instancePerformance = await response.json();
+```
+
+</CodeGroup>
+
+### Response Format
+
+```json
+{
+  "instance_id": "550e8400-e29b-41d4-a716-446655440000",
+  "uptime_percentage": 99.8,
+  "total_downtime": "2h 45m",
+  "connection_stability": {
+    "total_disconnections": 3,
+    "average_reconnection_time": "45s",
+    "longest_downtime": "1h 20m"
+  },
+  "rate_limits": {
+    "current_tier": "TIER_1000",
+    "messages_per_day_limit": 1000,
+    "average_daily_usage": 756,
+    "peak_usage_day": "2024-01-15",
+    "peak_usage_count": 987
+  },
+  "api_performance": {
+    "average_response_time": "245ms",
+    "success_rate": 0.998,
+    "total_api_calls": 45678,
+    "failed_calls": 91
+  }
+}
+```
+
+## Template Performance Analytics
+
+### Template Effectiveness Metrics
+
+Analyze the performance of your WhatsApp Business templates:
+
+<CodeGroup>
+
+```bash cURL
+curl -X GET "https://cloud.weblix.co.il/analytics/templates?start_date=2024-01-01&end_date=2024-01-31&sort_by=delivery_rate" \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+```javascript JavaScript
+const response = await fetch('https://cloud.weblix.co.il/analytics/templates?start_date=2024-01-01&end_date=2024-01-31&sort_by=delivery_rate', {
+  headers: {
+    'Authorization': 'Bearer YOUR_TOKEN'
+  }
+});
+
+const templateAnalytics = await response.json();
+```
+
+```python Python
+response = requests.get(
+    'https://cloud.weblix.co.il/analytics/templates?start_date=2024-01-01&end_date=2024-01-31&sort_by=delivery_rate',
+    headers={'Authorization': 'Bearer YOUR_TOKEN'}
+)
+
+template_analytics = response.json()
+```
+
+</CodeGroup>
+
+### Response Format
+
+```json
+{
+  "templates": [
+    {
+      "template_name": "order_confirmation",
+      "total_sent": 2456,
+      "delivered": 2389,
+      "read": 2123,
+      "delivery_rate": 0.973,
+      "read_rate": 0.888,
+      "click_through_rate": 0.234,
+      "conversion_rate": 0.156,
+      "approval_status": "APPROVED",
+      "quality_score": "HIGH"
+    },
+    {
+      "template_name": "shipping_update",
+      "total_sent": 1823,
+      "delivered": 1789,
+      "read": 1567,
+      "delivery_rate": 0.981,
+      "read_rate": 0.876,
+      "click_through_rate": 0.198,
+      "conversion_rate": 0.089,
+      "approval_status": "APPROVED",
+      "quality_score": "MEDIUM"
+    }
+  ],
+  "summary": {
+    "total_templates": 12,
+    "active_templates": 9,
+    "pending_approval": 2,
+    "rejected_templates": 1,
+    "average_delivery_rate": 0.967,
+    "average_read_rate": 0.834
+  }
+}
+```
+
+## Customer Engagement Analytics
+
+### Contact Engagement Patterns
+
+Understand how customers interact with your messages:
+
+<CodeGroup>
+
+```bash cURL
+curl -X GET "https://cloud.weblix.co.il/analytics/engagement?start_date=2024-01-01&end_date=2024-01-31&segment=all" \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+```javascript JavaScript
+const response = await fetch('https://cloud.weblix.co.il/analytics/engagement?start_date=2024-01-01&end_date=2024-01-31&segment=all', {
+  headers: {
+    'Authorization': 'Bearer YOUR_TOKEN'
+  }
+});
+
+const engagementAnalytics = await response.json();
+```
+
+</CodeGroup>
+
+### Response Format
+
+```json
+{
+  "engagement_summary": {
+    "total_contacts": 8934,
+    "active_contacts": 6723,
+    "highly_engaged_contacts": 2145,
+    "low_engagement_contacts": 1456,
+    "unresponsive_contacts": 755
+  },
+  "engagement_metrics": {
+    "average_response_rate": 0.67,
+    "average_conversation_length": 3.8,
+    "repeat_interaction_rate": 0.45,
+    "customer_satisfaction_score": 4.2
+  },
+  "segmentation": {
+    "by_engagement_level": {
+      "high": {
+        "count": 2145,
+        "response_rate": 0.89,
+        "avg_messages_per_conversation": 6.2
+      },
+      "medium": {
+        "count": 4578,
+        "response_rate": 0.72,
+        "avg_messages_per_conversation": 3.8
+      },
+      "low": {
+        "count": 2211,
+        "response_rate": 0.34,
+        "avg_messages_per_conversation": 1.9
+      }
+    }
+  },
+  "interaction_timeline": [
+    {
+      "hour": "09:00",
+      "response_rate": 0.78,
+      "messages_sent": 234,
+      "responses_received": 183
+    }
+  ]
+}
+```
+
+## Business Intelligence
+
+### ROI and Conversion Tracking
+
+Track the business impact of your WhatsApp messaging:
+
+<CodeGroup>
+
+```bash cURL
+curl -X GET "https://cloud.weblix.co.il/analytics/business-intelligence?start_date=2024-01-01&end_date=2024-01-31&include_revenue=true" \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+```javascript JavaScript
+const response = await fetch('https://cloud.weblix.co.il/analytics/business-intelligence?start_date=2024-01-01&end_date=2024-01-31&include_revenue=true', {
+  headers: {
+    'Authorization': 'Bearer YOUR_TOKEN'
+  }
+});
+
+const businessAnalytics = await response.json();
+```
+
+```python Python
+response = requests.get(
+    'https://cloud.weblix.co.il/analytics/business-intelligence?start_date=2024-01-01&end_date=2024-01-31&include_revenue=true',
+    headers={'Authorization': 'Bearer YOUR_TOKEN'}
+)
+
+business_analytics = response.json()
+```
+
+</CodeGroup>
+
+### Response Format
+
+```json
+{
+  "financial_metrics": {
+    "total_revenue_attributed": 156780.50,
+    "cost_per_message": 0.05,
+    "total_messaging_cost": 771.00,
+    "roi": 203.4,
+    "revenue_per_conversation": 45.32,
+    "customer_lifetime_value": 234.67
+  },
+  "conversion_metrics": {
+    "total_conversions": 1234,
+    "conversion_rate": 0.089,
+    "average_conversion_time": "2d 4h",
+    "top_converting_templates": [
+      {
+        "template": "limited_offer",
+        "conversions": 234,
+        "conversion_rate": 0.156
+      }
+    ]
+  },
+  "campaign_performance": [
+    {
+      "campaign_id": "summer_sale_2024",
+      "messages_sent": 5678,
+      "conversions": 456,
+      "revenue": 23450.00,
+      "roi": 156.7,
+      "cost_per_acquisition": 8.45
+    }
+  ]
+}
+```
+
+## Real-time Analytics
+
+### Live Dashboard Data
+
+Get real-time metrics for live monitoring:
+
+<CodeGroup>
+
+```bash cURL
+curl -X GET "https://cloud.weblix.co.il/analytics/real-time" \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+```javascript JavaScript
+const response = await fetch('https://cloud.weblix.co.il/analytics/real-time', {
+  headers: {
+    'Authorization': 'Bearer YOUR_TOKEN'
+  }
+});
+
+const liveAnalytics = await response.json();
+```
+
+```python Python
+response = requests.get(
+    'https://cloud.weblix.co.il/analytics/real-time',
+    headers={'Authorization': 'Bearer YOUR_TOKEN'}
+)
+
+live_analytics = response.json()
+```
+
+</CodeGroup>
+
+### Response Format
+
+```json
+{
+  "current_activity": {
+    "messages_sent_last_hour": 145,
+    "active_conversations": 23,
+    "instances_online": 4,
+    "current_response_rate": 0.78
+  },
+  "system_status": {
+    "api_status": "healthy",
+    "average_response_time": "180ms",
+    "error_rate": 0.002,
+    "rate_limit_utilization": 0.67
+  },
+  "alerts": [
+    {
+      "type": "warning",
+      "message": "Response rate below threshold on instance xyz",
+      "timestamp": "2024-01-15T14:30:00Z"
+    }
+  ],
+  "live_metrics": {
+    "messages_per_minute": 12,
+    "conversations_started_today": 67,
+    "average_conversation_duration": "8m 34s"
+  }
+}
+```
+
+## Custom Analytics
+
+### Create Custom Reports
+
+Build custom analytics reports with specific metrics:
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST "https://cloud.weblix.co.il/analytics/custom-report" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "report_name": "Weekly Marketing Performance",
+    "metrics": [
+      "message_delivery_rate",
+      "template_performance",
+      "conversion_rate",
+      "revenue_attribution"
+    ],
+    "filters": {
+      "instance_ids": ["550e8400-e29b-41d4-a716-446655440000"],
+      "message_types": ["template"],
+      "tags": ["marketing"]
+    },
+    "time_range": {
+      "start_date": "2024-01-01",
+      "end_date": "2024-01-31"
+    },
+    "group_by": "week",
+    "export_format": "json"
+  }'
+```
+
+```javascript JavaScript
+const reportConfig = {
+  report_name: 'Weekly Marketing Performance',
+  metrics: [
+    'message_delivery_rate',
+    'template_performance',
+    'conversion_rate',
+    'revenue_attribution'
+  ],
+  filters: {
+    instance_ids: ['550e8400-e29b-41d4-a716-446655440000'],
+    message_types: ['template'],
+    tags: ['marketing']
+  },
+  time_range: {
+    start_date: '2024-01-01',
+    end_date: '2024-01-31'
+  },
+  group_by: 'week',
+  export_format: 'json'
+};
+
+const response = await fetch('https://cloud.weblix.co.il/analytics/custom-report', {
+  method: 'POST',
+  headers: {
+    'Authorization': 'Bearer YOUR_TOKEN',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify(reportConfig)
+});
+```
+
+</CodeGroup>
+
+## Analytics Implementation
+
+### Dashboard Integration
+
+Example implementation for a real-time dashboard:
+
+```javascript
+class MegaSendAnalytics {
+  constructor(apiToken) {
+    this.apiToken = apiToken;
+    this.baseUrl = 'https://cloud.weblix.co.il';
+  }
+
+  async getMessageAnalytics(startDate, endDate, instanceId = null) {
+    const params = new URLSearchParams({
+      start_date: startDate,
+      end_date: endDate
+    });
+    
+    if (instanceId) {
+      params.append('instance_id', instanceId);
+    }
+
+    const response = await fetch(`${this.baseUrl}/analytics/messages?${params}`, {
+      headers: {
+        'Authorization': `Bearer ${this.apiToken}`
+      }
+    });
+
+    return response.json();
+  }
+
+  async getRealTimeMetrics() {
+    const response = await fetch(`${this.baseUrl}/analytics/real-time`, {
+      headers: {
+        'Authorization': `Bearer ${this.apiToken}`
+      }
+    });
+
+    return response.json();
+  }
+
+  async getEngagementTrends(days = 30) {
+    const endDate = new Date();
+    const startDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+    
+    const response = await fetch(`${this.baseUrl}/analytics/engagement?start_date=${startDate.toISOString()}&end_date=${endDate.toISOString()}`, {
+      headers: {
+        'Authorization': `Bearer ${this.apiToken}`
+      }
+    });
+
+    return response.json();
+  }
+
+  // Real-time updates with WebSocket
+  startRealTimeUpdates(callback) {
+    const ws = new WebSocket(`wss://cloud.weblix.co.il/analytics/ws?token=${this.apiToken}`);
+    
+    ws.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      callback(data);
+    };
+
+    return ws;
+  }
+}
+
+// Usage example
+const analytics = new MegaSendAnalytics('your-api-token');
+
+// Get message analytics for last 30 days
+const messageAnalytics = await analytics.getMessageAnalytics(
+  '2024-01-01T00:00:00Z',
+  '2024-01-31T23:59:59Z'
+);
+
+// Start real-time updates
+const ws = analytics.startRealTimeUpdates((data) => {
+  console.log('Real-time update:', data);
+  // Update your dashboard UI
+});
+```
+
+### Data Export and Integration
+
+Export analytics data for external BI tools:
+
+```javascript
+class AnalyticsExporter {
+  constructor(apiToken) {
+    this.analytics = new MegaSendAnalytics(apiToken);
+  }
+
+  async exportToCSV(startDate, endDate) {
+    const data = await this.analytics.getMessageAnalytics(startDate, endDate);
+    
+    // Convert to CSV format
+    const csv = this.convertToCSV(data.timeline);
+    
+    // Download or send to external system
+    return csv;
+  }
+
+  async sendToBI(data, endpoint) {
+    // Send to your BI platform (e.g., Tableau, Power BI)
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer YOUR_BI_TOKEN'
+      },
+      body: JSON.stringify(data)
+    });
+
+    return response.json();
+  }
+
+  convertToCSV(data) {
+    const headers = Object.keys(data[0]).join(',');
+    const rows = data.map(row => Object.values(row).join(','));
+    return [headers, ...rows].join('\n');
+  }
+}
+```
+
+## Best Practices
+
+### Performance Monitoring
+
+1. **Set Up Alerts** - Configure alerts for delivery rate drops, system downtime
+2. **Track Key Metrics** - Focus on delivery rate, response rate, conversion rate
+3. **Regular Reviews** - Schedule weekly/monthly analytics reviews
+4. **Benchmark Performance** - Compare against industry standards
+
+### Data Analysis
+
+1. **Segment Analysis** - Analyze performance by customer segments
+2. **Time-based Trends** - Track performance over time periods
+3. **A/B Testing** - Test different templates and messaging strategies
+4. **Attribution Modeling** - Track customer journey across touchpoints
+
+### Reporting
+
+1. **Automated Reports** - Set up scheduled reports for stakeholders
+2. **Custom Dashboards** - Create role-specific dashboards
+3. **Data Visualization** - Use charts and graphs for easy understanding
+4. **Action Items** - Convert insights into actionable recommendations
+
+## Error Handling
+
+Handle analytics API errors gracefully:
+
+```javascript
+async function fetchAnalyticsWithErrorHandling(endpoint, params) {
+  try {
+    const response = await fetch(`https://cloud.weblix.co.il/analytics/${endpoint}?${params}`, {
+      headers: {
+        'Authorization': 'Bearer YOUR_TOKEN'
+      }
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      
+      switch (response.status) {
+        case 400:
+          throw new Error(`Invalid parameters: ${error.detail}`);
+        case 429:
+          throw new Error('Rate limit exceeded. Please try again later.');
+        case 500:
+          throw new Error('Analytics service temporarily unavailable.');
+        default:
+          throw new Error(`Unexpected error: ${error.detail}`);
+      }
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Analytics fetch error:', error);
+    // Return cached data or default values
+    return null;
+  }
+}
+```
+
+## Next Steps
+
+- [Set up webhooks](/webhooks/setup) to receive real-time analytics events
+- [Manage contacts](/contacts/manage) to improve segmentation and targeting
+- [Send targeted messages](/messages/send) based on analytics insights
+- [Optimize templates](/templates/create) using performance data 
