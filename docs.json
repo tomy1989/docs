@@ -19,16 +19,11 @@
     }
   ],
   "navigation": [
+    "introduction",
+    "authentication",
+    "quickstart",
     {
-      "group": "Getting Started",
-      "pages": [
-        "introduction",
-        "authentication",
-        "quickstart"
-      ]
-    },
-    {
-      "group": "Core Features",
+      "group": "Guides",
       "pages": [
         "messages/send",
         "messages/bulk-send",
@@ -36,15 +31,6 @@
         "templates/list",
         "instances/list",
         "chats/conversations"
-      ]
-    },
-    {
-      "group": "Advanced Features",
-      "pages": [
-        "analytics/overview",
-        "analytics/templates",
-        "webhooks/setup",
-        "webhooks/events"
       ]
     },
     {
