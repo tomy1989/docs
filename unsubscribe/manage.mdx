@@ -25,7 +25,7 @@ Create an unsubscribe code for a specific phone number and instance:
 <CodeGroup>
 
 ```bash cURL
-curl -X POST "https://cloud.weblix.co.il/unsubscribe/create" \
+curl -X POST "https://api.megasend.co.il/unsubscribe/create" \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -36,7 +36,7 @@ curl -X POST "https://cloud.weblix.co.il/unsubscribe/create" \
 ```
 
 ```javascript JavaScript
-const response = await fetch('https://cloud.weblix.co.il/unsubscribe/create', {
+const response = await fetch('https://api.megasend.co.il/unsubscribe/create', {
   method: 'POST',
   headers: {
     'Authorization': 'Bearer YOUR_TOKEN',
@@ -57,7 +57,7 @@ console.log('Unsubscribe code:', result.code);
 import requests
 
 response = requests.post(
-    'https://cloud.weblix.co.il/unsubscribe/create',
+    'https://api.megasend.co.il/unsubscribe/create',
     headers={'Authorization': 'Bearer YOUR_TOKEN'},
     json={
         'phone_number': '+1234567890',
@@ -78,7 +78,7 @@ print(f"Unsubscribe code: {result['code']}")
 {
   "success": true,
   "unsubscribe_code": "unsub_abc123def456ghi789",
-  "unsubscribe_url": "https://cloud.weblix.co.il/api/whatsapp-cloud-api/unsubscribe/unsub_abc123def456ghi789",
+  "unsubscribe_url": "https://api.megasend.co.il/api/whatsapp-cloud-api/unsubscribe/unsub_abc123def456ghi789",
   "contact_id": "550e8400-e29b-41d4-a716-446655440000",
   "contact_created": false,
   "message": "Unsubscribe code created successfully"
@@ -92,12 +92,12 @@ Get or create an unsubscribe code for an existing contact:
 <CodeGroup>
 
 ```bash cURL
-curl -X GET "https://cloud.weblix.co.il/unsubscribe/contact/550e8400-e29b-41d4-a716-446655440000/code" \
+curl -X GET "https://api.megasend.co.il/unsubscribe/contact/550e8400-e29b-41d4-a716-446655440000/code" \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
 ```javascript JavaScript
-const response = await fetch('https://cloud.weblix.co.il/unsubscribe/contact/550e8400-e29b-41d4-a716-446655440000/code', {
+const response = await fetch('https://api.megasend.co.il/unsubscribe/contact/550e8400-e29b-41d4-a716-446655440000/code', {
   headers: {
     'Authorization': 'Bearer YOUR_TOKEN'
   }
@@ -108,7 +108,7 @@ const result = await response.json();
 
 ```python Python
 response = requests.get(
-    'https://cloud.weblix.co.il/unsubscribe/contact/550e8400-e29b-41d4-a716-446655440000/code',
+    'https://api.megasend.co.il/unsubscribe/contact/550e8400-e29b-41d4-a716-446655440000/code',
     headers={'Authorization': 'Bearer YOUR_TOKEN'}
 )
 ```
@@ -122,12 +122,12 @@ Handle unsubscribe requests programmatically via API:
 <CodeGroup>
 
 ```bash cURL
-curl -X POST "https://cloud.weblix.co.il/unsubscribe/process/unsub_abc123def456ghi789" \
+curl -X POST "https://api.megasend.co.il/unsubscribe/process/unsub_abc123def456ghi789" \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
 ```javascript JavaScript
-const response = await fetch('https://cloud.weblix.co.il/unsubscribe/process/unsub_abc123def456ghi789', {
+const response = await fetch('https://api.megasend.co.il/unsubscribe/process/unsub_abc123def456ghi789', {
   method: 'POST',
   headers: {
     'Authorization': 'Bearer YOUR_TOKEN'
@@ -139,7 +139,7 @@ const result = await response.json();
 
 ```python Python
 response = requests.post(
-    'https://cloud.weblix.co.il/unsubscribe/process/unsub_abc123def456ghi789',
+    'https://api.megasend.co.il/unsubscribe/process/unsub_abc123def456ghi789',
     headers={'Authorization': 'Bearer YOUR_TOKEN'}
 )
 ```
@@ -164,15 +164,15 @@ The public unsubscribe endpoint that customers use directly in their browser. Th
 <CodeGroup>
 
 ```bash cURL
-curl -X GET "https://cloud.weblix.co.il/unsubscribe/unsub_abc123def456ghi789"
+curl -X GET "https://api.megasend.co.il/unsubscribe/unsub_abc123def456ghi789"
 ```
 
 ```javascript Browser
 // Direct browser navigation
-window.location.href = 'https://cloud.weblix.co.il/unsubscribe/unsub_abc123def456ghi789';
+window.location.href = 'https://api.megasend.co.il/unsubscribe/unsub_abc123def456ghi789';
 
 // Or fetch the HTML content
-const response = await fetch('https://cloud.weblix.co.il/unsubscribe/unsub_abc123def456ghi789');
+const response = await fetch('https://api.megasend.co.il/unsubscribe/unsub_abc123def456ghi789');
 const htmlContent = await response.text();
 ```
 
@@ -181,7 +181,7 @@ import requests
 
 # This returns HTML content, not JSON
 response = requests.get(
-    'https://cloud.weblix.co.il/unsubscribe/unsub_abc123def456ghi789'
+    'https://api.megasend.co.il/unsubscribe/unsub_abc123def456ghi789'
 )
 
 html_content = response.text
@@ -207,7 +207,7 @@ Prevent a contact from receiving future messages:
 <CodeGroup>
 
 ```bash cURL
-curl -X POST "https://cloud.weblix.co.il/unsubscribe/contact/550e8400-e29b-41d4-a716-446655440000/block" \
+curl -X POST "https://api.megasend.co.il/unsubscribe/contact/550e8400-e29b-41d4-a716-446655440000/block" \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -216,7 +216,7 @@ curl -X POST "https://cloud.weblix.co.il/unsubscribe/contact/550e8400-e29b-41d4-
 ```
 
 ```javascript JavaScript
-const response = await fetch('https://cloud.weblix.co.il/unsubscribe/contact/550e8400-e29b-41d4-a716-446655440000/block', {
+const response = await fetch('https://api.megasend.co.il/unsubscribe/contact/550e8400-e29b-41d4-a716-446655440000/block', {
   method: 'POST',
   headers: {
     'Authorization': 'Bearer YOUR_TOKEN',
@@ -230,7 +230,7 @@ const response = await fetch('https://cloud.weblix.co.il/unsubscribe/contact/550
 
 ```python Python
 response = requests.post(
-    'https://cloud.weblix.co.il/unsubscribe/contact/550e8400-e29b-41d4-a716-446655440000/block',
+    'https://api.megasend.co.il/unsubscribe/contact/550e8400-e29b-41d4-a716-446655440000/block',
     headers={'Authorization': 'Bearer YOUR_TOKEN'},
     json={
         'reason': 'Customer requested to be blocked'
@@ -247,7 +247,7 @@ Allow a previously blocked contact to receive messages again:
 <CodeGroup>
 
 ```bash cURL
-curl -X POST "https://cloud.weblix.co.il/unsubscribe/contact/550e8400-e29b-41d4-a716-446655440000/unblock" \
+curl -X POST "https://api.megasend.co.il/unsubscribe/contact/550e8400-e29b-41d4-a716-446655440000/unblock" \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -256,7 +256,7 @@ curl -X POST "https://cloud.weblix.co.il/unsubscribe/contact/550e8400-e29b-41d4-
 ```
 
 ```javascript JavaScript
-const response = await fetch('https://cloud.weblix.co.il/unsubscribe/contact/550e8400-e29b-41d4-a716-446655440000/unblock', {
+const response = await fetch('https://api.megasend.co.il/unsubscribe/contact/550e8400-e29b-41d4-a716-446655440000/unblock', {
   method: 'POST',
   headers: {
     'Authorization': 'Bearer YOUR_TOKEN',
@@ -270,7 +270,7 @@ const response = await fetch('https://cloud.weblix.co.il/unsubscribe/contact/550
 
 ```python Python
 response = requests.post(
-    'https://cloud.weblix.co.il/unsubscribe/contact/550e8400-e29b-41d4-a716-446655440000/unblock',
+    'https://api.megasend.co.il/unsubscribe/contact/550e8400-e29b-41d4-a716-446655440000/unblock',
     headers={'Authorization': 'Bearer YOUR_TOKEN'},
     json={
         'reason': 'Customer requested to be unblocked'
@@ -290,7 +290,7 @@ Here's a complete example of implementing an unsubscribe flow:
 class UnsubscribeManager {
   constructor(apiToken) {
     this.apiToken = apiToken;
-    this.baseUrl = 'https://cloud.weblix.co.il';
+    this.baseUrl = 'https://api.megasend.co.il';
   }
 
   // Generate unsubscribe code when sending marketing messages
@@ -437,7 +437,7 @@ Create a custom unsubscribe page for better brand consistency:
         
         document.getElementById('unsubscribeBtn').addEventListener('click', async () => {
             try {
-                const response = await fetch(`https://cloud.weblix.co.il/unsubscribe/process/${code}`, {
+                const response = await fetch(`https://api.megasend.co.il/unsubscribe/process/${code}`, {
                     method: 'POST',
                     headers: { 
                         'Authorization': 'Bearer YOUR_TOKEN' // You'd need to pass this from server-side
@@ -523,7 +523,7 @@ Track unsubscribe metrics to improve your messaging:
 
 ```javascript
 async function getUnsubscribeAnalytics(startDate, endDate) {
-  const response = await fetch(`https://cloud.weblix.co.il/analytics/unsubscribes?start_date=${startDate}&end_date=${endDate}`, {
+  const response = await fetch(`https://api.megasend.co.il/analytics/unsubscribes?start_date=${startDate}&end_date=${endDate}`, {
     headers: {
       'Authorization': 'Bearer YOUR_TOKEN'
     }

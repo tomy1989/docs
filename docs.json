@@ -53,7 +53,7 @@
     "website": "https://megasend.co"
   },
   "api": {
-    "baseUrl": "https://cloud.weblix.co.il",
+    "baseUrl": "https://api.megasend.co.il",
     "auth": {
       "method": "bearer"
     }

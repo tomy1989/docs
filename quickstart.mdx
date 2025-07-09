@@ -16,7 +16,7 @@ Before you start, make sure you have:
 - ✅ Your API credentials (JWT token or access token)
 
 <Note>
-Don't have an account yet? [Sign up for MegaSend](https://megasend.co) and follow our onboarding process to connect your WhatsApp Business Account.
+Don't have an account yet? [Sign up for MegaSend](https://app.megasend.co.il) and follow our onboarding process to connect your WhatsApp Business Account.
 </Note>
 
 ## Step 1: Authentication
@@ -34,7 +34,7 @@ Choose your preferred authentication method:
 
     ```bash
     # 1. Login to get JWT token
-    curl -X POST "https://cloud.weblix.co.il/auth/login/credentials" \
+    curl -X POST "https://api.megasend.co.il/auth/login/credentials" \
       -H "Content-Type: application/json" \
       -d '{
         "username": "your-email@example.com",
@@ -44,7 +44,7 @@ Choose your preferred authentication method:
 
     ```bash
     # 2. Create access token using JWT
-    curl -X POST "https://cloud.weblix.co.il/access-tokens/me" \
+    curl -X POST "https://api.megasend.co.il/access-tokens/me" \
       -H "Authorization: Bearer YOUR_JWT_TOKEN" \
       -H "Content-Type: application/json" \
       -d '{
@@ -61,7 +61,7 @@ Choose your preferred authentication method:
     JWT tokens are ideal for web applications where users log in directly.
 
     ```bash
-    curl -X POST "https://cloud.weblix.co.il/auth/login/credentials" \
+    curl -X POST "https://api.megasend.co.il/auth/login/credentials" \
       -H "Content-Type: application/json" \
       -d '{
         "username": "your-email@example.com",
@@ -81,12 +81,12 @@ Every WhatsApp Business Account connection in MegaSend is called an "instance." 
 <CodeGroup>
 
 ```bash cURL
-curl -X GET "https://cloud.weblix.co.il/instances/me" \
+curl -X GET "https://api.megasend.co.il/instances/me" \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
 ```javascript JavaScript
-const response = await fetch('https://cloud.weblix.co.il/instances/me', {
+const response = await fetch('https://api.megasend.co.il/instances/me', {
   headers: {
     'Authorization': 'Bearer YOUR_TOKEN'
   }
@@ -100,7 +100,7 @@ console.log('Instance ID:', instances[0].id);
 import requests
 
 response = requests.get(
-    'https://cloud.weblix.co.il/instances/me',
+    'https://api.megasend.co.il/instances/me',
     headers={'Authorization': 'Bearer YOUR_TOKEN'}
 )
 
@@ -114,7 +114,7 @@ print(f'Instance ID: {instance_id}')
 $curl = curl_init();
 
 curl_setopt_array($curl, [
-    CURLOPT_URL => 'https://cloud.weblix.co.il/instances/me',
+    CURLOPT_URL => 'https://api.megasend.co.il/instances/me',
     CURLOPT_RETURNTRANSFER => true,
     CURLOPT_HTTPHEADER => [
         'Authorization: Bearer YOUR_TOKEN'
@@ -157,7 +157,7 @@ Now let's send a simple text message to a WhatsApp number:
 <CodeGroup>
 
 ```bash cURL
-curl -X POST "https://cloud.weblix.co.il/messages/send" \
+curl -X POST "https://api.megasend.co.il/messages/send" \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -169,7 +169,7 @@ curl -X POST "https://cloud.weblix.co.il/messages/send" \
 ```
 
 ```javascript JavaScript
-const response = await fetch('https://cloud.weblix.co.il/messages/send', {
+const response = await fetch('https://api.megasend.co.il/messages/send', {
   method: 'POST',
   headers: {
     'Authorization': 'Bearer YOUR_TOKEN',
@@ -191,7 +191,7 @@ console.log('Message sent:', result);
 import requests
 
 response = requests.post(
-    'https://cloud.weblix.co.il/messages/send',
+    'https://api.megasend.co.il/messages/send',
     headers={
         'Authorization': 'Bearer YOUR_TOKEN',
         'Content-Type': 'application/json'
@@ -213,7 +213,7 @@ print('Message sent:', result)
 $curl = curl_init();
 
 curl_setopt_array($curl, [
-    CURLOPT_URL => 'https://cloud.weblix.co.il/messages/send',
+    CURLOPT_URL => 'https://api.megasend.co.il/messages/send',
     CURLOPT_RETURNTRANSFER => true,
     CURLOPT_POST => true,
     CURLOPT_HTTPHEADER => [
@@ -261,7 +261,7 @@ echo "Message sent: " . print_r($result, true);
 Messages go through several status updates. You can track the delivery status:
 
 ```bash
-curl -X GET "https://cloud.weblix.co.il/messages/responses?wa_message_id=wamid.HBgMTIzNDU2Nzg5MDEyMzQVAgARGBI5RkY2NzAyQUIyNEE4RkQ2AA==" \
+curl -X GET "https://api.megasend.co.il/messages/responses?wa_message_id=wamid.HBgMTIzNDU2Nzg5MDEyMzQVAgARGBI5RkY2NzAyQUIyNEE4RkQ2AA==" \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
@@ -395,7 +395,7 @@ Always handle potential errors gracefully:
 
 ```javascript
 try {
-  const response = await fetch('https://cloud.weblix.co.il/messages/send', {
+  const response = await fetch('https://api.megasend.co.il/messages/send', {
     method: 'POST',
     headers: {
       'Authorization': 'Bearer YOUR_TOKEN',
@@ -445,7 +445,7 @@ Use these test numbers to experiment without sending real messages:
 For development, use our sandbox environment:
 
 ```javascript
-const SANDBOX_BASE_URL = 'https://cloud.weblix.co.il';
+const SANDBOX_BASE_URL = 'https://api.megasend.co.il';
 ```
 
 ## Getting Help
@@ -455,7 +455,8 @@ If you run into issues:
 1. **Check the error message** - Our API provides detailed error descriptions
 2. **Review the documentation** - Most questions are answered here
 3. **Contact support** - Email [support@megasend.com](mailto:support@megasend.com)
-4. **Check system status** - Visit our status page for any known issues
+4. **Contact team** - Email [team@weblix.co.il](mailto:team@weblix.co.il)
+5. **Check system status** - Visit our status page for any known issues
 
 ## Summary
 

@@ -27,12 +27,12 @@ Get comprehensive message delivery and engagement statistics:
 <CodeGroup>
 
 ```bash cURL
-curl -X GET "https://cloud.weblix.co.il/analytics/messages?start_date=2024-01-01&end_date=2024-01-31&instance_id=550e8400-e29b-41d4-a716-446655440000" \
+curl -X GET "https://api.megasend.co.il/analytics/messages?start_date=2024-01-01&end_date=2024-01-31&instance_id=550e8400-e29b-41d4-a716-446655440000" \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
 ```javascript JavaScript
-const response = await fetch('https://cloud.weblix.co.il/analytics/messages?start_date=2024-01-01&end_date=2024-01-31&instance_id=550e8400-e29b-41d4-a716-446655440000', {
+const response = await fetch('https://api.megasend.co.il/analytics/messages?start_date=2024-01-01&end_date=2024-01-31&instance_id=550e8400-e29b-41d4-a716-446655440000', {
   headers: {
     'Authorization': 'Bearer YOUR_TOKEN'
   }
@@ -46,7 +46,7 @@ console.log('Message Analytics:', analytics);
 import requests
 
 response = requests.get(
-    'https://cloud.weblix.co.il/analytics/messages?start_date=2024-01-01&end_date=2024-01-31&instance_id=550e8400-e29b-41d4-a716-446655440000',
+    'https://api.megasend.co.il/analytics/messages?start_date=2024-01-01&end_date=2024-01-31&instance_id=550e8400-e29b-41d4-a716-446655440000',
     headers={'Authorization': 'Bearer YOUR_TOKEN'}
 )
 
@@ -120,12 +120,12 @@ Analyze performance by message type:
 <CodeGroup>
 
 ```bash cURL
-curl -X GET "https://cloud.weblix.co.il/analytics/messages/by-type?start_date=2024-01-01&end_date=2024-01-31" \
+curl -X GET "https://api.megasend.co.il/analytics/messages/by-type?start_date=2024-01-01&end_date=2024-01-31" \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
 ```javascript JavaScript
-const response = await fetch('https://cloud.weblix.co.il/analytics/messages/by-type?start_date=2024-01-01&end_date=2024-01-31', {
+const response = await fetch('https://api.megasend.co.il/analytics/messages/by-type?start_date=2024-01-01&end_date=2024-01-31', {
   headers: {
     'Authorization': 'Bearer YOUR_TOKEN'
   }
@@ -145,12 +145,12 @@ Track conversation patterns and customer journeys:
 <CodeGroup>
 
 ```bash cURL
-curl -X GET "https://cloud.weblix.co.il/analytics/conversations?start_date=2024-01-01&end_date=2024-01-31&group_by=day" \
+curl -X GET "https://api.megasend.co.il/analytics/conversations?start_date=2024-01-01&end_date=2024-01-31&group_by=day" \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
 ```javascript JavaScript
-const response = await fetch('https://cloud.weblix.co.il/analytics/conversations?start_date=2024-01-01&end_date=2024-01-31&group_by=day', {
+const response = await fetch('https://api.megasend.co.il/analytics/conversations?start_date=2024-01-01&end_date=2024-01-31&group_by=day', {
   headers: {
     'Authorization': 'Bearer YOUR_TOKEN'
   }
@@ -161,7 +161,7 @@ const conversationAnalytics = await response.json();
 
 ```python Python
 response = requests.get(
-    'https://cloud.weblix.co.il/analytics/conversations?start_date=2024-01-01&end_date=2024-01-31&group_by=day',
+    'https://api.megasend.co.il/analytics/conversations?start_date=2024-01-01&end_date=2024-01-31&group_by=day',
     headers={'Authorization': 'Bearer YOUR_TOKEN'}
 )
 
@@ -215,12 +215,12 @@ Monitor WhatsApp instance performance and reliability:
 <CodeGroup>
 
 ```bash cURL
-curl -X GET "https://cloud.weblix.co.il/analytics/instances/550e8400-e29b-41d4-a716-446655440000/performance?start_date=2024-01-01&end_date=2024-01-31" \
+curl -X GET "https://api.megasend.co.il/analytics/instances/550e8400-e29b-41d4-a716-446655440000/performance?start_date=2024-01-01&end_date=2024-01-31" \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
 ```javascript JavaScript
-const response = await fetch('https://cloud.weblix.co.il/analytics/instances/550e8400-e29b-41d4-a716-446655440000/performance?start_date=2024-01-01&end_date=2024-01-31', {
+const response = await fetch('https://api.megasend.co.il/analytics/instances/550e8400-e29b-41d4-a716-446655440000/performance?start_date=2024-01-01&end_date=2024-01-31', {
   headers: {
     'Authorization': 'Bearer YOUR_TOKEN'
   }
@@ -268,12 +268,12 @@ Analyze the performance of your WhatsApp Business templates:
 <CodeGroup>
 
 ```bash cURL
-curl -X GET "https://cloud.weblix.co.il/analytics/templates?start_date=2024-01-01&end_date=2024-01-31&sort_by=delivery_rate" \
+curl -X GET "https://api.megasend.co.il/analytics/templates?start_date=2024-01-01&end_date=2024-01-31&sort_by=delivery_rate" \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
 ```javascript JavaScript
-const response = await fetch('https://cloud.weblix.co.il/analytics/templates?start_date=2024-01-01&end_date=2024-01-31&sort_by=delivery_rate', {
+const response = await fetch('https://api.megasend.co.il/analytics/templates?start_date=2024-01-01&end_date=2024-01-31&sort_by=delivery_rate', {
   headers: {
     'Authorization': 'Bearer YOUR_TOKEN'
   }
@@ -284,7 +284,7 @@ const templateAnalytics = await response.json();
 
 ```python Python
 response = requests.get(
-    'https://cloud.weblix.co.il/analytics/templates?start_date=2024-01-01&end_date=2024-01-31&sort_by=delivery_rate',
+    'https://api.megasend.co.il/analytics/templates?start_date=2024-01-01&end_date=2024-01-31&sort_by=delivery_rate',
     headers={'Authorization': 'Bearer YOUR_TOKEN'}
 )
 
@@ -343,12 +343,12 @@ Understand how customers interact with your messages:
 <CodeGroup>
 
 ```bash cURL
-curl -X GET "https://cloud.weblix.co.il/analytics/engagement?start_date=2024-01-01&end_date=2024-01-31&segment=all" \
+curl -X GET "https://api.megasend.co.il/analytics/engagement?start_date=2024-01-01&end_date=2024-01-31&segment=all" \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
 ```javascript JavaScript
-const response = await fetch('https://cloud.weblix.co.il/analytics/engagement?start_date=2024-01-01&end_date=2024-01-31&segment=all', {
+const response = await fetch('https://api.megasend.co.il/analytics/engagement?start_date=2024-01-01&end_date=2024-01-31&segment=all', {
   headers: {
     'Authorization': 'Bearer YOUR_TOKEN'
   }
@@ -415,12 +415,12 @@ Track the business impact of your WhatsApp messaging:
 <CodeGroup>
 
 ```bash cURL
-curl -X GET "https://cloud.weblix.co.il/analytics/business-intelligence?start_date=2024-01-01&end_date=2024-01-31&include_revenue=true" \
+curl -X GET "https://api.megasend.co.il/analytics/business-intelligence?start_date=2024-01-01&end_date=2024-01-31&include_revenue=true" \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
 ```javascript JavaScript
-const response = await fetch('https://cloud.weblix.co.il/analytics/business-intelligence?start_date=2024-01-01&end_date=2024-01-31&include_revenue=true', {
+const response = await fetch('https://api.megasend.co.il/analytics/business-intelligence?start_date=2024-01-01&end_date=2024-01-31&include_revenue=true', {
   headers: {
     'Authorization': 'Bearer YOUR_TOKEN'
   }
@@ -431,7 +431,7 @@ const businessAnalytics = await response.json();
 
 ```python Python
 response = requests.get(
-    'https://cloud.weblix.co.il/analytics/business-intelligence?start_date=2024-01-01&end_date=2024-01-31&include_revenue=true',
+    'https://api.megasend.co.il/analytics/business-intelligence?start_date=2024-01-01&end_date=2024-01-31&include_revenue=true',
     headers={'Authorization': 'Bearer YOUR_TOKEN'}
 )
 
@@ -486,12 +486,12 @@ Get real-time metrics for live monitoring:
 <CodeGroup>
 
 ```bash cURL
-curl -X GET "https://cloud.weblix.co.il/analytics/real-time" \
+curl -X GET "https://api.megasend.co.il/analytics/real-time" \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
 ```javascript JavaScript
-const response = await fetch('https://cloud.weblix.co.il/analytics/real-time', {
+const response = await fetch('https://api.megasend.co.il/analytics/real-time', {
   headers: {
     'Authorization': 'Bearer YOUR_TOKEN'
   }
@@ -502,7 +502,7 @@ const liveAnalytics = await response.json();
 
 ```python Python
 response = requests.get(
-    'https://cloud.weblix.co.il/analytics/real-time',
+    'https://api.megasend.co.il/analytics/real-time',
     headers={'Authorization': 'Bearer YOUR_TOKEN'}
 )
 
@@ -551,7 +551,7 @@ Build custom analytics reports with specific metrics:
 <CodeGroup>
 
 ```bash cURL
-curl -X POST "https://cloud.weblix.co.il/analytics/custom-report" \
+curl -X POST "https://api.megasend.co.il/analytics/custom-report" \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -598,7 +598,7 @@ const reportConfig = {
   export_format: 'json'
 };
 
-const response = await fetch('https://cloud.weblix.co.il/analytics/custom-report', {
+const response = await fetch('https://api.megasend.co.il/analytics/custom-report', {
   method: 'POST',
   headers: {
     'Authorization': 'Bearer YOUR_TOKEN',
@@ -620,7 +620,7 @@ Example implementation for a real-time dashboard:
 class MegaSendAnalytics {
   constructor(apiToken) {
     this.apiToken = apiToken;
-    this.baseUrl = 'https://cloud.weblix.co.il';
+    this.baseUrl = 'https://api.megasend.co.il';
   }
 
   async getMessageAnalytics(startDate, endDate, instanceId = null) {
@@ -667,7 +667,7 @@ class MegaSendAnalytics {
 
   // Real-time updates with WebSocket
   startRealTimeUpdates(callback) {
-    const ws = new WebSocket(`wss://cloud.weblix.co.il/analytics/ws?token=${this.apiToken}`);
+    const ws = new WebSocket(`wss://api.megasend.co.il/analytics/ws?token=${this.apiToken}`);
     
     ws.onmessage = (event) => {
       const data = JSON.parse(event.data);
@@ -766,7 +766,7 @@ Handle analytics API errors gracefully:
 ```javascript
 async function fetchAnalyticsWithErrorHandling(endpoint, params) {
   try {
-    const response = await fetch(`https://cloud.weblix.co.il/analytics/${endpoint}?${params}`, {
+    const response = await fetch(`https://api.megasend.co.il/analytics/${endpoint}?${params}`, {
       headers: {
         'Authorization': 'Bearer YOUR_TOKEN'
       }

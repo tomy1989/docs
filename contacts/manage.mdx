@@ -25,7 +25,7 @@ Add a new contact to your system:
 <CodeGroup>
 
 ```bash cURL
-curl -X POST "https://cloud.weblix.co.il/contacts" \
+curl -X POST "https://api.megasend.co.il/contacts" \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -64,7 +64,7 @@ const newContact = {
   }
 };
 
-const response = await fetch('https://cloud.weblix.co.il/contacts', {
+const response = await fetch('https://api.megasend.co.il/contacts', {
   method: 'POST',
   headers: {
     'Authorization': 'Bearer YOUR_TOKEN',
@@ -97,7 +97,7 @@ new_contact = {
 }
 
 response = requests.post(
-    'https://cloud.weblix.co.il/contacts',
+    'https://api.megasend.co.il/contacts',
     headers={'Authorization': 'Bearer YOUR_TOKEN'},
     json=new_contact
 )
@@ -145,12 +145,12 @@ Retrieve all contacts with filtering and pagination:
 <CodeGroup>
 
 ```bash cURL
-curl -X GET "https://cloud.weblix.co.il/contacts?limit=20&tags=customer&status=active" \
+curl -X GET "https://api.megasend.co.il/contacts?limit=20&tags=customer&status=active" \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
 ```javascript JavaScript
-const response = await fetch('https://cloud.weblix.co.il/contacts?limit=20&tags=customer&status=active', {
+const response = await fetch('https://api.megasend.co.il/contacts?limit=20&tags=customer&status=active', {
   headers: {
     'Authorization': 'Bearer YOUR_TOKEN'
   }
@@ -161,7 +161,7 @@ const contacts = await response.json();
 
 ```python Python
 response = requests.get(
-    'https://cloud.weblix.co.il/contacts?limit=20&tags=customer&status=active',
+    'https://api.megasend.co.il/contacts?limit=20&tags=customer&status=active',
     headers={'Authorization': 'Bearer YOUR_TOKEN'}
 )
 
@@ -216,12 +216,12 @@ Retrieve detailed information about a specific contact:
 <CodeGroup>
 
 ```bash cURL
-curl -X GET "https://cloud.weblix.co.il/contacts/550e8400-e29b-41d4-a716-446655440000" \
+curl -X GET "https://api.megasend.co.il/contacts/550e8400-e29b-41d4-a716-446655440000" \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
 ```javascript JavaScript
-const response = await fetch('https://cloud.weblix.co.il/contacts/550e8400-e29b-41d4-a716-446655440000', {
+const response = await fetch('https://api.megasend.co.il/contacts/550e8400-e29b-41d4-a716-446655440000', {
   headers: {
     'Authorization': 'Bearer YOUR_TOKEN'
   }
@@ -232,7 +232,7 @@ const contact = await response.json();
 
 ```python Python
 response = requests.get(
-    'https://cloud.weblix.co.il/contacts/550e8400-e29b-41d4-a716-446655440000',
+    'https://api.megasend.co.il/contacts/550e8400-e29b-41d4-a716-446655440000',
     headers={'Authorization': 'Bearer YOUR_TOKEN'}
 )
 
@@ -248,7 +248,7 @@ Modify contact information and preferences:
 <CodeGroup>
 
 ```bash cURL
-curl -X PUT "https://cloud.weblix.co.il/contacts/550e8400-e29b-41d4-a716-446655440000" \
+curl -X PUT "https://api.megasend.co.il/contacts/550e8400-e29b-41d4-a716-446655440000" \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -287,7 +287,7 @@ const updates = {
   }
 };
 
-const response = await fetch('https://cloud.weblix.co.il/contacts/550e8400-e29b-41d4-a716-446655440000', {
+const response = await fetch('https://api.megasend.co.il/contacts/550e8400-e29b-41d4-a716-446655440000', {
   method: 'PUT',
   headers: {
     'Authorization': 'Bearer YOUR_TOKEN',
@@ -308,12 +308,12 @@ Retrieve conversation history for a contact:
 <CodeGroup>
 
 ```bash cURL
-curl -X GET "https://cloud.weblix.co.il/contacts/550e8400-e29b-41d4-a716-446655440000/messages?limit=50" \
+curl -X GET "https://api.megasend.co.il/contacts/550e8400-e29b-41d4-a716-446655440000/messages?limit=50" \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
 ```javascript JavaScript
-const response = await fetch('https://cloud.weblix.co.il/contacts/550e8400-e29b-41d4-a716-446655440000/messages?limit=50', {
+const response = await fetch('https://api.megasend.co.il/contacts/550e8400-e29b-41d4-a716-446655440000/messages?limit=50', {
   headers: {
     'Authorization': 'Bearer YOUR_TOKEN'
   }
@@ -362,12 +362,12 @@ Retrieve detailed engagement analytics for a contact:
 <CodeGroup>
 
 ```bash cURL
-curl -X GET "https://cloud.weblix.co.il/contacts/550e8400-e29b-41d4-a716-446655440000/engagement" \
+curl -X GET "https://api.megasend.co.il/contacts/550e8400-e29b-41d4-a716-446655440000/engagement" \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
 ```javascript JavaScript
-const response = await fetch('https://cloud.weblix.co.il/contacts/550e8400-e29b-41d4-a716-446655440000/engagement', {
+const response = await fetch('https://api.megasend.co.il/contacts/550e8400-e29b-41d4-a716-446655440000/engagement', {
   headers: {
     'Authorization': 'Bearer YOUR_TOKEN'
   }
@@ -418,7 +418,7 @@ Organize contacts into groups for targeted messaging:
 <CodeGroup>
 
 ```bash cURL
-curl -X POST "https://cloud.weblix.co.il/contacts/groups" \
+curl -X POST "https://api.megasend.co.il/contacts/groups" \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -443,7 +443,7 @@ const newGroup = {
   }
 };
 
-const response = await fetch('https://cloud.weblix.co.il/contacts/groups', {
+const response = await fetch('https://api.megasend.co.il/contacts/groups', {
   method: 'POST',
   headers: {
     'Authorization': 'Bearer YOUR_TOKEN',
@@ -460,7 +460,7 @@ const response = await fetch('https://cloud.weblix.co.il/contacts/groups', {
 <CodeGroup>
 
 ```bash cURL
-curl -X POST "https://cloud.weblix.co.il/contacts/groups/group_123/members" \
+curl -X POST "https://api.megasend.co.il/contacts/groups/group_123/members" \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -472,7 +472,7 @@ curl -X POST "https://cloud.weblix.co.il/contacts/groups/group_123/members" \
 ```
 
 ```javascript JavaScript
-const response = await fetch('https://cloud.weblix.co.il/contacts/groups/group_123/members', {
+const response = await fetch('https://api.megasend.co.il/contacts/groups/group_123/members', {
   method: 'POST',
   headers: {
     'Authorization': 'Bearer YOUR_TOKEN',
@@ -496,7 +496,7 @@ const response = await fetch('https://cloud.weblix.co.il/contacts/groups/group_1
 <CodeGroup>
 
 ```bash cURL
-curl -X PUT "https://cloud.weblix.co.il/contacts/550e8400-e29b-41d4-a716-446655440000/preferences" \
+curl -X PUT "https://api.megasend.co.il/contacts/550e8400-e29b-41d4-a716-446655440000/preferences" \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -517,7 +517,7 @@ const preferences = {
   topics_of_interest: ['tech', 'business', 'offers']
 };
 
-const response = await fetch('https://cloud.weblix.co.il/contacts/550e8400-e29b-41d4-a716-446655440000/preferences', {
+const response = await fetch('https://api.megasend.co.il/contacts/550e8400-e29b-41d4-a716-446655440000/preferences', {
   method: 'PUT',
   headers: {
     'Authorization': 'Bearer YOUR_TOKEN',
@@ -538,7 +538,7 @@ Import multiple contacts from CSV or JSON:
 <CodeGroup>
 
 ```bash cURL
-curl -X POST "https://cloud.weblix.co.il/contacts/import" \
+curl -X POST "https://api.megasend.co.il/contacts/import" \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -587,7 +587,7 @@ const importData = {
   }
 };
 
-const response = await fetch('https://cloud.weblix.co.il/contacts/import', {
+const response = await fetch('https://api.megasend.co.il/contacts/import', {
   method: 'POST',
   headers: {
     'Authorization': 'Bearer YOUR_TOKEN',
@@ -606,12 +606,12 @@ Export contacts to CSV or JSON format:
 <CodeGroup>
 
 ```bash cURL
-curl -X GET "https://cloud.weblix.co.il/contacts/export?format=csv&tags=customer&include_engagement=true" \
+curl -X GET "https://api.megasend.co.il/contacts/export?format=csv&tags=customer&include_engagement=true" \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
 ```javascript JavaScript
-const response = await fetch('https://cloud.weblix.co.il/contacts/export?format=csv&tags=customer&include_engagement=true', {
+const response = await fetch('https://api.megasend.co.il/contacts/export?format=csv&tags=customer&include_engagement=true', {
   headers: {
     'Authorization': 'Bearer YOUR_TOKEN'
   }
@@ -631,7 +631,7 @@ Perform complex searches across contact data:
 <CodeGroup>
 
 ```bash cURL
-curl -X POST "https://cloud.weblix.co.il/contacts/search" \
+curl -X POST "https://api.megasend.co.il/contacts/search" \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -694,7 +694,7 @@ const searchQuery = {
   limit: 50
 };
 
-const response = await fetch('https://cloud.weblix.co.il/contacts/search', {
+const response = await fetch('https://api.megasend.co.il/contacts/search', {
   method: 'POST',
   headers: {
     'Authorization': 'Bearer YOUR_TOKEN',
@@ -714,7 +714,7 @@ const response = await fetch('https://cloud.weblix.co.il/contacts/search', {
 class ContactManager {
   constructor(apiToken) {
     this.apiToken = apiToken;
-    this.baseUrl = 'https://cloud.weblix.co.il';
+    this.baseUrl = 'https://api.megasend.co.il';
   }
 
   async createContact(contactData) {

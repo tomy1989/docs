@@ -11,7 +11,7 @@ The MegaSend API is organized around REST principles. Our API accepts JSON-encod
 All API requests should be made to:
 
 ```
-https://cloud.weblix.co.il
+https://api.megasend.co.il
 ```
 
 ## Authentication
@@ -22,7 +22,7 @@ The MegaSend API uses Bearer token authentication. Include your API token in the
 Authorization: Bearer YOUR_API_TOKEN
 ```
 
-You can obtain your API token from the [MegaSend Dashboard](https://dashboard.megasend.co/api-keys).
+You can obtain your API token from the [MegaSend Dashboard](https://app.megasend.co.il).
 
 ## Request Format
 
@@ -31,7 +31,7 @@ You can obtain your API token from the [MegaSend Dashboard](https://dashboard.me
 All POST and PUT requests must include the `Content-Type: application/json` header:
 
 ```bash
-curl -X POST "https://cloud.weblix.co.il/messages/send" \
+curl -X POST "https://api.megasend.co.il/messages/send" \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"instance_id": "...", "recipient": "..."}'
@@ -144,11 +144,11 @@ List endpoints support pagination using cursor-based pagination:
 
 ```bash
 # First page
-curl "https://cloud.weblix.co.il/messages?limit=20" \
+curl "https://api.megasend.co.il/messages?limit=20" \
   -H "Authorization: Bearer YOUR_TOKEN"
 
 # Next page
-curl "https://cloud.weblix.co.il/messages?limit=20&cursor=eyJpZCI6Im1zZ18yIiwiZGlyZWN0aW9uIjoibmV4dCJ9" \
+curl "https://api.megasend.co.il/messages?limit=20&cursor=eyJpZCI6Im1zZ18yIiwiZGlyZWN0aW9uIjoibmV4dCJ9" \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
@@ -202,7 +202,7 @@ async function makeRequestWithRetry(url, options, maxRetries = 3) {
 For POST requests that create resources, you can include an idempotency key to prevent duplicate requests:
 
 ```bash
-curl -X POST "https://cloud.weblix.co.il/messages/send" \
+curl -X POST "https://api.megasend.co.il/messages/send" \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -H "Idempotency-Key: msg_unique_key_123" \
@@ -308,7 +308,7 @@ go get github.com/megasend/go-sdk
 The API is versioned using URL path versioning. The current version is `v1`:
 
 ```
-https://cloud.weblix.co.il/v1/messages/send
+https://api.megasend.co.il/v1/messages/send
 ```
 
 When breaking changes are introduced, a new version will be released. We maintain backward compatibility for at least 12 months.
@@ -320,7 +320,7 @@ When breaking changes are introduced, a new version will be released. We maintai
 Use the sandbox environment for testing:
 
 ```
-https://api-sandbox.megasend.co
+https://api.megasend.co.il
 ```
 
 Sandbox features:
@@ -346,8 +346,9 @@ Use these test phone numbers that don't send actual messages:
 
 ### Help & Support
 - Email: support@megasend.com
-- Documentation: https://docs.megasend.co
-- Status Page: https://status.megasend.co
+- Team Contact: team@weblix.co.il
+- Documentation: https://docs.megasend.co.il
+- Status Page: https://status.megasend.co.il
 
 ### Community
 - Discord: [Join our community](https://discord.gg/megasend)
