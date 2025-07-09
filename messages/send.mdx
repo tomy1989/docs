@@ -1,0 +1,769 @@
+---
+title: 'Send Messages'
+description: 'Learn how to send WhatsApp messages using the MegaSend API with text, media, and interactive content'
+icon: 'paper-plane'
+---
+
+The MegaSend API allows you to send various types of WhatsApp messages including text, images, documents, videos, audio, and interactive messages with buttons and lists.
+
+## Basic Text Message
+
+Send a simple text message to any WhatsApp number:
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST "https://api.megasend.co/messages/send" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "instance_id": "550e8400-e29b-41d4-a716-446655440000",
+    "recipient": "+1234567890",
+    "message_type": "text",
+    "text": "Hello! Welcome to our service 👋"
+  }'
+```
+
+```javascript JavaScript
+const response = await fetch('https://api.megasend.co/messages/send', {
+  method: 'POST',
+  headers: {
+    'Authorization': 'Bearer YOUR_TOKEN',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    instance_id: '550e8400-e29b-41d4-a716-446655440000',
+    recipient: '+1234567890',
+    message_type: 'text',
+    text: 'Hello! Welcome to our service 👋'
+  })
+});
+
+const result = await response.json();
+```
+
+```python Python
+import requests
+
+response = requests.post(
+    'https://api.megasend.co/messages/send',
+    headers={
+        'Authorization': 'Bearer YOUR_TOKEN',
+        'Content-Type': 'application/json'
+    },
+    json={
+        'instance_id': '550e8400-e29b-41d4-a716-446655440000',
+        'recipient': '+1234567890',
+        'message_type': 'text',
+        'text': 'Hello! Welcome to our service 👋'
+    }
+)
+
+result = response.json()
+```
+
+```php PHP
+<?php
+$response = file_get_contents('https://api.megasend.co/messages/send', false, stream_context_create([
+    'http' => [
+        'method' => 'POST',
+        'header' => [
+            'Authorization: Bearer YOUR_TOKEN',
+            'Content-Type: application/json'
+        ],
+        'content' => json_encode([
+            'instance_id' => '550e8400-e29b-41d4-a716-446655440000',
+            'recipient' => '+1234567890',
+            'message_type' => 'text',
+            'text' => 'Hello! Welcome to our service 👋'
+        ])
+    ]
+]));
+
+$result = json_decode($response, true);
+?>
+```
+
+</CodeGroup>
+
+## Image Messages
+
+Send images with optional captions:
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST "https://api.megasend.co/messages/send" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "instance_id": "550e8400-e29b-41d4-a716-446655440000",
+    "recipient": "+1234567890",
+    "message_type": "image",
+    "image": {
+      "url": "https://example.com/product-image.jpg",
+      "caption": "Check out our new product! 🎉"
+    }
+  }'
+```
+
+```javascript JavaScript
+const message = {
+  instance_id: '550e8400-e29b-41d4-a716-446655440000',
+  recipient: '+1234567890',
+  message_type: 'image',
+  image: {
+    url: 'https://example.com/product-image.jpg',
+    caption: 'Check out our new product! 🎉'
+  }
+};
+
+const response = await fetch('https://api.megasend.co/messages/send', {
+  method: 'POST',
+  headers: {
+    'Authorization': 'Bearer YOUR_TOKEN',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify(message)
+});
+```
+
+```python Python
+message = {
+    'instance_id': '550e8400-e29b-41d4-a716-446655440000',
+    'recipient': '+1234567890',
+    'message_type': 'image',
+    'image': {
+        'url': 'https://example.com/product-image.jpg',
+        'caption': 'Check out our new product! 🎉'
+    }
+}
+
+response = requests.post(
+    'https://api.megasend.co/messages/send',
+    headers={'Authorization': 'Bearer YOUR_TOKEN'},
+    json=message
+)
+```
+
+</CodeGroup>
+
+### Image Requirements
+
+- **Format**: JPEG, PNG, WebP
+- **Size**: Maximum 5MB
+- **URL**: Must be publicly accessible over HTTPS
+- **Caption**: Optional, maximum 1,024 characters
+
+## Document Messages
+
+Send PDF files, Word documents, spreadsheets, and other file types:
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST "https://api.megasend.co/messages/send" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "instance_id": "550e8400-e29b-41d4-a716-446655440000",
+    "recipient": "+1234567890",
+    "message_type": "document",
+    "document": {
+      "url": "https://example.com/invoice.pdf",
+      "filename": "Invoice_12345.pdf",
+      "caption": "Your invoice is ready for download"
+    }
+  }'
+```
+
+```javascript JavaScript
+const documentMessage = {
+  instance_id: '550e8400-e29b-41d4-a716-446655440000',
+  recipient: '+1234567890',
+  message_type: 'document',
+  document: {
+    url: 'https://example.com/invoice.pdf',
+    filename: 'Invoice_12345.pdf',
+    caption: 'Your invoice is ready for download'
+  }
+};
+```
+
+</CodeGroup>
+
+### Document Requirements
+
+- **Size**: Maximum 100MB
+- **Types**: PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX, TXT, and more
+- **Filename**: Required, helps users identify the file type
+
+## Video Messages
+
+Send video content with optional captions:
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST "https://api.megasend.co/messages/send" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "instance_id": "550e8400-e29b-41d4-a716-446655440000",
+    "recipient": "+1234567890",
+    "message_type": "video",
+    "video": {
+      "url": "https://example.com/product-demo.mp4",
+      "caption": "Watch our product demo video!"
+    }
+  }'
+```
+
+```javascript JavaScript
+const videoMessage = {
+  instance_id: '550e8400-e29b-41d4-a716-446655440000',
+  recipient: '+1234567890',
+  message_type: 'video',
+  video: {
+    url: 'https://example.com/product-demo.mp4',
+    caption: 'Watch our product demo video!'
+  }
+};
+```
+
+</CodeGroup>
+
+### Video Requirements
+
+- **Format**: MP4, 3GPP
+- **Size**: Maximum 16MB
+- **Duration**: Up to 10 minutes recommended
+- **Resolution**: Up to 1080p
+
+## Audio Messages
+
+Send voice notes and audio files:
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST "https://api.megasend.co/messages/send" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "instance_id": "550e8400-e29b-41d4-a716-446655440000",
+    "recipient": "+1234567890",
+    "message_type": "audio",
+    "audio": {
+      "url": "https://example.com/voice-message.mp3"
+    }
+  }'
+```
+
+```javascript JavaScript
+const audioMessage = {
+  instance_id: '550e8400-e29b-41d4-a716-446655440000',
+  recipient: '+1234567890',
+  message_type: 'audio',
+  audio: {
+    url: 'https://example.com/voice-message.mp3'
+  }
+};
+```
+
+</CodeGroup>
+
+### Audio Requirements
+
+- **Format**: MP3, AAC, AMR, OGG
+- **Size**: Maximum 16MB
+- **Duration**: Up to 30 minutes
+
+## Interactive Messages
+
+### Button Messages
+
+Create messages with action buttons:
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST "https://api.megasend.co/messages/send" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "instance_id": "550e8400-e29b-41d4-a716-446655440000",
+    "recipient": "+1234567890",
+    "message_type": "interactive",
+    "interactive": {
+      "type": "button",
+      "body": {
+        "text": "Thank you for your order! How would you like to proceed?"
+      },
+      "action": {
+        "buttons": [
+          {
+            "type": "reply",
+            "reply": {
+              "id": "track_order",
+              "title": "Track Order"
+            }
+          },
+          {
+            "type": "reply",
+            "reply": {
+              "id": "contact_support",
+              "title": "Contact Support"
+            }
+          },
+          {
+            "type": "reply",
+            "reply": {
+              "id": "view_receipt",
+              "title": "View Receipt"
+            }
+          }
+        ]
+      }
+    }
+  }'
+```
+
+```javascript JavaScript
+const buttonMessage = {
+  instance_id: '550e8400-e29b-41d4-a716-446655440000',
+  recipient: '+1234567890',
+  message_type: 'interactive',
+  interactive: {
+    type: 'button',
+    body: {
+      text: 'Thank you for your order! How would you like to proceed?'
+    },
+    action: {
+      buttons: [
+        {
+          type: 'reply',
+          reply: {
+            id: 'track_order',
+            title: 'Track Order'
+          }
+        },
+        {
+          type: 'reply',
+          reply: {
+            id: 'contact_support',
+            title: 'Contact Support'
+          }
+        },
+        {
+          type: 'reply',
+          reply: {
+            id: 'view_receipt',
+            title: 'View Receipt'
+          }
+        }
+      ]
+    }
+  }
+};
+```
+
+</CodeGroup>
+
+### List Messages
+
+Create messages with selectable lists:
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST "https://api.megasend.co/messages/send" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "instance_id": "550e8400-e29b-41d4-a716-446655440000",
+    "recipient": "+1234567890",
+    "message_type": "interactive",
+    "interactive": {
+      "type": "list",
+      "header": {
+        "type": "text",
+        "text": "Our Services"
+      },
+      "body": {
+        "text": "Please select the service you are interested in:"
+      },
+      "footer": {
+        "text": "We are here to help!"
+      },
+      "action": {
+        "button": "View Services",
+        "sections": [
+          {
+            "title": "Popular Services",
+            "rows": [
+              {
+                "id": "web_design",
+                "title": "Web Design",
+                "description": "Custom website design and development"
+              },
+              {
+                "id": "mobile_app",
+                "title": "Mobile App",
+                "description": "iOS and Android app development"
+              }
+            ]
+          },
+          {
+            "title": "Other Services",
+            "rows": [
+              {
+                "id": "consulting",
+                "title": "Consulting",
+                "description": "Technical consulting and strategy"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  }'
+```
+
+```javascript JavaScript
+const listMessage = {
+  instance_id: '550e8400-e29b-41d4-a716-446655440000',
+  recipient: '+1234567890',
+  message_type: 'interactive',
+  interactive: {
+    type: 'list',
+    header: {
+      type: 'text',
+      text: 'Our Services'
+    },
+    body: {
+      text: 'Please select the service you are interested in:'
+    },
+    footer: {
+      text: 'We are here to help!'
+    },
+    action: {
+      button: 'View Services',
+      sections: [
+        {
+          title: 'Popular Services',
+          rows: [
+            {
+              id: 'web_design',
+              title: 'Web Design',
+              description: 'Custom website design and development'
+            },
+            {
+              id: 'mobile_app',
+              title: 'Mobile App',
+              description: 'iOS and Android app development'
+            }
+          ]
+        }
+      ]
+    }
+  }
+};
+```
+
+</CodeGroup>
+
+## Template Messages
+
+Use pre-approved WhatsApp Business templates for marketing and notifications:
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST "https://api.megasend.co/messages/send" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "instance_id": "550e8400-e29b-41d4-a716-446655440000",
+    "recipient": "+1234567890",
+    "message_type": "template",
+    "template": {
+      "name": "order_confirmation",
+      "language": "en",
+      "components": [
+        {
+          "type": "header",
+          "parameters": [
+            {
+              "type": "text",
+              "text": "ORD-12345"
+            }
+          ]
+        },
+        {
+          "type": "body",
+          "parameters": [
+            {
+              "type": "text",
+              "text": "John Doe"
+            },
+            {
+              "type": "text",
+              "text": "$29.99"
+            },
+            {
+              "type": "text",
+              "text": "Tomorrow"
+            }
+          ]
+        }
+      ]
+    }
+  }'
+```
+
+```javascript JavaScript
+const templateMessage = {
+  instance_id: '550e8400-e29b-41d4-a716-446655440000',
+  recipient: '+1234567890',
+  message_type: 'template',
+  template: {
+    name: 'order_confirmation',
+    language: 'en',
+    components: [
+      {
+        type: 'body',
+        parameters: [
+          { type: 'text', text: 'John Doe' },
+          { type: 'text', text: '$29.99' },
+          { type: 'text', text: 'Tomorrow' }
+        ]
+      }
+    ]
+  }
+};
+```
+
+</CodeGroup>
+
+<Note>
+Template messages require pre-approval from WhatsApp. Learn more about [creating templates](/templates/create).
+</Note>
+
+## Location Messages
+
+Share location coordinates:
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST "https://api.megasend.co/messages/send" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "instance_id": "550e8400-e29b-41d4-a716-446655440000",
+    "recipient": "+1234567890",
+    "message_type": "location",
+    "location": {
+      "latitude": 37.7749,
+      "longitude": -122.4194,
+      "name": "Our Office",
+      "address": "123 Business Street, San Francisco, CA"
+    }
+  }'
+```
+
+```javascript JavaScript
+const locationMessage = {
+  instance_id: '550e8400-e29b-41d4-a716-446655440000',
+  recipient: '+1234567890',
+  message_type: 'location',
+  location: {
+    latitude: 37.7749,
+    longitude: -122.4194,
+    name: 'Our Office',
+    address: '123 Business Street, San Francisco, CA'
+  }
+};
+```
+
+</CodeGroup>
+
+## Contact Messages
+
+Share contact information:
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST "https://api.megasend.co/messages/send" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "instance_id": "550e8400-e29b-41d4-a716-446655440000",
+    "recipient": "+1234567890",
+    "message_type": "contact",
+    "contact": {
+      "name": {
+        "formatted_name": "John Smith",
+        "first_name": "John",
+        "last_name": "Smith"
+      },
+      "phones": [
+        {
+          "phone": "+1234567890",
+          "type": "WORK"
+        }
+      ],
+      "emails": [
+        {
+          "email": "john@example.com",
+          "type": "WORK"
+        }
+      ]
+    }
+  }'
+```
+
+```javascript JavaScript
+const contactMessage = {
+  instance_id: '550e8400-e29b-41d4-a716-446655440000',
+  recipient: '+1234567890',
+  message_type: 'contact',
+  contact: {
+    name: {
+      formatted_name: 'John Smith',
+      first_name: 'John',
+      last_name: 'Smith'
+    },
+    phones: [
+      {
+        phone: '+1234567890',
+        type: 'WORK'
+      }
+    ],
+    emails: [
+      {
+        email: 'john@example.com',
+        type: 'WORK'
+      }
+    ]
+  }
+};
+```
+
+</CodeGroup>
+
+## Response Format
+
+All message sending requests return a consistent response format:
+
+```json
+{
+  "id": "msg_abc123def456",
+  "wa_message_id": "wamid.HBgMTIzNDU2Nzg5MDEyMzQVAgARGBI5RkY2NzAyQUIyNEE4RkQ2AA==",
+  "status": "sent",
+  "recipient": "+1234567890",
+  "message_type": "text",
+  "instance_id": "550e8400-e29b-41d4-a716-446655440000",
+  "created_at": "2024-01-15T10:35:00Z",
+  "estimated_delivery": "2024-01-15T10:35:03Z"
+}
+```
+
+### Response Fields
+
+- **`id`** - Unique message identifier in MegaSend
+- **`wa_message_id`** - WhatsApp's unique message identifier
+- **`status`** - Current message status (`sent`, `delivered`, `read`, `failed`)
+- **`recipient`** - Phone number that received the message
+- **`message_type`** - Type of message sent
+- **`instance_id`** - WhatsApp Business instance used
+- **`created_at`** - When the message was created
+- **`estimated_delivery`** - Estimated delivery time
+
+## Error Handling
+
+Handle common errors gracefully:
+
+```javascript
+try {
+  const response = await fetch('https://api.megasend.co/messages/send', {
+    method: 'POST',
+    headers: {
+      'Authorization': 'Bearer YOUR_TOKEN',
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(messageData)
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    
+    switch (response.status) {
+      case 400:
+        console.error('Invalid request:', error.detail);
+        break;
+      case 401:
+        console.error('Authentication failed:', error.detail);
+        break;
+      case 429:
+        console.error('Rate limit exceeded:', error.detail);
+        // Implement retry with exponential backoff
+        break;
+      case 500:
+        console.error('Server error:', error.detail);
+        break;
+      default:
+        console.error('Unexpected error:', error.detail);
+    }
+    return;
+  }
+
+  const result = await response.json();
+  console.log('Message sent successfully:', result.id);
+  
+} catch (error) {
+  console.error('Network error:', error.message);
+}
+```
+
+## Common Error Codes
+
+| Code | Message | Solution |
+|------|---------|----------|
+| 400 | Invalid recipient phone number | Use international format (+1234567890) |
+| 401 | Authentication failed | Check your token validity |
+| 403 | Insufficient permissions | Verify instance ownership |
+| 429 | Rate limit exceeded | Implement exponential backoff |
+| 500 | Media download failed | Ensure media URL is publicly accessible |
+
+## Best Practices
+
+### Message Content
+
+1. **Keep it personal** - WhatsApp is a personal messaging platform
+2. **Use emojis appropriately** - They can make messages more engaging
+3. **Include clear calls-to-action** - Tell users what to do next
+4. **Respect character limits** - Text messages have a 4,096 character limit
+
+### Media Guidelines
+
+1. **Optimize file sizes** - Smaller files deliver faster
+2. **Use HTTPS URLs** - All media URLs must be secure
+3. **Set appropriate filenames** - Help users identify file types
+4. **Test media accessibility** - Ensure URLs are publicly accessible
+
+### Performance Tips
+
+1. **Batch similar requests** - Use bulk sending for multiple recipients
+2. **Handle rate limits** - Implement retry logic with exponential backoff
+3. **Cache media URLs** - Avoid uploading the same files repeatedly
+4. **Monitor delivery status** - Track message success rates
+
+## Next Steps
+
+- [Send bulk messages](/messages/bulk-send) to multiple recipients
+- [Create message templates](/templates/create) for marketing campaigns
+- [Set up webhooks](/webhooks/setup) to receive status updates
+- [Track message analytics](/analytics/overview) for insights 

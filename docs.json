@@ -1,102 +1,124 @@
 {
   "$schema": "https://mintlify.com/docs.json",
   "theme": "mint",
-  "name": "Mint Starter Kit",
-  "colors": {
-    "primary": "#16A34A",
-    "light": "#07C983",
-    "dark": "#15803D"
-  },
-  "favicon": "/favicon.svg",
-  "navigation": {
-    "tabs": [
-      {
-        "tab": "Guides",
-        "groups": [
-          {
-            "group": "Get Started",
-            "pages": [
-              "index",
-              "quickstart",
-              "development"
-            ]
-          },
-          {
-            "group": "Essentials",
-            "pages": [
-              "essentials/markdown",
-              "essentials/code",
-              "essentials/images",
-              "essentials/settings",
-              "essentials/navigation",
-              "essentials/reusable-snippets"
-            ]
-          }
-        ]
-      },
-      {
-        "tab": "API Reference",
-        "groups": [
-          {
-            "group": "API Documentation",
-            "pages": [
-              "api-reference/introduction"
-            ]
-          },
-          {
-            "group": "Endpoint Examples",
-            "pages": [
-              "api-reference/endpoint/get",
-              "api-reference/endpoint/create",
-              "api-reference/endpoint/delete",
-              "api-reference/endpoint/webhook"
-            ]
-          }
-        ]
-      }
-    ],
-    "global": {
-      "anchors": [
-        {
-          "anchor": "Documentation",
-          "href": "https://mintlify.com/docs",
-          "icon": "book-open-cover"
-        },
-        {
-          "anchor": "Community",
-          "href": "https://mintlify.com/community",
-          "icon": "slack"
-        },
-        {
-          "anchor": "Blog",
-          "href": "https://mintlify.com/blog",
-          "icon": "newspaper"
-        }
-      ]
-    }
-  },
+  "name": "MegaSend API",
   "logo": {
     "light": "/logo/light.svg",
     "dark": "/logo/dark.svg"
   },
-  "navbar": {
-    "links": [
-      {
-        "label": "Support",
-        "href": "mailto:hi@mintlify.com"
-      }
-    ],
-    "primary": {
-      "type": "button",
-      "label": "Dashboard",
-      "href": "https://dashboard.mintlify.com"
+  "favicon": "/favicon.svg",
+  "colors": {
+    "primary": "#25D366",
+    "light": "#40E884",
+    "dark": "#128C7E"
+  },
+  "topbarLinks": [
+    {
+      "name": "Support",
+      "url": "mailto:support@megasend.co"
+    }
+  ],
+  "navigation": [
+    {
+      "group": "Getting Started",
+      "pages": [
+        "introduction",
+        "authentication",
+        "quickstart"
+      ]
+    },
+    {
+      "group": "Core Features",
+      "pages": [
+        "messages/send",
+        "messages/bulk-send",
+        "templates/create",
+        "templates/list",
+        "instances/list",
+        "chats/conversations"
+      ]
+    },
+    {
+      "group": "Advanced Features",
+      "pages": [
+        "analytics/overview",
+        "analytics/templates",
+        "webhooks/setup",
+        "webhooks/events"
+      ]
+    },
+    {
+      "group": "API Reference",
+      "pages": [
+        "api-reference/introduction",
+        {
+          "group": "Authentication",
+          "pages": [
+            "api-reference/auth/login",
+            "api-reference/auth/tokens"
+          ]
+        },
+        {
+          "group": "Messages",
+          "pages": [
+            "api-reference/messages/send",
+            "api-reference/messages/bulk-send",
+            "api-reference/messages/responses"
+          ]
+        },
+        {
+          "group": "Templates",
+          "pages": [
+            "api-reference/templates/create",
+            "api-reference/templates/list",
+            "api-reference/templates/get",
+            "api-reference/templates/update",
+            "api-reference/templates/delete"
+          ]
+        },
+        {
+          "group": "Instances",
+          "pages": [
+            "api-reference/instances/list",
+            "api-reference/instances/create",
+            "api-reference/instances/get",
+            "api-reference/instances/update"
+          ]
+        },
+        {
+          "group": "Chats",
+          "pages": [
+            "api-reference/chats/conversations",
+            "api-reference/chats/messages",
+            "api-reference/chats/send"
+          ]
+        },
+        {
+          "group": "Analytics",
+          "pages": [
+            "api-reference/analytics/overview",
+            "api-reference/analytics/meta",
+            "api-reference/analytics/templates"
+          ]
+        },
+        {
+          "group": "Webhooks",
+          "pages": [
+            "api-reference/webhooks/verify",
+            "api-reference/webhooks/receive"
+          ]
+        }
+      ]
+    }
+  ],
+  "footerSocials": {
+    "website": "https://megasend.co"
+  },
+  "api": {
+    "baseUrl": "https://api.megasend.co",
+    "auth": {
+      "method": "bearer"
     }
   },
-  "footer": {
-    "socials": {
-      "x": "https://x.com/mintlify",
-      "github": "https://github.com/mintlify",
-      "linkedin": "https://linkedin.com/company/mintlify"
-    }
-  }
+  "openapi": "/openapi.json"
 }

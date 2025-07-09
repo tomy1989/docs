@@ -1,33 +1,373 @@
 ---
-title: 'Introduction'
-description: 'Example section for showcasing API endpoints'
+title: 'API Reference'
+description: 'Complete reference for the MegaSend WhatsApp Business API with endpoints, parameters, and response formats'
+icon: 'code'
 ---
 
-<Note>
-  If you're not looking to build API reference documentation, you can delete
-  this section by removing the api-reference folder.
-</Note>
+The MegaSend API is organized around REST principles. Our API accepts JSON-encoded request bodies, returns JSON-encoded responses, and uses standard HTTP response codes, authentication, and verbs.
 
-## Welcome
+## Base URL
 
-There are two ways to build API documentation: [OpenAPI](https://mintlify.com/docs/api-playground/openapi/setup) and [MDX components](https://mintlify.com/docs/api-playground/mdx/configuration). For the starter kit, we are using the following OpenAPI specification.
+All API requests should be made to:
 
-<Card
-  title="Plant Store Endpoints"
-  icon="leaf"
-  href="https://github.com/mintlify/starter/blob/main/api-reference/openapi.json"
->
-  View the OpenAPI specification file
-</Card>
+```
+https://api.megasend.co
+```
 
 ## Authentication
 
-All API endpoints are authenticated using Bearer tokens and picked up from the specification file.
+The MegaSend API uses Bearer token authentication. Include your API token in the Authorization header:
+
+```bash
+Authorization: Bearer YOUR_API_TOKEN
+```
+
+You can obtain your API token from the [MegaSend Dashboard](https://dashboard.megasend.co/api-keys).
+
+## Request Format
+
+### Content Type
+
+All POST and PUT requests must include the `Content-Type: application/json` header:
+
+```bash
+curl -X POST "https://api.megasend.co/messages/send" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"instance_id": "...", "recipient": "..."}'
+```
+
+### HTTP Methods
+
+The API uses standard HTTP methods:
+
+- **GET** - Retrieve data
+- **POST** - Create new resources
+- **PUT** - Update existing resources
+- **DELETE** - Remove resources
+
+## Response Format
+
+### Success Responses
+
+Successful API calls return JSON with the requested data:
 
 ```json
-"security": [
-  {
-    "bearerAuth": []
-  }
-]
+{
+  "id": "msg_abc123def456",
+  "status": "sent",
+  "recipient": "+1234567890",
+  "message_type": "text",
+  "created_at": "2024-01-15T10:30:00Z"
+}
 ```
+
+### Error Responses
+
+Error responses include an error object with details:
+
+```json
+{
+  "error": {
+    "code": "INVALID_PHONE_NUMBER",
+    "message": "The recipient phone number is not valid",
+    "details": "Phone number must be in international format (+1234567890)",
+    "request_id": "req_xyz789abc123"
+  }
+}
+```
+
+## HTTP Status Codes
+
+The API uses conventional HTTP status codes:
+
+| Code | Status | Description |
+|------|--------|-------------|
+| 200 | OK | Request successful |
+| 201 | Created | Resource created successfully |
+| 400 | Bad Request | Invalid request parameters |
+| 401 | Unauthorized | Invalid or missing authentication |
+| 403 | Forbidden | Insufficient permissions |
+| 404 | Not Found | Resource not found |
+| 422 | Unprocessable Entity | Validation errors |
+| 429 | Too Many Requests | Rate limit exceeded |
+| 500 | Internal Server Error | Server error |
+
+## Error Codes
+
+### Common Error Codes
+
+| Code | Description |
+|------|-------------|
+| `INVALID_TOKEN` | Authentication token is invalid |
+| `EXPIRED_TOKEN` | Authentication token has expired |
+| `INSUFFICIENT_PERMISSIONS` | Token lacks required permissions |
+| `INVALID_INSTANCE` | Instance ID is invalid or not found |
+| `INSTANCE_DISCONNECTED` | WhatsApp instance is not connected |
+| `INVALID_PHONE_NUMBER` | Phone number format is invalid |
+| `MESSAGE_TOO_LONG` | Message exceeds length limits |
+| `RATE_LIMIT_EXCEEDED` | API rate limit exceeded |
+| `TEMPLATE_NOT_FOUND` | Message template not found |
+| `TEMPLATE_NOT_APPROVED` | Template not approved by WhatsApp |
+
+## Pagination
+
+List endpoints support pagination using cursor-based pagination:
+
+### Request Parameters
+
+- `limit` (optional) - Number of items to return (default: 20, max: 100)
+- `cursor` (optional) - Pagination cursor from previous response
+
+### Response Format
+
+```json
+{
+  "data": [
+    {
+      "id": "msg_1",
+      "status": "delivered"
+    },
+    {
+      "id": "msg_2", 
+      "status": "sent"
+    }
+  ],
+  "pagination": {
+    "has_more": true,
+    "next_cursor": "eyJpZCI6Im1zZ18yIiwiZGlyZWN0aW9uIjoibmV4dCJ9"
+  }
+}
+```
+
+### Example Usage
+
+```bash
+# First page
+curl "https://api.megasend.co/messages?limit=20" \
+  -H "Authorization: Bearer YOUR_TOKEN"
+
+# Next page
+curl "https://api.megasend.co/messages?limit=20&cursor=eyJpZCI6Im1zZ18yIiwiZGlyZWN0aW9uIjoibmV4dCJ9" \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+## Rate Limiting
+
+The API implements rate limiting to ensure fair usage:
+
+### Limits
+
+- **Global**: 1,000 requests per minute per API key
+- **Messaging**: Instance-specific limits based on WhatsApp Business tier
+- **Bulk Operations**: 10 concurrent bulk jobs per account
+
+### Headers
+
+Rate limit information is included in response headers:
+
+```http
+X-RateLimit-Limit: 1000
+X-RateLimit-Remaining: 847
+X-RateLimit-Reset: 1705320900
+```
+
+### Handling Rate Limits
+
+When rate limited (429 status), implement exponential backoff:
+
+```javascript
+async function makeRequestWithRetry(url, options, maxRetries = 3) {
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      const response = await fetch(url, options);
+      
+      if (response.status === 429) {
+        const retryAfter = response.headers.get('Retry-After') || Math.pow(2, attempt);
+        await new Promise(resolve => setTimeout(resolve, retryAfter * 1000));
+        continue;
+      }
+      
+      return response;
+    } catch (error) {
+      if (attempt === maxRetries) throw error;
+      await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt) * 1000));
+    }
+  }
+}
+```
+
+## Idempotency
+
+For POST requests that create resources, you can include an idempotency key to prevent duplicate requests:
+
+```bash
+curl -X POST "https://api.megasend.co/messages/send" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -H "Idempotency-Key: msg_unique_key_123" \
+  -d '{"instance_id": "...", "recipient": "..."}'
+```
+
+## Webhooks
+
+The API supports webhooks for real-time event notifications. See [Webhook Setup](/webhooks/setup) for configuration details.
+
+## Data Types
+
+### Common Field Types
+
+- **ID Fields** - UUID format: `550e8400-e29b-41d4-a716-446655440000`
+- **Phone Numbers** - International format: `+1234567890`
+- **Timestamps** - ISO 8601 format: `2024-01-15T10:30:00Z`
+- **URLs** - Must be HTTPS for media files
+- **Status** - Enum values: `sent`, `delivered`, `read`, `failed`
+
+### Phone Number Format
+
+All phone numbers must be in international E.164 format:
+
+```
++1234567890  ✅ Correct
+1234567890   ❌ Missing country code
++1-234-567-890  ❌ Contains formatting
+```
+
+## API Endpoints Overview
+
+### Authentication & Users
+- `POST /auth/login` - User authentication
+- `GET /auth/me` - Get current user info
+- `POST /auth/refresh` - Refresh access token
+
+### Instances
+- `POST /instances/create` - Create WhatsApp instance
+- `GET /instances` - List instances
+- `GET /instances/{id}` - Get instance details
+- `PUT /instances/{id}` - Update instance
+- `DELETE /instances/{id}` - Delete instance
+- `GET /instances/{id}/status` - Check instance status
+
+### Messaging
+- `POST /messages/send` - Send single message
+- `POST /messages/send-bulk` - Send bulk messages
+- `GET /messages` - List messages
+- `GET /messages/{id}` - Get message details
+
+### Templates
+- `POST /templates/create` - Create message template
+- `GET /templates` - List templates
+- `GET /templates/{id}` - Get template details
+- `PUT /templates/{id}` - Update template
+- `DELETE /templates/{id}` - Delete template
+
+### Contacts
+- `POST /contacts` - Create contact
+- `GET /contacts` - List contacts
+- `GET /contacts/{id}` - Get contact details
+- `PUT /contacts/{id}` - Update contact
+- `DELETE /contacts/{id}` - Delete contact
+
+### Webhooks
+- `POST /webhooks/endpoints` - Create webhook endpoint
+- `GET /webhooks/endpoints` - List webhook endpoints
+- `PUT /webhooks/endpoints/{id}` - Update webhook endpoint
+- `DELETE /webhooks/endpoints/{id}` - Delete webhook endpoint
+
+### Analytics
+- `GET /analytics/messages` - Message analytics
+- `GET /analytics/instances` - Instance analytics
+- `GET /analytics/templates` - Template performance
+
+## SDK Libraries
+
+Official SDKs are available for popular programming languages:
+
+### JavaScript/Node.js
+```bash
+npm install @megasend/api
+```
+
+### Python
+```bash
+pip install megasend-api
+```
+
+### PHP
+```bash
+composer require megasend/api
+```
+
+### Go
+```bash
+go get github.com/megasend/go-sdk
+```
+
+## Versioning
+
+The API is versioned using URL path versioning. The current version is `v1`:
+
+```
+https://api.megasend.co/v1/messages/send
+```
+
+When breaking changes are introduced, a new version will be released. We maintain backward compatibility for at least 12 months.
+
+## Testing
+
+### Sandbox Environment
+
+Use the sandbox environment for testing:
+
+```
+https://api-sandbox.megasend.co
+```
+
+Sandbox features:
+- No actual messages are sent
+- All endpoints return mock responses
+- Rate limits are relaxed
+- Free to use for development
+
+### Test Phone Numbers
+
+Use these test phone numbers that don't send actual messages:
+
+- `+15551234567` - Always succeeds
+- `+15551234568` - Always fails with invalid number
+- `+15551234569` - Simulates rate limit exceeded
+
+## Support
+
+### Documentation
+- [Getting Started](/quickstart)
+- [Authentication Guide](/authentication)
+- [Webhook Setup](/webhooks/setup)
+
+### Help & Support
+- Email: support@megasend.co
+- Documentation: https://docs.megasend.co
+- Status Page: https://status.megasend.co
+
+### Community
+- Discord: [Join our community](https://discord.gg/megasend)
+- GitHub: [View examples](https://github.com/megasend/examples)
+
+## OpenAPI Specification
+
+Download the complete OpenAPI 3.0 specification:
+
+- [JSON Format](/openapi.json)
+- [YAML Format](/openapi.yaml)
+
+You can use this specification with tools like:
+- [Postman](https://postman.com) - API testing
+- [Insomnia](https://insomnia.rest) - API client
+- [OpenAPI Generator](https://openapi-generator.tech) - Generate SDKs
+
+## Next Steps
+
+1. [Get started with authentication](/authentication)
+2. [Send your first message](/messages/send)
+3. [Set up webhooks](/webhooks/setup)
+4. [Explore our code examples](https://github.com/megasend/examples)

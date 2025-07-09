@@ -1,0 +1,734 @@
+---
+title: 'Webhook Setup'
+description: 'Configure webhooks to receive real-time notifications about message status, delivery confirmations, and incoming messages'
+icon: 'webhook'
+---
+
+Webhooks allow your application to receive real-time notifications when events occur in your MegaSend account. This is essential for tracking message delivery, handling incoming messages, and maintaining accurate conversation states.
+
+## Webhook Events
+
+MegaSend sends webhooks for the following events:
+
+### Message Events
+- **`message.sent`** - Message successfully sent to WhatsApp
+- **`message.delivered`** - Message delivered to recipient's device
+- **`message.read`** - Message read by recipient
+- **`message.failed`** - Message delivery failed
+
+### Incoming Message Events
+- **`message.received`** - New message received from a contact
+- **`message.button_clicked`** - Interactive button clicked
+- **`message.list_selected`** - List item selected
+
+### Instance Events
+- **`instance.connected`** - WhatsApp instance connected
+- **`instance.disconnected`** - WhatsApp instance disconnected
+- **`instance.error`** - Instance error occurred
+
+### Template Events
+- **`template.approved`** - Template approved by WhatsApp
+- **`template.rejected`** - Template rejected by WhatsApp
+
+## Setting Up Webhooks
+
+### Create Webhook Endpoint
+
+First, create an endpoint in your application to receive webhook notifications:
+
+<CodeGroup>
+
+```javascript Node.js/Express
+const express = require('express');
+const crypto = require('crypto');
+const app = express();
+
+app.use(express.json());
+
+app.post('/webhooks/megasend', (req, res) => {
+  // Verify webhook signature (recommended)
+  const signature = req.headers['x-megasend-signature'];
+  const payload = JSON.stringify(req.body);
+  const expectedSignature = crypto
+    .createHmac('sha256', process.env.WEBHOOK_SECRET)
+    .update(payload)
+    .digest('hex');
+  
+  if (signature !== `sha256=${expectedSignature}`) {
+    return res.status(401).send('Invalid signature');
+  }
+  
+  const { event, data } = req.body;
+  
+  switch (event) {
+    case 'message.delivered':
+      handleMessageDelivered(data);
+      break;
+    case 'message.received':
+      handleIncomingMessage(data);
+      break;
+    case 'message.failed':
+      handleMessageFailed(data);
+      break;
+    default:
+      console.log('Unhandled event:', event);
+  }
+  
+  res.status(200).send('OK');
+});
+
+function handleMessageDelivered(data) {
+  console.log('Message delivered:', data.message_id);
+  // Update your database, trigger notifications, etc.
+}
+
+function handleIncomingMessage(data) {
+  console.log('New message from:', data.from);
+  // Process incoming message, trigger auto-responses, etc.
+}
+
+function handleMessageFailed(data) {
+  console.log('Message failed:', data.message_id, data.error);
+  // Handle failed messages, retry logic, etc.
+}
+
+app.listen(3000);
+```
+
+```python Python/Flask
+from flask import Flask, request, jsonify
+import hashlib
+import hmac
+import os
+
+app = Flask(__name__)
+
+@app.route('/webhooks/megasend', methods=['POST'])
+def megasend_webhook():
+    # Verify webhook signature
+    signature = request.headers.get('X-MegaSend-Signature')
+    payload = request.get_data()
+    expected_signature = 'sha256=' + hmac.new(
+        os.environ['WEBHOOK_SECRET'].encode(),
+        payload,
+        hashlib.sha256
+    ).hexdigest()
+    
+    if signature != expected_signature:
+        return 'Invalid signature', 401
+    
+    data = request.json
+    event = data.get('event')
+    payload = data.get('data')
+    
+    if event == 'message.delivered':
+        handle_message_delivered(payload)
+    elif event == 'message.received':
+        handle_incoming_message(payload)
+    elif event == 'message.failed':
+        handle_message_failed(payload)
+    else:
+        print(f'Unhandled event: {event}')
+    
+    return 'OK', 200
+
+def handle_message_delivered(data):
+    print(f"Message delivered: {data['message_id']}")
+    # Update database, send notifications, etc.
+
+def handle_incoming_message(data):
+    print(f"New message from: {data['from']}")
+    # Process incoming message, trigger auto-responses, etc.
+
+def handle_message_failed(data):
+    print(f"Message failed: {data['message_id']} - {data['error']}")
+    # Handle failed messages, implement retry logic, etc.
+
+if __name__ == '__main__':
+    app.run(port=3000)
+```
+
+```php PHP
+<?php
+// webhook.php
+function verifySignature($payload, $signature, $secret) {
+    $expectedSignature = 'sha256=' . hash_hmac('sha256', $payload, $secret);
+    return hash_equals($signature, $expectedSignature);
+}
+
+$payload = file_get_contents('php://input');
+$signature = $_SERVER['HTTP_X_MEGASEND_SIGNATURE'] ?? '';
+$secret = $_ENV['WEBHOOK_SECRET'];
+
+if (!verifySignature($payload, $signature, $secret)) {
+    http_response_code(401);
+    echo 'Invalid signature';
+    exit;
+}
+
+$data = json_decode($payload, true);
+$event = $data['event'];
+$eventData = $data['data'];
+
+switch ($event) {
+    case 'message.delivered':
+        handleMessageDelivered($eventData);
+        break;
+    case 'message.received':
+        handleIncomingMessage($eventData);
+        break;
+    case 'message.failed':
+        handleMessageFailed($eventData);
+        break;
+    default:
+        error_log("Unhandled event: $event");
+}
+
+function handleMessageDelivered($data) {
+    error_log("Message delivered: " . $data['message_id']);
+    // Update database, send notifications, etc.
+}
+
+function handleIncomingMessage($data) {
+    error_log("New message from: " . $data['from']);
+    // Process incoming message, trigger auto-responses, etc.
+}
+
+function handleMessageFailed($data) {
+    error_log("Message failed: " . $data['message_id'] . " - " . $data['error']);
+    // Handle failed messages, implement retry logic, etc.
+}
+
+http_response_code(200);
+echo 'OK';
+?>
+```
+
+</CodeGroup>
+
+### Register Webhook URL
+
+Configure your webhook URL in the MegaSend dashboard:
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST "https://api.megasend.co/webhooks/endpoints" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "url": "https://your-domain.com/webhooks/megasend",
+    "events": [
+      "message.sent",
+      "message.delivered", 
+      "message.read",
+      "message.failed",
+      "message.received"
+    ],
+    "secret": "your-webhook-secret-key"
+  }'
+```
+
+```javascript JavaScript
+const webhookConfig = {
+  url: 'https://your-domain.com/webhooks/megasend',
+  events: [
+    'message.sent',
+    'message.delivered', 
+    'message.read',
+    'message.failed',
+    'message.received'
+  ],
+  secret: 'your-webhook-secret-key'
+};
+
+const response = await fetch('https://api.megasend.co/webhooks/endpoints', {
+  method: 'POST',
+  headers: {
+    'Authorization': 'Bearer YOUR_TOKEN',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify(webhookConfig)
+});
+
+const result = await response.json();
+console.log('Webhook configured:', result.id);
+```
+
+```python Python
+import requests
+
+webhook_config = {
+    'url': 'https://your-domain.com/webhooks/megasend',
+    'events': [
+        'message.sent',
+        'message.delivered', 
+        'message.read',
+        'message.failed',
+        'message.received'
+    ],
+    'secret': 'your-webhook-secret-key'
+}
+
+response = requests.post(
+    'https://api.megasend.co/webhooks/endpoints',
+    headers={'Authorization': 'Bearer YOUR_TOKEN'},
+    json=webhook_config
+)
+
+result = response.json()
+print(f"Webhook configured: {result['id']}")
+```
+
+</CodeGroup>
+
+## Webhook Payload Structure
+
+All webhooks follow a consistent structure:
+
+```json
+{
+  "event": "message.delivered",
+  "timestamp": "2024-01-15T10:35:00Z",
+  "data": {
+    "message_id": "msg_abc123def456",
+    "wa_message_id": "wamid.HBgMTIzNDU2Nzg5MDEyMzQVAgARGBI5RkY2NzAyQUIyNEE4RkQ2AA==",
+    "instance_id": "550e8400-e29b-41d4-a716-446655440000",
+    "recipient": "+1234567890",
+    "status": "delivered",
+    "delivered_at": "2024-01-15T10:35:03Z"
+  }
+}
+```
+
+## Event Payloads
+
+### Message Delivered
+
+```json
+{
+  "event": "message.delivered",
+  "timestamp": "2024-01-15T10:35:00Z",
+  "data": {
+    "message_id": "msg_abc123def456",
+    "wa_message_id": "wamid.HBgMTIzNDU2Nzg5MDEyMzQVAgARGBI5RkY2NzAyQUIyNEE4RkQ2AA==",
+    "instance_id": "550e8400-e29b-41d4-a716-446655440000",
+    "recipient": "+1234567890",
+    "status": "delivered",
+    "delivered_at": "2024-01-15T10:35:03Z"
+  }
+}
+```
+
+### Message Read
+
+```json
+{
+  "event": "message.read",
+  "timestamp": "2024-01-15T10:37:00Z",
+  "data": {
+    "message_id": "msg_abc123def456",
+    "wa_message_id": "wamid.HBgMTIzNDU2Nzg5MDEyMzQVAgARGBI5RkY2NzAyQUIyNEE4RkQ2AA==",
+    "instance_id": "550e8400-e29b-41d4-a716-446655440000",
+    "recipient": "+1234567890",
+    "status": "read",
+    "read_at": "2024-01-15T10:37:15Z"
+  }
+}
+```
+
+### Message Failed
+
+```json
+{
+  "event": "message.failed",
+  "timestamp": "2024-01-15T10:35:00Z",
+  "data": {
+    "message_id": "msg_abc123def456",
+    "instance_id": "550e8400-e29b-41d4-a716-446655440000",
+    "recipient": "+1234567890",
+    "status": "failed",
+    "error": {
+      "code": "INVALID_PHONE_NUMBER",
+      "message": "The recipient phone number is not valid",
+      "details": "Phone number must be in international format"
+    },
+    "failed_at": "2024-01-15T10:35:02Z"
+  }
+}
+```
+
+### Incoming Message
+
+```json
+{
+  "event": "message.received",
+  "timestamp": "2024-01-15T10:40:00Z",
+  "data": {
+    "message_id": "msg_incoming_xyz789",
+    "wa_message_id": "wamid.HBgMTIzNDU2Nzg5MDEyMzQVAgASGBI5RkY2NzAyQUIyNEE4RkQ2BB==",
+    "instance_id": "550e8400-e29b-41d4-a716-446655440000",
+    "from": "+1234567890",
+    "contact": {
+      "name": "John Doe",
+      "profile_pic": "https://example.com/profile.jpg"
+    },
+    "message_type": "text",
+    "content": {
+      "text": "Hello! I need help with my order."
+    },
+    "received_at": "2024-01-15T10:40:00Z"
+  }
+}
+```
+
+### Interactive Button Clicked
+
+```json
+{
+  "event": "message.button_clicked",
+  "timestamp": "2024-01-15T10:42:00Z",
+  "data": {
+    "message_id": "msg_interactive_456",
+    "original_message_id": "msg_abc123def456",
+    "instance_id": "550e8400-e29b-41d4-a716-446655440000",
+    "from": "+1234567890",
+    "button": {
+      "id": "confirm_appointment",
+      "title": "Confirm",
+      "type": "quick_reply"
+    },
+    "received_at": "2024-01-15T10:42:00Z"
+  }
+}
+```
+
+### Instance Status Change
+
+```json
+{
+  "event": "instance.disconnected",
+  "timestamp": "2024-01-15T10:45:00Z",
+  "data": {
+    "instance_id": "550e8400-e29b-41d4-a716-446655440000",
+    "status": "disconnected",
+    "reason": "QR_CODE_EXPIRED",
+    "message": "QR code has expired. Please scan a new QR code to reconnect.",
+    "timestamp": "2024-01-15T10:45:00Z"
+  }
+}
+```
+
+## Security
+
+### Signature Verification
+
+Always verify webhook signatures to ensure requests are from MegaSend:
+
+<CodeGroup>
+
+```javascript Node.js
+function verifyWebhookSignature(payload, signature, secret) {
+  const expectedSignature = crypto
+    .createHmac('sha256', secret)
+    .update(payload, 'utf8')
+    .digest('hex');
+  
+  return signature === `sha256=${expectedSignature}`;
+}
+
+// Usage
+const isValid = verifyWebhookSignature(
+  JSON.stringify(req.body),
+  req.headers['x-megasend-signature'],
+  process.env.WEBHOOK_SECRET
+);
+```
+
+```python Python
+import hashlib
+import hmac
+
+def verify_webhook_signature(payload, signature, secret):
+    expected_signature = 'sha256=' + hmac.new(
+        secret.encode('utf-8'),
+        payload.encode('utf-8'),
+        hashlib.sha256
+    ).hexdigest()
+    
+    return hmac.compare_digest(signature, expected_signature)
+
+# Usage
+is_valid = verify_webhook_signature(
+    request.get_data(as_text=True),
+    request.headers.get('X-MegaSend-Signature'),
+    os.environ['WEBHOOK_SECRET']
+)
+```
+
+```php PHP
+function verifyWebhookSignature($payload, $signature, $secret) {
+    $expectedSignature = 'sha256=' . hash_hmac('sha256', $payload, $secret);
+    return hash_equals($signature, $expectedSignature);
+}
+
+// Usage
+$isValid = verifyWebhookSignature(
+    file_get_contents('php://input'),
+    $_SERVER['HTTP_X_MEGASEND_SIGNATURE'],
+    $_ENV['WEBHOOK_SECRET']
+);
+```
+
+</CodeGroup>
+
+### Best Practices
+
+1. **HTTPS Only** - Always use HTTPS endpoints
+2. **Verify Signatures** - Always verify webhook signatures
+3. **Idempotency** - Handle duplicate webhooks gracefully
+4. **Quick Response** - Respond quickly (< 5 seconds) to avoid retries
+5. **Secure Secrets** - Store webhook secrets securely
+
+## Testing Webhooks
+
+### Local Development with ngrok
+
+For local testing, use ngrok to expose your local server:
+
+```bash
+# Install ngrok
+npm install -g ngrok
+
+# Expose your local server
+ngrok http 3000
+
+# Use the HTTPS URL for webhook configuration
+# Example: https://abc123.ngrok.io/webhooks/megasend
+```
+
+### Test Webhook Endpoint
+
+Create a test endpoint to verify webhook delivery:
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST "https://api.megasend.co/webhooks/test" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "endpoint_id": "webhook_endpoint_123",
+    "event": "message.delivered"
+  }'
+```
+
+```javascript JavaScript
+const testWebhook = {
+  endpoint_id: 'webhook_endpoint_123',
+  event: 'message.delivered'
+};
+
+const response = await fetch('https://api.megasend.co/webhooks/test', {
+  method: 'POST',
+  headers: {
+    'Authorization': 'Bearer YOUR_TOKEN',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify(testWebhook)
+});
+```
+
+</CodeGroup>
+
+## Managing Webhook Endpoints
+
+### List Webhook Endpoints
+
+```bash
+curl -X GET "https://api.megasend.co/webhooks/endpoints" \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+### Update Webhook Configuration
+
+```bash
+curl -X PUT "https://api.megasend.co/webhooks/endpoints/webhook_endpoint_123" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "events": ["message.delivered", "message.read", "message.received"],
+    "active": true
+  }'
+```
+
+### Delete Webhook Endpoint
+
+```bash
+curl -X DELETE "https://api.megasend.co/webhooks/endpoints/webhook_endpoint_123" \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+## Webhook Delivery
+
+### Retry Policy
+
+MegaSend implements an exponential backoff retry policy:
+
+- **Initial Attempt** - Immediate delivery
+- **1st Retry** - After 5 seconds
+- **2nd Retry** - After 25 seconds  
+- **3rd Retry** - After 125 seconds
+- **4th Retry** - After 625 seconds
+- **Final Retry** - After 3125 seconds (52 minutes)
+
+### Success Criteria
+
+A webhook is considered successfully delivered when:
+- Your endpoint returns HTTP status 200-299
+- Response is received within 5 seconds
+- No connection errors occur
+
+### Failure Handling
+
+Webhooks are marked as failed when:
+- HTTP status codes 400-599 are returned
+- Connection timeout (> 5 seconds)
+- DNS resolution fails
+- SSL/TLS errors occur
+
+## Common Use Cases
+
+### Order Status Updates
+
+```javascript
+function handleMessageDelivered(data) {
+  // Update order status in database
+  await updateOrderStatus(data.message_id, 'delivered');
+  
+  // Send internal notification
+  await notifyStaff(`Order confirmation delivered to ${data.recipient}`);
+  
+  // Trigger follow-up sequence
+  await scheduleFollowUpMessage(data.recipient, '24 hours');
+}
+```
+
+### Customer Support Automation
+
+```javascript
+function handleIncomingMessage(data) {
+  const { from, content, message_type } = data;
+  
+  if (message_type === 'text') {
+    const keywords = ['help', 'support', 'problem', 'issue'];
+    const needsSupport = keywords.some(keyword => 
+      content.text.toLowerCase().includes(keyword)
+    );
+    
+    if (needsSupport) {
+      // Create support ticket
+      await createSupportTicket(from, content.text);
+      
+      // Send auto-response
+      await sendAutoResponse(from, 'support_received');
+    }
+  }
+}
+```
+
+### Interactive Response Handling
+
+```javascript
+function handleButtonClicked(data) {
+  const { from, button, original_message_id } = data;
+  
+  switch (button.id) {
+    case 'confirm_appointment':
+      await confirmAppointment(from, original_message_id);
+      await sendConfirmationMessage(from);
+      break;
+      
+    case 'reschedule_appointment':
+      await sendRescheduleOptions(from);
+      break;
+      
+    case 'cancel_appointment':
+      await cancelAppointment(from, original_message_id);
+      await sendCancellationConfirmation(from);
+      break;
+  }
+}
+```
+
+## Error Handling
+
+Handle webhook processing errors gracefully:
+
+```javascript
+app.post('/webhooks/megasend', async (req, res) => {
+  try {
+    // Verify signature
+    if (!verifySignature(req)) {
+      return res.status(401).send('Invalid signature');
+    }
+    
+    const { event, data } = req.body;
+    
+    // Process webhook with timeout
+    await Promise.race([
+      processWebhook(event, data),
+      new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Timeout')), 4000)
+      )
+    ]);
+    
+    res.status(200).send('OK');
+    
+  } catch (error) {
+    console.error('Webhook processing error:', error);
+    
+    // Log for debugging but still return 200 to prevent retries
+    // for non-retryable errors
+    if (error.message === 'Invalid data format') {
+      res.status(200).send('Ignored invalid data');
+    } else {
+      res.status(500).send('Processing error');
+    }
+  }
+});
+```
+
+## Monitoring and Debugging
+
+### Webhook Logs
+
+View webhook delivery logs in your dashboard or via API:
+
+```bash
+curl -X GET "https://api.megasend.co/webhooks/logs?endpoint_id=webhook_endpoint_123&limit=50" \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+### Debug Information
+
+Include debug logging in your webhook handler:
+
+```javascript
+function logWebhookEvent(event, data, success) {
+  console.log(JSON.stringify({
+    timestamp: new Date().toISOString(),
+    event,
+    message_id: data.message_id,
+    success,
+    processing_time: Date.now() - startTime
+  }));
+}
+```
+
+## Next Steps
+
+- [Send messages](/messages/send) and track their delivery status
+- [Handle incoming messages](/chats/handle-incoming) with automated responses
+- [Set up analytics](/analytics/overview) to monitor webhook performance
+- [Configure message scheduling](/messages/schedule) based on webhook events 

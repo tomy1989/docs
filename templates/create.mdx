@@ -1,0 +1,761 @@
+---
+title: 'Create Templates'
+description: 'Learn how to create, submit, and manage WhatsApp Business message templates for marketing and notifications'
+icon: 'file-template'
+---
+
+WhatsApp Business templates are pre-approved message formats that enable you to send marketing messages, notifications, and other business communications to customers who haven't messaged you in the last 24 hours.
+
+## Template Structure
+
+WhatsApp templates consist of several components:
+
+- **Header** (optional) - Text, image, video, or document
+- **Body** - Main message content with placeholder variables
+- **Footer** (optional) - Additional text at the bottom
+- **Buttons** (optional) - Call-to-action or quick reply buttons
+
+## Creating Templates
+
+### Basic Text Template
+
+Create a simple text-only template:
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST "https://api.megasend.co/templates/create" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "welcome_message",
+    "category": "MARKETING",
+    "language": "en",
+    "components": [
+      {
+        "type": "BODY",
+        "text": "Welcome to {{1}}! Thank you for signing up. Your account is now active and ready to use."
+      }
+    ]
+  }'
+```
+
+```javascript JavaScript
+const template = {
+  name: 'welcome_message',
+  category: 'MARKETING',
+  language: 'en',
+  components: [
+    {
+      type: 'BODY',
+      text: 'Welcome to {{1}}! Thank you for signing up. Your account is now active and ready to use.'
+    }
+  ]
+};
+
+const response = await fetch('https://api.megasend.co/templates/create', {
+  method: 'POST',
+  headers: {
+    'Authorization': 'Bearer YOUR_TOKEN',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify(template)
+});
+
+const result = await response.json();
+```
+
+```python Python
+import requests
+
+template = {
+    'name': 'welcome_message',
+    'category': 'MARKETING',
+    'language': 'en',
+    'components': [
+        {
+            'type': 'BODY',
+            'text': 'Welcome to {{1}}! Thank you for signing up. Your account is now active and ready to use.'
+        }
+    ]
+}
+
+response = requests.post(
+    'https://api.megasend.co/templates/create',
+    headers={'Authorization': 'Bearer YOUR_TOKEN'},
+    json=template
+)
+
+result = response.json()
+```
+
+</CodeGroup>
+
+### Template with Header and Footer
+
+Create a more complex template with header and footer:
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST "https://api.megasend.co/templates/create" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "order_confirmation",
+    "category": "TRANSACTIONAL",
+    "language": "en",
+    "components": [
+      {
+        "type": "HEADER",
+        "format": "TEXT",
+        "text": "Order #{{1}} Confirmed"
+      },
+      {
+        "type": "BODY",
+        "text": "Hi {{1}},\n\nYour order for {{2}} has been confirmed and will be delivered by {{3}}.\n\nTotal: ${{4}}\n\nThank you for your purchase!"
+      },
+      {
+        "type": "FOOTER",
+        "text": "Track your order anytime on our website"
+      }
+    ]
+  }'
+```
+
+```javascript JavaScript
+const orderTemplate = {
+  name: 'order_confirmation',
+  category: 'TRANSACTIONAL',
+  language: 'en',
+  components: [
+    {
+      type: 'HEADER',
+      format: 'TEXT',
+      text: 'Order #{{1}} Confirmed'
+    },
+    {
+      type: 'BODY',
+      text: 'Hi {{1}},\n\nYour order for {{2}} has been confirmed and will be delivered by {{3}}.\n\nTotal: ${{4}}\n\nThank you for your purchase!'
+    },
+    {
+      type: 'FOOTER',
+      text: 'Track your order anytime on our website'
+    }
+  ]
+};
+```
+
+</CodeGroup>
+
+### Template with Media Header
+
+Create a template with an image, video, or document header:
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST "https://api.megasend.co/templates/create" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "product_announcement",
+    "category": "MARKETING",
+    "language": "en",
+    "components": [
+      {
+        "type": "HEADER",
+        "format": "IMAGE",
+        "example": {
+          "header_handle": ["https://example.com/product-image.jpg"]
+        }
+      },
+      {
+        "type": "BODY",
+        "text": "🚀 Introducing {{1}}!\n\nOur latest innovation is here. {{2}}\n\nSpecial launch price: ${{3}}\nAvailable until: {{4}}"
+      },
+      {
+        "type": "FOOTER",
+        "text": "Limited time offer - Act fast!"
+      }
+    ]
+  }'
+```
+
+```javascript JavaScript
+const productTemplate = {
+  name: 'product_announcement',
+  category: 'MARKETING',
+  language: 'en',
+  components: [
+    {
+      type: 'HEADER',
+      format: 'IMAGE',
+      example: {
+        header_handle: ['https://example.com/product-image.jpg']
+      }
+    },
+    {
+      type: 'BODY',
+      text: '🚀 Introducing {{1}}!\n\nOur latest innovation is here. {{2}}\n\nSpecial launch price: ${{3}}\nAvailable until: {{4}}'
+    },
+    {
+      type: 'FOOTER',
+      text: 'Limited time offer - Act fast!'
+    }
+  ]
+};
+```
+
+</CodeGroup>
+
+### Template with Buttons
+
+Add interactive buttons to your templates:
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST "https://api.megasend.co/templates/create" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "appointment_reminder",
+    "category": "UTILITY",
+    "language": "en",
+    "components": [
+      {
+        "type": "BODY",
+        "text": "Hi {{1}},\n\nReminder: You have an appointment scheduled for {{2}} at {{3}}.\n\nPlease confirm your attendance or reschedule if needed."
+      },
+      {
+        "type": "BUTTONS",
+        "buttons": [
+          {
+            "type": "QUICK_REPLY",
+            "text": "Confirm"
+          },
+          {
+            "type": "QUICK_REPLY", 
+            "text": "Reschedule"
+          },
+          {
+            "type": "URL",
+            "text": "View Details",
+            "url": "https://example.com/appointments/{{4}}"
+          }
+        ]
+      }
+    ]
+  }'
+```
+
+```javascript JavaScript
+const appointmentTemplate = {
+  name: 'appointment_reminder',
+  category: 'UTILITY',
+  language: 'en',
+  components: [
+    {
+      type: 'BODY',
+      text: 'Hi {{1}},\n\nReminder: You have an appointment scheduled for {{2}} at {{3}}.\n\nPlease confirm your attendance or reschedule if needed.'
+    },
+    {
+      type: 'BUTTONS',
+      buttons: [
+        {
+          type: 'QUICK_REPLY',
+          text: 'Confirm'
+        },
+        {
+          type: 'QUICK_REPLY', 
+          text: 'Reschedule'
+        },
+        {
+          type: 'URL',
+          text: 'View Details',
+          url: 'https://example.com/appointments/{{4}}'
+        }
+      ]
+    }
+  ]
+};
+```
+
+</CodeGroup>
+
+## Template Categories
+
+WhatsApp requires templates to be categorized based on their purpose:
+
+### MARKETING
+For promotional content, offers, and product announcements.
+
+**Requirements:**
+- Must comply with WhatsApp's marketing policies
+- Rate limited to 1,000 marketing conversations per day initially
+- Requires opt-in consent from recipients
+
+**Examples:**
+- Product launches
+- Sales and discounts
+- Newsletter content
+- Event invitations
+
+### UTILITY
+For account updates, order status, and other service-related messages.
+
+**Requirements:**
+- Must provide clear utility to the customer
+- Higher rate limits than marketing messages
+- Should be relevant to the customer's relationship with your business
+
+**Examples:**
+- Account notifications
+- Appointment reminders
+- Service updates
+- Policy changes
+
+### AUTHENTICATION
+For verification codes and login confirmations.
+
+**Requirements:**
+- Must contain authentication codes or links
+- Very high rate limits
+- Automatically approved in most cases
+
+**Examples:**
+- OTP codes
+- Login confirmations
+- Password reset links
+- Account verification
+
+## Variable Placeholders
+
+Use `{{1}}`, `{{2}}`, `{{3}}`, etc. as placeholders for dynamic content:
+
+### Body Variables
+- Maximum 10 variables per template body
+- Variables must be used in sequential order ({{1}}, {{2}}, {{3}})
+- Cannot be empty when sending messages
+
+### Header Variables
+- Only one variable allowed in text headers: `{{1}}`
+- Media headers don't support variables (media is set per template)
+
+### URL Variables
+- Dynamic URLs in buttons: `https://example.com/orders/{{1}}`
+- Must use HTTPS protocol
+- Variable can only be at the end of the URL
+
+## Language Support
+
+Templates must be created for each language you want to support:
+
+<CodeGroup>
+
+```bash cURL - Spanish Template
+curl -X POST "https://api.megasend.co/templates/create" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "welcome_message",
+    "category": "MARKETING",
+    "language": "es",
+    "components": [
+      {
+        "type": "BODY",
+        "text": "¡Bienvenido a {{1}}! Gracias por registrarte. Tu cuenta está activa y lista para usar."
+      }
+    ]
+  }'
+```
+
+```javascript JavaScript - Multi-language
+const languages = ['en', 'es', 'fr', 'de'];
+const templates = languages.map(lang => ({
+  name: 'welcome_message',
+  category: 'MARKETING',
+  language: lang,
+  components: [
+    {
+      type: 'BODY',
+      text: getLocalizedText(lang, 'welcome_message')
+    }
+  ]
+}));
+
+// Create templates for each language
+for (const template of templates) {
+  await createTemplate(template);
+}
+```
+
+</CodeGroup>
+
+### Supported Languages
+
+- **English** - `en`, `en_US`, `en_GB`
+- **Spanish** - `es`, `es_ES`, `es_MX`
+- **Portuguese** - `pt_BR`, `pt_PT`
+- **French** - `fr`
+- **German** - `de`
+- **Italian** - `it`
+- **Dutch** - `nl`
+- **Russian** - `ru`
+- **Arabic** - `ar`
+- **Hindi** - `hi`
+- **Chinese** - `zh_CN`, `zh_TW`
+- **Japanese** - `ja`
+- **Korean** - `ko`
+
+## Template Examples
+
+Provide examples for template variables to help with approval:
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST "https://api.megasend.co/templates/create" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "shipping_notification",
+    "category": "UTILITY", 
+    "language": "en",
+    "components": [
+      {
+        "type": "BODY",
+        "text": "Hi {{1}}, your order {{2}} has shipped! Track it here: {{3}}",
+        "example": {
+          "body_text": [
+            ["John Doe", "ORD-12345", "https://tracking.example.com/12345"]
+          ]
+        }
+      }
+    ]
+  }'
+```
+
+```javascript JavaScript
+const templateWithExamples = {
+  name: 'shipping_notification',
+  category: 'UTILITY',
+  language: 'en',
+  components: [
+    {
+      type: 'BODY',
+      text: 'Hi {{1}}, your order {{2}} has shipped! Track it here: {{3}}',
+      example: {
+        body_text: [
+          ['John Doe', 'ORD-12345', 'https://tracking.example.com/12345']
+        ]
+      }
+    }
+  ]
+};
+```
+
+</CodeGroup>
+
+## Response Format
+
+Template creation returns the following response:
+
+```json
+{
+  "id": "template_abc123def456",
+  "status": "PENDING",
+  "name": "welcome_message",
+  "category": "MARKETING",
+  "language": "en",
+  "components": [
+    {
+      "type": "BODY",
+      "text": "Welcome to {{1}}! Thank you for signing up. Your account is now active and ready to use."
+    }
+  ],
+  "created_at": "2024-01-15T10:30:00Z",
+  "updated_at": "2024-01-15T10:30:00Z"
+}
+```
+
+### Template Status
+
+- **PENDING** - Submitted for WhatsApp review
+- **APPROVED** - Ready to use for sending messages
+- **REJECTED** - Not approved, requires modifications
+- **DISABLED** - Temporarily disabled due to policy violations
+
+## Managing Templates
+
+### List Templates
+
+Get all your templates:
+
+<CodeGroup>
+
+```bash cURL
+curl -X GET "https://api.megasend.co/templates?status=APPROVED&limit=50" \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+```javascript JavaScript
+const response = await fetch('https://api.megasend.co/templates?status=APPROVED&limit=50', {
+  headers: {
+    'Authorization': 'Bearer YOUR_TOKEN'
+  }
+});
+
+const templates = await response.json();
+```
+
+```python Python
+response = requests.get(
+    'https://api.megasend.co/templates?status=APPROVED&limit=50',
+    headers={'Authorization': 'Bearer YOUR_TOKEN'}
+)
+
+templates = response.json()
+```
+
+</CodeGroup>
+
+### Get Template Details
+
+Retrieve a specific template:
+
+<CodeGroup>
+
+```bash cURL
+curl -X GET "https://api.megasend.co/templates/template_abc123def456" \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+```javascript JavaScript
+const response = await fetch('https://api.megasend.co/templates/template_abc123def456', {
+  headers: {
+    'Authorization': 'Bearer YOUR_TOKEN'
+  }
+});
+
+const template = await response.json();
+```
+
+</CodeGroup>
+
+### Update Template
+
+Modify an existing template (creates a new version):
+
+<CodeGroup>
+
+```bash cURL
+curl -X PUT "https://api.megasend.co/templates/template_abc123def456" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "components": [
+      {
+        "type": "BODY",
+        "text": "Welcome to {{1}}! Thank you for joining us. Your account is active and ready to explore our amazing features."
+      }
+    ]
+  }'
+```
+
+```javascript JavaScript
+const updatedTemplate = {
+  components: [
+    {
+      type: 'BODY',
+      text: 'Welcome to {{1}}! Thank you for joining us. Your account is active and ready to explore our amazing features.'
+    }
+  ]
+};
+
+const response = await fetch('https://api.megasend.co/templates/template_abc123def456', {
+  method: 'PUT',
+  headers: {
+    'Authorization': 'Bearer YOUR_TOKEN',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify(updatedTemplate)
+});
+```
+
+</CodeGroup>
+
+### Delete Template
+
+Remove a template from your account:
+
+<CodeGroup>
+
+```bash cURL
+curl -X DELETE "https://api.megasend.co/templates/template_abc123def456" \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+```javascript JavaScript
+const response = await fetch('https://api.megasend.co/templates/template_abc123def456', {
+  method: 'DELETE',
+  headers: {
+    'Authorization': 'Bearer YOUR_TOKEN'
+  }
+});
+```
+
+</CodeGroup>
+
+## Template Quality Rating
+
+WhatsApp assigns quality ratings to templates based on user engagement:
+
+### High Quality ⭐⭐⭐
+- **Benefits**: Higher rate limits, priority delivery
+- **Requirements**: Low block rate, high delivery rate, positive user engagement
+
+### Medium Quality ⭐⭐
+- **Benefits**: Standard rate limits
+- **Requirements**: Average engagement metrics
+
+### Low Quality ⭐
+- **Limitations**: Reduced rate limits, limited delivery
+- **Causes**: High block rates, low engagement, user complaints
+
+### Improving Quality
+
+1. **Personalize content** - Use variables for names and relevant information
+2. **Provide value** - Ensure messages are useful to recipients
+3. **Clear opt-out** - Include unsubscribe instructions
+4. **Appropriate timing** - Send messages at reasonable hours
+5. **Relevant content** - Match message content to user interests
+
+## Best Practices
+
+### Content Guidelines
+
+1. **Be Clear and Concise**
+   - Use simple, direct language
+   - Avoid marketing jargon
+   - State the purpose clearly
+
+2. **Add Value**
+   - Provide useful information
+   - Include actionable content
+   - Respect the user's time
+
+3. **Follow Policies**
+   - No misleading content
+   - No prohibited content (adult, illegal, etc.)
+   - Respect intellectual property
+
+### Technical Best Practices
+
+1. **Variable Usage**
+   - Use variables for personalization
+   - Provide meaningful examples
+   - Keep variable content short
+
+2. **Button Design**
+   - Use clear, action-oriented text
+   - Limit to 3 buttons maximum
+   - Test URL destinations
+
+3. **Media Guidelines**
+   - Use high-quality images
+   - Ensure HTTPS URLs
+   - Test media accessibility
+
+## Approval Process
+
+### Timeline
+- **Authentication templates**: Usually approved within 24 hours
+- **Utility templates**: 1-3 business days
+- **Marketing templates**: 3-7 business days
+
+### Common Rejection Reasons
+
+1. **Policy Violations**
+   - Misleading content
+   - Prohibited categories
+   - Poor grammar/spelling
+
+2. **Format Issues**
+   - Incorrect variable usage
+   - Invalid button configurations
+   - Unsupported media formats
+
+3. **Quality Issues**
+   - Vague or unclear content
+   - Too promotional
+   - Poor examples
+
+### Resubmission
+
+If a template is rejected:
+
+1. Review the rejection reason
+2. Make necessary corrections
+3. Resubmit as a new template
+4. Wait for re-review
+
+## Error Handling
+
+Common template creation errors:
+
+```javascript
+try {
+  const response = await fetch('https://api.megasend.co/templates/create', {
+    method: 'POST',
+    headers: {
+      'Authorization': 'Bearer YOUR_TOKEN',
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(template)
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    
+    switch (response.status) {
+      case 400:
+        console.error('Invalid template format:', error.detail);
+        break;
+      case 409:
+        console.error('Template name already exists:', error.detail);
+        break;
+      case 422:
+        console.error('Template validation failed:', error.detail);
+        break;
+      default:
+        console.error('Unexpected error:', error.detail);
+    }
+    return;
+  }
+
+  const result = await response.json();
+  console.log('Template created:', result.id);
+  
+} catch (error) {
+  console.error('Network error:', error.message);
+}
+```
+
+## Common Error Codes
+
+| Code | Message | Solution |
+|------|---------|----------|
+| 400 | Invalid component format | Check component structure |
+| 409 | Template name already exists | Use a different name |
+| 422 | Too many variables | Reduce variable count (max 10) |
+| 422 | Invalid variable sequence | Use sequential numbering {{1}}, {{2}} |
+| 422 | Unsupported language | Use supported language codes |
+
+## Next Steps
+
+- [Send template messages](/messages/send#template-messages) to your customers
+- [Use templates in bulk messaging](/messages/bulk-send#bulk-template-messages) campaigns
+- [Set up webhooks](/webhooks/setup) to track template status changes
+- [Monitor template performance](/analytics/templates) with analytics 
