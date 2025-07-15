@@ -1,0 +1,569 @@
+ ---
+title: 'Get Template Details'
+description: 'Retrieve detailed information about specific WhatsApp Business message templates including structure and parameters'
+icon: 'file-magnifying-glass'
+---
+
+The MegaSend API allows you to retrieve detailed information about specific WhatsApp Business message templates, including their structure, parameters, approval status, and usage guidelines.
+
+## Get Template by ID
+
+Retrieve complete details for a specific template:
+
+<CodeGroup>
+
+```bash cURL
+curl -X GET "https://api.megasend.co.il/templates/550e8400-e29b-41d4-a716-446655440000/template/template_12345" \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+```javascript JavaScript
+const instanceId = '550e8400-e29b-41d4-a716-446655440000';
+const templateId = 'template_12345';
+
+const response = await fetch(`https://api.megasend.co.il/templates/${instanceId}/template/${templateId}`, {
+  method: 'GET',
+  headers: {
+    'Authorization': 'Bearer YOUR_TOKEN'
+  }
+});
+
+const template = await response.json();
+```
+
+```python Python
+import requests
+
+instance_id = '550e8400-e29b-41d4-a716-446655440000'
+template_id = 'template_12345'
+
+response = requests.get(
+    f'https://api.megasend.co.il/templates/{instance_id}/template/{template_id}',
+    headers={
+        'Authorization': 'Bearer YOUR_TOKEN'
+    }
+)
+
+template = response.json()
+```
+
+```php PHP
+<?php
+$instanceId = '550e8400-e29b-41d4-a716-446655440000';
+$templateId = 'template_12345';
+
+$response = file_get_contents(
+    "https://api.megasend.co.il/templates/{$instanceId}/template/{$templateId}",
+    false,
+    stream_context_create([
+        'http' => [
+            'method' => 'GET',
+            'header' => 'Authorization: Bearer YOUR_TOKEN'
+        ]
+    ])
+);
+
+$template = json_decode($response, true);
+?>
+```
+
+</CodeGroup>
+
+## Path Parameters
+
+<ParamField path="instance_id" type="string" required>
+  Your WhatsApp instance ID. Get this from the `/instances/me` endpoint.
+</ParamField>
+
+<ParamField path="template_id" type="string" required>
+  The unique template ID. Get this from the `/templates/{instance_id}/list` endpoint.
+</ParamField>
+
+## Response Format
+
+<ResponseField name="id" type="string">
+  Unique template ID in WhatsApp Business API.
+</ResponseField>
+
+<ResponseField name="name" type="string">
+  Template name (lowercase, underscores only).
+</ResponseField>
+
+<ResponseField name="status" type="string">
+  Template approval status: `APPROVED`, `PENDING`, `REJECTED`, `DISABLED`.
+</ResponseField>
+
+<ResponseField name="category" type="string">
+  Template category: `MARKETING`, `UTILITY`, `AUTHENTICATION`.
+</ResponseField>
+
+<ResponseField name="language" type="string">
+  Template language code (e.g., `en_US`, `es_ES`).
+</ResponseField>
+
+<ResponseField name="components" type="array">
+  Array of template components (header, body, footer, buttons).
+  
+  <Expandable title="Component Object">
+    <ResponseField name="type" type="string">
+      Component type: `HEADER`, `BODY`, `FOOTER`, `BUTTONS`.
+    </ResponseField>
+    
+    <ResponseField name="format" type="string">
+      For headers: `TEXT`, `IMAGE`, `VIDEO`, `DOCUMENT`.
+    </ResponseField>
+    
+    <ResponseField name="text" type="string">
+      Component text content with parameter placeholders.
+    </ResponseField>
+    
+    <ResponseField name="parameters" type="array">
+      Array of parameter definitions for this component.
+    </ResponseField>
+    
+    <ResponseField name="buttons" type="array">
+      For button components: array of button definitions.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="parameter_count" type="object">
+  Count of parameters by component type.
+  
+  <Expandable title="Parameter Count">
+    <ResponseField name="header" type="integer">
+      Number of parameters in header component.
+    </ResponseField>
+    
+    <ResponseField name="body" type="integer">
+      Number of parameters in body component.
+    </ResponseField>
+    
+    <ResponseField name="buttons" type="integer">
+      Number of dynamic button parameters.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="created_time" type="string">
+  Template creation timestamp.
+</ResponseField>
+
+<ResponseField name="modified_time" type="string">
+  Last modification timestamp.
+</ResponseField>
+
+## Response Examples
+
+### Simple Text Template
+
+```json
+{
+  "id": "1234567890123456",
+  "name": "welcome_message",
+  "status": "APPROVED",
+  "category": "UTILITY",
+  "language": "en_US",
+  "components": [
+    {
+      "type": "BODY",
+      "text": "Welcome to {{1}}! Your account {{2}} is now active.",
+      "parameters": [
+        {
+          "type": "text",
+          "position": 1,
+          "example": "MegaSend"
+        },
+        {
+          "type": "text",
+          "position": 2,
+          "example": "john@example.com"
+        }
+      ]
+    }
+  ],
+  "parameter_count": {
+    "header": 0,
+    "body": 2,
+    "buttons": 0
+  },
+  "created_time": "2024-01-15T10:00:00Z",
+  "modified_time": "2024-01-15T10:00:00Z"
+}
+```
+
+### Media Template with Buttons
+
+```json
+{
+  "id": "1234567890123457",
+  "name": "order_confirmation",
+  "status": "APPROVED",
+  "category": "UTILITY",
+  "language": "en_US",
+  "components": [
+    {
+      "type": "HEADER",
+      "format": "IMAGE",
+      "parameters": [
+        {
+          "type": "image",
+          "position": 1
+        }
+      ]
+    },
+    {
+      "type": "BODY",
+      "text": "Hi {{1}}, your order {{2}} has been confirmed! Total: {{3}}. Estimated delivery: {{4}}.",
+      "parameters": [
+        {
+          "type": "text",
+          "position": 1,
+          "example": "John"
+        },
+        {
+          "type": "text",
+          "position": 2,
+          "example": "ORD-12345"
+        },
+        {
+          "type": "currency",
+          "position": 3,
+          "example": "$99.99"
+        },
+        {
+          "type": "date_time",
+          "position": 4,
+          "example": "January 20, 2024"
+        }
+      ]
+    },
+    {
+      "type": "FOOTER",
+      "text": "Thank you for your business!"
+    },
+    {
+      "type": "BUTTONS",
+      "buttons": [
+        {
+          "type": "URL",
+          "text": "Track Order",
+          "url": "https://store.com/track/{{1}}",
+          "parameters": [
+            {
+              "type": "text",
+              "position": 1,
+              "example": "ORD-12345"
+            }
+          ]
+        },
+        {
+          "type": "PHONE_NUMBER",
+          "text": "Call Support",
+          "phone_number": "+1234567890"
+        }
+      ]
+    }
+  ],
+  "parameter_count": {
+    "header": 1,
+    "body": 4,
+    "buttons": 1
+  },
+  "created_time": "2024-01-10T14:30:00Z",
+  "modified_time": "2024-01-12T09:15:00Z"
+}
+```
+
+### Authentication Template
+
+```json
+{
+  "id": "1234567890123458",
+  "name": "verification_code",
+  "status": "APPROVED",
+  "category": "AUTHENTICATION",
+  "language": "en_US",
+  "components": [
+    {
+      "type": "BODY",
+      "text": "Your verification code is {{1}}. This code expires in 10 minutes.",
+      "parameters": [
+        {
+          "type": "text",
+          "position": 1,
+          "example": "123456"
+        }
+      ]
+    },
+    {
+      "type": "BUTTONS",
+      "buttons": [
+        {
+          "type": "OTP",
+          "text": "Copy Code",
+          "otp_type": "COPY_CODE"
+        }
+      ]
+    }
+  ],
+  "parameter_count": {
+    "header": 0,
+    "body": 1,
+    "buttons": 0
+  },
+  "created_time": "2024-01-08T11:20:00Z",
+  "modified_time": "2024-01-08T11:20:00Z"
+}
+```
+
+## Template Status Types
+
+<AccordionGroup>
+  <Accordion title="APPROVED">
+    Template has been approved by Meta and can be used to send messages.
+    
+    **Actions Available:**
+    - Send messages using this template
+    - View template details
+    - Edit template (limited changes)
+  </Accordion>
+
+  <Accordion title="PENDING">
+    Template is under review by Meta's approval system.
+    
+    **Actions Available:**
+    - View template details
+    - Wait for approval (usually 24-48 hours)
+    - Delete template if needed
+  </Accordion>
+
+  <Accordion title="REJECTED">
+    Template was rejected by Meta and cannot be used.
+    
+    **Actions Available:**
+    - View rejection reason
+    - Edit and resubmit template
+    - Delete template
+  </Accordion>
+
+  <Accordion title="DISABLED">
+    Template was previously approved but is now disabled.
+    
+    **Actions Available:**
+    - View template details
+    - Cannot send messages
+    - May need to create new template
+  </Accordion>
+</AccordionGroup>
+
+## Parameter Types
+
+<AccordionGroup>
+  <Accordion title="Text Parameters">
+    Standard text replacement for dynamic content.
+    
+    ```json
+    {
+      "type": "text",
+      "position": 1,
+      "example": "John Doe"
+    }
+    ```
+  </Accordion>
+
+  <Accordion title="Currency Parameters">
+    Formatted currency values with proper localization.
+    
+    ```json
+    {
+      "type": "currency",
+      "position": 2,
+      "example": "$99.99"
+    }
+    ```
+  </Accordion>
+
+  <Accordion title="Date/Time Parameters">
+    Formatted date and time values.
+    
+    ```json
+    {
+      "type": "date_time",
+      "position": 3,
+      "example": "January 15, 2024 at 2:30 PM"
+    }
+    ```
+  </Accordion>
+
+  <Accordion title="Media Parameters">
+    Dynamic media content for headers.
+    
+    ```json
+    {
+      "type": "image",
+      "position": 1
+    }
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Using Template Details
+
+### Validate Parameters Before Sending
+
+<CodeGroup>
+
+```javascript JavaScript
+// Get template details first
+const template = await fetch(`https://api.megasend.co.il/templates/${instanceId}/template/${templateId}`, {
+  headers: { 'Authorization': 'Bearer YOUR_TOKEN' }
+}).then(r => r.json());
+
+// Validate parameter count
+const bodyComponent = template.components.find(c => c.type === 'BODY');
+const requiredParams = bodyComponent?.parameters?.length || 0;
+
+if (myParameters.length !== requiredParams) {
+  throw new Error(`Template requires ${requiredParams} parameters, got ${myParameters.length}`);
+}
+
+// Send message with validated parameters
+const message = await fetch('https://api.megasend.co.il/messages/send', {
+  method: 'POST',
+  headers: {
+    'Authorization': 'Bearer YOUR_TOKEN',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    instance_id: instanceId,
+    recipient: '+1234567890',
+    message_type: 'template',
+    template_data: {
+      name: template.name,
+      language: template.language,
+      body_params: myParameters.map((value, index) => ({
+        type: 'text',
+        value: value
+      }))
+    }
+  })
+});
+```
+
+```python Python
+import requests
+
+def send_validated_template(instance_id, template_id, recipient, parameters):
+    # Get template details
+    template_response = requests.get(
+        f'https://api.megasend.co.il/templates/{instance_id}/template/{template_id}',
+        headers={'Authorization': 'Bearer YOUR_TOKEN'}
+    )
+    template = template_response.json()
+    
+    # Find body component and validate parameters
+    body_component = next((c for c in template['components'] if c['type'] == 'BODY'), None)
+    required_params = len(body_component.get('parameters', [])) if body_component else 0
+    
+    if len(parameters) != required_params:
+        raise ValueError(f"Template requires {required_params} parameters, got {len(parameters)}")
+    
+    # Send message
+    message_data = {
+        'instance_id': instance_id,
+        'recipient': recipient,
+        'message_type': 'template',
+        'template_data': {
+            'name': template['name'],
+            'language': template['language'],
+            'body_params': [
+                {'type': 'text', 'value': param} for param in parameters
+            ]
+        }
+    }
+    
+    return requests.post(
+        'https://api.megasend.co.il/messages/send',
+        headers={'Authorization': 'Bearer YOUR_TOKEN', 'Content-Type': 'application/json'},
+        json=message_data
+    )
+```
+
+</CodeGroup>
+
+### Dynamic Form Generation
+
+Use template details to create dynamic forms:
+
+```javascript
+function generateTemplateForm(template) {
+  const bodyComponent = template.components.find(c => c.type === 'BODY');
+  const parameters = bodyComponent?.parameters || [];
+  
+  return parameters.map((param, index) => ({
+    name: `param_${param.position}`,
+    label: `Parameter ${param.position}`,
+    type: param.type === 'currency' ? 'number' : 'text',
+    placeholder: param.example,
+    required: true
+  }));
+}
+```
+
+## Error Responses
+
+<ResponseExample>
+
+```json Template Not Found
+{
+  "error": {
+    "code": "TEMPLATE_NOT_FOUND",
+    "message": "Template not found or access denied",
+    "details": {
+      "template_id": "template_12345",
+      "instance_id": "550e8400-e29b-41d4-a716-446655440000"
+    }
+  }
+}
+```
+
+</ResponseExample>
+
+<ResponseExample>
+
+```json Invalid Instance
+{
+  "error": {
+    "code": "INVALID_INSTANCE",
+    "message": "Instance not found or access denied",
+    "details": {
+      "instance_id": "550e8400-e29b-41d4-a716-446655440000"
+    }
+  }
+}
+```
+
+</ResponseExample>
+
+## Best Practices
+
+<Tip>
+**Cache Template Details**: Template structures don't change often. Cache details to avoid repeated API calls.
+</Tip>
+
+<Tip>
+**Validate Before Sending**: Always validate parameter count and types before sending template messages.
+</Tip>
+
+<Warning>
+**Status Checking**: Only use APPROVED templates for sending messages. Check status before sending.
+</Warning>
+
+<Info>
+**Parameter Examples**: Use the provided parameter examples to understand expected format and content.
+</Info>
+
+<Note>
+**Component Order**: Template components are returned in the order they appear in the message (header, body, footer, buttons).
+</Note>

@@ -33,7 +33,9 @@
         "pages": [
           "messages/send",
           "messages/bulk-send",
+          "messages/incoming",
           "templates/create",
+          "templates/details",
           "instances/manage",
           "webhooks/setup",
           "analytics/overview",

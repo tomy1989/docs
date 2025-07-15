@@ -1,0 +1,451 @@
+ ---
+title: 'Get Incoming Messages'
+description: 'Retrieve incoming WhatsApp messages and customer responses using the MegaSend API'
+icon: 'message-arrow-down'
+---
+
+The MegaSend API allows you to retrieve incoming WhatsApp messages from customers, including text messages, media files, and interactive responses.
+
+## Get Incoming Messages
+
+Retrieve a list of incoming messages for a specific WhatsApp instance:
+
+<CodeGroup>
+
+```bash cURL
+curl -X GET "https://api.megasend.co.il/messages/incoming?instance_id=550e8400-e29b-41d4-a716-446655440000&limit=50" \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+```javascript JavaScript
+const response = await fetch('https://api.megasend.co.il/messages/incoming?instance_id=550e8400-e29b-41d4-a716-446655440000&limit=50', {
+  method: 'GET',
+  headers: {
+    'Authorization': 'Bearer YOUR_TOKEN'
+  }
+});
+
+const messages = await response.json();
+```
+
+```python Python
+import requests
+
+response = requests.get(
+    'https://api.megasend.co.il/messages/incoming',
+    headers={
+        'Authorization': 'Bearer YOUR_TOKEN'
+    },
+    params={
+        'instance_id': '550e8400-e29b-41d4-a716-446655440000',
+        'limit': 50
+    }
+)
+
+messages = response.json()
+```
+
+```php PHP
+<?php
+$instanceId = '550e8400-e29b-41d4-a716-446655440000';
+$limit = 50;
+
+$response = file_get_contents(
+    "https://api.megasend.co.il/messages/incoming?instance_id={$instanceId}&limit={$limit}",
+    false,
+    stream_context_create([
+        'http' => [
+            'method' => 'GET',
+            'header' => 'Authorization: Bearer YOUR_TOKEN'
+        ]
+    ])
+);
+
+$messages = json_decode($response, true);
+?>
+```
+
+</CodeGroup>
+
+## Query Parameters
+
+<ParamField query="instance_id" type="string" required>
+  Your WhatsApp instance ID. Get this from the `/instances/me` endpoint.
+</ParamField>
+
+<ParamField query="limit" type="integer" default="50">
+  Maximum number of messages to return (1-100).
+</ParamField>
+
+<ParamField query="offset" type="integer" default="0">
+  Number of messages to skip for pagination.
+</ParamField>
+
+<ParamField query="from_date" type="string">
+  Filter messages from this date (ISO 8601 format: `2024-01-15T10:00:00Z`).
+</ParamField>
+
+<ParamField query="to_date" type="string">
+  Filter messages until this date (ISO 8601 format: `2024-01-15T23:59:59Z`).
+</ParamField>
+
+<ParamField query="sender" type="string">
+  Filter messages from a specific phone number (E.164 format: `+1234567890`).
+</ParamField>
+
+## Response Format
+
+<ResponseField name="messages" type="array">
+  Array of incoming message objects.
+  
+  <Expandable title="Message Object">
+    <ResponseField name="id" type="string">
+      Unique message ID in MegaSend system.
+    </ResponseField>
+    
+    <ResponseField name="wa_message_id" type="string">
+      WhatsApp message ID from Meta.
+    </ResponseField>
+    
+    <ResponseField name="sender" type="string">
+      Sender's phone number in E.164 format.
+    </ResponseField>
+    
+    <ResponseField name="sender_name" type="string">
+      Sender's WhatsApp display name.
+    </ResponseField>
+    
+    <ResponseField name="message_type" type="string">
+      Type of message: `text`, `image`, `video`, `audio`, `document`, `location`, `contacts`, `interactive`.
+    </ResponseField>
+    
+    <ResponseField name="content" type="object">
+      Message content based on message type.
+    </ResponseField>
+    
+    <ResponseField name="timestamp" type="string">
+      Message timestamp in ISO 8601 format.
+    </ResponseField>
+    
+    <ResponseField name="context" type="object">
+      Context information if this is a reply to another message.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="pagination" type="object">
+  Pagination information.
+  
+  <Expandable title="Pagination">
+    <ResponseField name="total" type="integer">
+      Total number of messages available.
+    </ResponseField>
+    
+    <ResponseField name="limit" type="integer">
+      Current limit per page.
+    </ResponseField>
+    
+    <ResponseField name="offset" type="integer">
+      Current offset.
+    </ResponseField>
+    
+    <ResponseField name="has_more" type="boolean">
+      Whether there are more messages available.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+## Response Examples
+
+### Text Message Response
+
+```json
+{
+  "messages": [
+    {
+      "id": "msg_123456789",
+      "wa_message_id": "wamid.HBgLMTY1MDM4Nzk0MzkVAgASGBQzQTMxNzA1QzNENEI4ODY0OTY2MAA=",
+      "sender": "+1234567890",
+      "sender_name": "John Doe",
+      "message_type": "text",
+      "content": {
+        "text": "Thank you for the quick response!"
+      },
+      "timestamp": "2024-01-15T14:30:00Z",
+      "context": null
+    }
+  ],
+  "pagination": {
+    "total": 125,
+    "limit": 50,
+    "offset": 0,
+    "has_more": true
+  }
+}
+```
+
+### Image Message Response
+
+```json
+{
+  "messages": [
+    {
+      "id": "msg_123456790",
+      "wa_message_id": "wamid.HBgLMTY1MDM4Nzk0MzkVAgASGBQzQTMxNzA1QzNENEI4ODY0OTY2MEE=",
+      "sender": "+1234567890",
+      "sender_name": "John Doe",
+      "message_type": "image",
+      "content": {
+        "image": {
+          "id": "media_id_123",
+          "mime_type": "image/jpeg",
+          "sha256": "abc123def456...",
+          "caption": "Here's the photo you requested"
+        }
+      },
+      "timestamp": "2024-01-15T14:35:00Z",
+      "context": {
+        "message_id": "wamid.previous_message_id",
+        "from": "+1234567890"
+      }
+    }
+  ]
+}
+```
+
+### Interactive Response
+
+```json
+{
+  "messages": [
+    {
+      "id": "msg_123456791",
+      "wa_message_id": "wamid.HBgLMTY1MDM4Nzk0MzkVAgASGBQzQTMxNzA1QzNENEI4ODY0OTY2MFE=",
+      "sender": "+1234567890",
+      "sender_name": "John Doe",
+      "message_type": "interactive",
+      "content": {
+        "interactive": {
+          "type": "button_reply",
+          "button_reply": {
+            "id": "btn_confirm_order",
+            "title": "Confirm Order"
+          }
+        }
+      },
+      "timestamp": "2024-01-15T14:40:00Z",
+      "context": {
+        "message_id": "wamid.button_message_id",
+        "from": "+1234567890"
+      }
+    }
+  ]
+}
+```
+
+## Message Types
+
+<AccordionGroup>
+  <Accordion title="Text Messages">
+    Simple text content from customers.
+    
+    ```json
+    {
+      "message_type": "text",
+      "content": {
+        "text": "Customer message content"
+      }
+    }
+    ```
+  </Accordion>
+
+  <Accordion title="Media Messages">
+    Images, videos, audio files, and documents.
+    
+    ```json
+    {
+      "message_type": "image",
+      "content": {
+        "image": {
+          "id": "media_id",
+          "mime_type": "image/jpeg",
+          "sha256": "file_hash",
+          "caption": "Optional caption"
+        }
+      }
+    }
+    ```
+  </Accordion>
+
+  <Accordion title="Location Messages">
+    Location sharing from customers.
+    
+    ```json
+    {
+      "message_type": "location",
+      "content": {
+        "location": {
+          "latitude": 40.7128,
+          "longitude": -74.0060,
+          "name": "New York City",
+          "address": "New York, NY, USA"
+        }
+      }
+    }
+    ```
+  </Accordion>
+
+  <Accordion title="Contact Messages">
+    Contact cards shared by customers.
+    
+    ```json
+    {
+      "message_type": "contacts",
+      "content": {
+        "contacts": [
+          {
+            "name": {
+              "formatted_name": "John Smith",
+              "first_name": "John",
+              "last_name": "Smith"
+            },
+            "phones": [
+              {
+                "phone": "+1234567890",
+                "type": "CELL"
+              }
+            ]
+          }
+        ]
+      }
+    }
+    ```
+  </Accordion>
+
+  <Accordion title="Interactive Responses">
+    Button clicks and list selections.
+    
+    ```json
+    {
+      "message_type": "interactive",
+      "content": {
+        "interactive": {
+          "type": "button_reply",
+          "button_reply": {
+            "id": "button_id",
+            "title": "Button Text"
+          }
+        }
+      }
+    }
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Pagination
+
+Use pagination for large message volumes:
+
+<CodeGroup>
+
+```javascript JavaScript
+// Get first page
+let response = await fetch('https://api.megasend.co.il/messages/incoming?instance_id=YOUR_INSTANCE&limit=50&offset=0');
+let data = await response.json();
+
+// Get next page if available
+if (data.pagination.has_more) {
+  response = await fetch(`https://api.megasend.co.il/messages/incoming?instance_id=YOUR_INSTANCE&limit=50&offset=${data.pagination.offset + data.pagination.limit}`);
+  let nextPage = await response.json();
+}
+```
+
+```python Python
+import requests
+
+def get_all_messages(instance_id, batch_size=50):
+    all_messages = []
+    offset = 0
+    
+    while True:
+        response = requests.get(
+            'https://api.megasend.co.il/messages/incoming',
+            headers={'Authorization': 'Bearer YOUR_TOKEN'},
+            params={
+                'instance_id': instance_id,
+                'limit': batch_size,
+                'offset': offset
+            }
+        )
+        
+        data = response.json()
+        all_messages.extend(data['messages'])
+        
+        if not data['pagination']['has_more']:
+            break
+            
+        offset += batch_size
+    
+    return all_messages
+```
+
+</CodeGroup>
+
+## Filtering Messages
+
+### By Date Range
+
+```javascript
+const response = await fetch('https://api.megasend.co.il/messages/incoming?' + new URLSearchParams({
+  instance_id: 'YOUR_INSTANCE',
+  from_date: '2024-01-01T00:00:00Z',
+  to_date: '2024-01-31T23:59:59Z',
+  limit: 100
+}));
+```
+
+### By Specific Sender
+
+```javascript
+const response = await fetch('https://api.megasend.co.il/messages/incoming?' + new URLSearchParams({
+  instance_id: 'YOUR_INSTANCE',
+  sender: '+1234567890',
+  limit: 50
+}));
+```
+
+## Error Responses
+
+<ResponseExample>
+
+```json Error Response
+{
+  "error": {
+    "code": "INVALID_INSTANCE",
+    "message": "Instance not found or access denied",
+    "details": {
+      "instance_id": "550e8400-e29b-41d4-a716-446655440000"
+    }
+  }
+}
+```
+
+</ResponseExample>
+
+## Best Practices
+
+<Tip>
+**Poll Regularly**: Check for new messages every 30-60 seconds to provide timely responses to customers.
+</Tip>
+
+<Tip>
+**Use Webhooks**: For real-time message processing, consider setting up webhooks instead of polling.
+</Tip>
+
+<Warning>
+**Rate Limits**: Respect API rate limits when polling for messages. Implement exponential backoff for failed requests.
+</Warning>
+
+<Info>
+**Media Files**: Media content is referenced by ID. Use the media download endpoint to retrieve actual files.
+</Info>
