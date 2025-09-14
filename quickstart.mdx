@@ -45,7 +45,7 @@ Choose your preferred authentication method:
     ```bash
     # 2. Create access token using JWT
     curl -X POST "https://api.megasend.co.il/access-tokens/me" \
-      -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+      -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN" \
       -H "Content-Type: application/json" \
       -d '{
         "description": "Quickstart API Token",
@@ -82,13 +82,13 @@ Every WhatsApp Business Account connection in MegaSend is called an "instance." 
 
 ```bash cURL
 curl -X GET "https://api.megasend.co.il/instances/me" \
-  -H "Authorization: Bearer YOUR_TOKEN"
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
 ```
 
 ```javascript JavaScript
 const response = await fetch('https://api.megasend.co.il/instances/me', {
   headers: {
-    'Authorization': 'Bearer YOUR_TOKEN'
+    'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'
   }
 });
 
@@ -101,7 +101,7 @@ import requests
 
 response = requests.get(
     'https://api.megasend.co.il/instances/me',
-    headers={'Authorization': 'Bearer YOUR_TOKEN'}
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'}
 )
 
 instances = response.json()
@@ -117,7 +117,7 @@ curl_setopt_array($curl, [
     CURLOPT_URL => 'https://api.megasend.co.il/instances/me',
     CURLOPT_RETURNTRANSFER => true,
     CURLOPT_HTTPHEADER => [
-        'Authorization: Bearer YOUR_TOKEN'
+        'X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN'
     ],
 ]);
 
@@ -158,7 +158,7 @@ Now let's send a simple text message to a WhatsApp number:
 
 ```bash cURL
 curl -X POST "https://api.megasend.co.il/messages/send" \
-  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
     "instance_id": "550e8400-e29b-41d4-a716-446655440000",
@@ -172,7 +172,7 @@ curl -X POST "https://api.megasend.co.il/messages/send" \
 const response = await fetch('https://api.megasend.co.il/messages/send', {
   method: 'POST',
   headers: {
-    'Authorization': 'Bearer YOUR_TOKEN',
+    'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN',
     'Content-Type': 'application/json'
   },
   body: JSON.stringify({
@@ -193,7 +193,7 @@ import requests
 response = requests.post(
     'https://api.megasend.co.il/messages/send',
     headers={
-        'Authorization': 'Bearer YOUR_TOKEN',
+        'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN',
         'Content-Type': 'application/json'
     },
     json={
@@ -217,7 +217,7 @@ curl_setopt_array($curl, [
     CURLOPT_RETURNTRANSFER => true,
     CURLOPT_POST => true,
     CURLOPT_HTTPHEADER => [
-        'Authorization: Bearer YOUR_TOKEN',
+        'X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN',
         'Content-Type: application/json'
     ],
     CURLOPT_POSTFIELDS => json_encode([
@@ -262,7 +262,7 @@ Messages go through several status updates. You can track the delivery status:
 
 ```bash
 curl -X GET "https://api.megasend.co.il/messages/responses?wa_message_id=wamid.HBgMTIzNDU2Nzg5MDEyMzQVAgARGBI5RkY2NzAyQUIyNEE4RkQ2AA==" \
-  -H "Authorization: Bearer YOUR_TOKEN"
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
 ```
 
 ### Message Status Flow
@@ -398,7 +398,7 @@ try {
   const response = await fetch('https://api.megasend.co.il/messages/send', {
     method: 'POST',
     headers: {
-      'Authorization': 'Bearer YOUR_TOKEN',
+      'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN',
       'Content-Type': 'application/json'
     },
     body: JSON.stringify(messageData)

@@ -16,10 +16,10 @@ https://api.megasend.co.il
 
 ## Authentication
 
-The MegaSend API uses Bearer token authentication. Include your API token in the Authorization header:
+The MegaSend API uses X-MEGASEND-AUTH header authentication. Include your access token in the X-MEGASEND-AUTH header:
 
 ```bash
-Authorization: Bearer YOUR_API_TOKEN
+X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN
 ```
 
 You can obtain your API token from the [MegaSend Dashboard](https://app.megasend.co.il).
@@ -32,7 +32,7 @@ All POST and PUT requests must include the `Content-Type: application/json` head
 
 ```bash
 curl -X POST "https://api.megasend.co.il/messages/send" \
-  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"instance_id": "...", "recipient": "..."}'
 ```
@@ -145,11 +145,11 @@ List endpoints support pagination using cursor-based pagination:
 ```bash
 # First page
 curl "https://api.megasend.co.il/messages?limit=20" \
-  -H "Authorization: Bearer YOUR_TOKEN"
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
 
 # Next page
 curl "https://api.megasend.co.il/messages?limit=20&cursor=eyJpZCI6Im1zZ18yIiwiZGlyZWN0aW9uIjoibmV4dCJ9" \
-  -H "Authorization: Bearer YOUR_TOKEN"
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
 ```
 
 ## Rate Limiting
@@ -203,7 +203,7 @@ For POST requests that create resources, you can include an idempotency key to p
 
 ```bash
 curl -X POST "https://api.megasend.co.il/messages/send" \
-  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -H "Idempotency-Key: msg_unique_key_123" \
   -d '{"instance_id": "...", "recipient": "..."}'

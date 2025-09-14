@@ -24,8 +24,8 @@ Create a simple text-only template:
 <CodeGroup>
 
 ```bash cURL
-curl -X POST "https://api.megasend.co.il/templates/create" \
-  -H "Authorization: Bearer YOUR_TOKEN" \
+curl -X POST "https://api.megasend.co.il/templates/{instance_id}/create" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
     "name": "welcome_message",
@@ -53,10 +53,10 @@ const template = {
   ]
 };
 
-const response = await fetch('https://api.megasend.co.il/templates/create', {
+const response = await fetch('https://api.megasend.co.il/templates/{instance_id}/create', {
   method: 'POST',
   headers: {
-    'Authorization': 'Bearer YOUR_TOKEN',
+    'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN',
     'Content-Type': 'application/json'
   },
   body: JSON.stringify(template)
@@ -81,8 +81,8 @@ template = {
 }
 
 response = requests.post(
-    'https://api.megasend.co.il/templates/create',
-    headers={'Authorization': 'Bearer YOUR_TOKEN'},
+    'https://api.megasend.co.il/templates/{instance_id}/create',
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'},
     json=template
 )
 
@@ -99,7 +99,7 @@ Create a more complex template with header and footer:
 
 ```bash cURL
 curl -X POST "https://api.megasend.co.il/templates/create" \
-  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
     "name": "order_confirmation",
@@ -156,7 +156,7 @@ Create a template with an image, video, or document header:
 
 ```bash cURL
 curl -X POST "https://api.megasend.co.il/templates/create" \
-  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
     "name": "product_announcement",
@@ -217,7 +217,7 @@ Add interactive buttons to your templates:
 
 ```bash cURL
 curl -X POST "https://api.megasend.co.il/templates/create" \
-  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
     "name": "appointment_reminder",
@@ -356,7 +356,7 @@ Templates must be created for each language you want to support:
 
 ```bash cURL - Spanish Template
 curl -X POST "https://api.megasend.co.il/templates/create" \
-  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
     "name": "welcome_message",
@@ -417,7 +417,7 @@ Provide examples for template variables to help with approval:
 
 ```bash cURL
 curl -X POST "https://api.megasend.co.il/templates/create" \
-  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
     "name": "shipping_notification",
@@ -497,13 +497,13 @@ Get all your templates:
 
 ```bash cURL
 curl -X GET "https://api.megasend.co.il/templates?status=APPROVED&limit=50" \
-  -H "Authorization: Bearer YOUR_TOKEN"
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
 ```
 
 ```javascript JavaScript
 const response = await fetch('https://api.megasend.co.il/templates?status=APPROVED&limit=50', {
   headers: {
-    'Authorization': 'Bearer YOUR_TOKEN'
+    'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'
   }
 });
 
@@ -513,7 +513,7 @@ const templates = await response.json();
 ```python Python
 response = requests.get(
     'https://api.megasend.co.il/templates?status=APPROVED&limit=50',
-    headers={'Authorization': 'Bearer YOUR_TOKEN'}
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'}
 )
 
 templates = response.json()
@@ -529,13 +529,13 @@ Retrieve a specific template:
 
 ```bash cURL
 curl -X GET "https://api.megasend.co.il/templates/template_abc123def456" \
-  -H "Authorization: Bearer YOUR_TOKEN"
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
 ```
 
 ```javascript JavaScript
 const response = await fetch('https://api.megasend.co.il/templates/template_abc123def456', {
   headers: {
-    'Authorization': 'Bearer YOUR_TOKEN'
+    'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'
   }
 });
 
@@ -552,7 +552,7 @@ Modify an existing template (creates a new version):
 
 ```bash cURL
 curl -X PUT "https://api.megasend.co.il/templates/template_abc123def456" \
-  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
     "components": [
@@ -577,7 +577,7 @@ const updatedTemplate = {
 const response = await fetch('https://api.megasend.co.il/templates/template_abc123def456', {
   method: 'PUT',
   headers: {
-    'Authorization': 'Bearer YOUR_TOKEN',
+    'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN',
     'Content-Type': 'application/json'
   },
   body: JSON.stringify(updatedTemplate)
@@ -594,14 +594,14 @@ Remove a template from your account:
 
 ```bash cURL
 curl -X DELETE "https://api.megasend.co.il/templates/template_abc123def456" \
-  -H "Authorization: Bearer YOUR_TOKEN"
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
 ```
 
 ```javascript JavaScript
 const response = await fetch('https://api.megasend.co.il/templates/template_abc123def456', {
   method: 'DELETE',
   headers: {
-    'Authorization': 'Bearer YOUR_TOKEN'
+    'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'
   }
 });
 ```
@@ -710,7 +710,7 @@ try {
   const response = await fetch('https://api.megasend.co.il/templates/create', {
     method: 'POST',
     headers: {
-      'Authorization': 'Bearer YOUR_TOKEN',
+      'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN',
       'Content-Type': 'application/json'
     },
     body: JSON.stringify(template)

@@ -1,0 +1,266 @@
+---
+title: 'Message Responses'
+description: 'Track message delivery status, responses, and analytics for your WhatsApp messages'
+icon: 'chart-line'
+---
+
+Monitor the delivery status and responses of your WhatsApp messages. This endpoint provides detailed information about message delivery, read receipts, and customer responses.
+
+## Get Message Responses
+
+Retrieve paginated message delivery status and responses:
+
+<CodeGroup>
+
+```bash cURL
+curl -X GET "https://api.megasend.co.il/messages/responses?instance_id=550e8400-e29b-41d4-a716-446655440000" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
+```
+
+```javascript JavaScript
+const params = new URLSearchParams({
+  instance_id: '550e8400-e29b-41d4-a716-446655440000',
+  page: '1',
+  per_page: '20'
+});
+
+const response = await fetch(`https://api.megasend.co.il/messages/responses?${params}`, {
+  headers: {
+    'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'
+  }
+});
+
+const data = await response.json();
+console.log(`Total messages: ${data.total}`);
+```
+
+```python Python
+import requests
+
+params = {
+    'instance_id': '550e8400-e29b-41d4-a716-446655440000',
+    'page': 1,
+    'per_page': 20
+}
+
+response = requests.get(
+    'https://api.megasend.co.il/messages/responses',
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'},
+    params=params
+)
+
+data = response.json()
+print(f"Total messages: {data['total']}")
+```
+
+```php PHP
+<?php
+$params = http_build_query([
+    'instance_id' => '550e8400-e29b-41d4-a716-446655440000',
+    'page' => 1,
+    'per_page' => 20
+]);
+
+$response = file_get_contents("https://api.megasend.co.il/messages/responses?$params", false, stream_context_create([
+    'http' => [
+        'method' => 'GET',
+        'header' => 'X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN'
+    ]
+]));
+
+$data = json_decode($response, true);
+echo "Total messages: " . $data['total'];
+?>
+```
+
+</CodeGroup>
+
+## Filter by Status
+
+Filter messages by their delivery status:
+
+<CodeGroup>
+
+```bash cURL
+curl -X GET "https://api.megasend.co.il/messages/responses?instance_id=550e8400-e29b-41d4-a716-446655440000&status=delivered" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
+```
+
+```javascript JavaScript
+const params = new URLSearchParams({
+  instance_id: '550e8400-e29b-41d4-a716-446655440000',
+  status: 'delivered',
+  start_date: '2024-01-01T00:00:00Z',
+  end_date: '2024-01-31T23:59:59Z'
+});
+
+const response = await fetch(`https://api.megasend.co.il/messages/responses?${params}`, {
+  headers: {
+    'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'
+  }
+});
+
+const data = await response.json();
+```
+
+```python Python
+from datetime import datetime, timezone
+
+params = {
+    'instance_id': '550e8400-e29b-41d4-a716-446655440000',
+    'status': 'delivered',
+    'start_date': '2024-01-01T00:00:00Z',
+    'end_date': '2024-01-31T23:59:59Z',
+    'message_type': 'template'
+}
+
+response = requests.get(
+    'https://api.megasend.co.il/messages/responses',
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'},
+    params=params
+)
+
+data = response.json()
+```
+
+</CodeGroup>
+
+## Query Parameters
+
+| Parameter | Type | Description | Required |
+|-----------|------|-------------|----------|
+| `instance_id` | UUID | WhatsApp instance ID | ✅ |
+| `status` | string | Filter by message status | ❌ |
+| `start_date` | datetime | Filter messages from this date | ❌ |
+| `end_date` | datetime | Filter messages until this date | ❌ |
+| `message_type` | string | Filter by message type | ❌ |
+| `source` | string | Filter by integration source | ❌ |
+| `page` | integer | Page number (default: 1) | ❌ |
+| `per_page` | integer | Items per page (default: 20, max: 100) | ❌ |
+
+## Message Status Values
+
+| Status | Description |
+|--------|-------------|
+| `sent` | Message was sent to WhatsApp |
+| `delivered` | Message was delivered to recipient |
+| `read` | Message was read by recipient |
+| `failed` | Message delivery failed |
+| `pending` | Message is being processed |
+
+## Message Types
+
+| Type | Description |
+|------|-------------|
+| `text` | Plain text messages |
+| `template` | Template messages |
+| `image` | Image messages |
+| `document` | Document messages |
+| `video` | Video messages |
+| `audio` | Audio messages |
+| `interactive` | Interactive messages with buttons |
+
+## Response Format
+
+```json
+{
+  "data": [
+    {
+      "id": "wamid.abc123def456",
+      "status": "delivered",
+      "recipient": "+1234567890",
+      "message_type": "template",
+      "template_name": "welcome_message",
+      "source": "shopify",
+      "sent_at": "2024-01-15T10:30:00Z",
+      "delivered_at": "2024-01-15T10:30:05Z",
+      "read_at": "2024-01-15T10:35:00Z",
+      "error_code": null,
+      "error_message": null,
+      "pricing": {
+        "billable": true,
+        "pricing_model": "CBP",
+        "category": "marketing"
+      },
+      "conversation": {
+        "id": "conv_abc123def456",
+        "origin": {
+          "type": "marketing"
+        },
+        "expiration_timestamp": "2024-01-16T10:30:00Z"
+      }
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "per_page": 20,
+    "total": 150,
+    "pages": 8,
+    "has_next": true,
+    "has_prev": false
+  }
+}
+```
+
+## Filter by Source
+
+Filter messages by integration source (useful for tracking campaigns):
+
+<CodeGroup>
+
+```bash cURL
+curl -X GET "https://api.megasend.co.il/messages/responses?instance_id=550e8400-e29b-41d4-a716-446655440000&source=shopify" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
+```
+
+```javascript JavaScript
+// Track messages from specific integration
+const shopifyMessages = await fetch('https://api.megasend.co.il/messages/responses?' + new URLSearchParams({
+  instance_id: '550e8400-e29b-41d4-a716-446655440000',
+  source: 'shopify',
+  status: 'delivered'
+}), {
+  headers: { 'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN' }
+});
+
+const websiteMessages = await fetch('https://api.megasend.co.il/messages/responses?' + new URLSearchParams({
+  instance_id: '550e8400-e29b-41d4-a716-446655440000',
+  source: 'website',
+  status: 'delivered'
+}), {
+  headers: { 'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN' }
+});
+```
+
+</CodeGroup>
+
+## Common Source Values
+
+| Source | Description |
+|--------|-------------|
+| `shopify` | Messages from Shopify integration |
+| `website` | Messages from website forms |
+| `api` | Direct API calls |
+| `dashboard` | Messages sent from dashboard |
+| `automation` | Automated campaign messages |
+
+<Note>
+The `source` parameter is optional when sending messages but helps with tracking and analytics when retrieving message responses.
+</Note>
+
+## Error Handling
+
+```json
+{
+  "error": "Invalid instance_id parameter",
+  "code": 400
+}
+```
+
+| Error Code | Description |
+|------------|-------------|
+| `400` | Missing or invalid parameters |
+| `401` | Invalid authentication token |
+| `403` | Access denied to instance |
+| `404` | Instance not found |
+| `429` | Rate limit exceeded |

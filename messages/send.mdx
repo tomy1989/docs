@@ -14,7 +14,7 @@ Send a simple text message to any WhatsApp number:
 
 ```bash cURL
 curl -X POST "https://api.megasend.co.il/messages/send" \
-  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
     "instance_id": "550e8400-e29b-41d4-a716-446655440000",
@@ -28,7 +28,7 @@ curl -X POST "https://api.megasend.co.il/messages/send" \
 const response = await fetch('https://api.megasend.co.il/messages/send', {
   method: 'POST',
   headers: {
-    'Authorization': 'Bearer YOUR_TOKEN',
+    'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN',
     'Content-Type': 'application/json'
   },
   body: JSON.stringify({
@@ -48,7 +48,7 @@ import requests
 response = requests.post(
     'https://api.megasend.co.il/messages/send',
     headers={
-        'Authorization': 'Bearer YOUR_TOKEN',
+        'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN',
         'Content-Type': 'application/json'
     },
     json={
@@ -68,7 +68,7 @@ $response = file_get_contents('https://api.megasend.co.il/messages/send', false,
     'http' => [
         'method' => 'POST',
         'header' => [
-            'Authorization: Bearer YOUR_TOKEN',
+            'X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN',
             'Content-Type: application/json'
         ],
         'content' => json_encode([
@@ -94,7 +94,7 @@ Send images with optional captions:
 
 ```bash cURL
 curl -X POST "https://api.megasend.co.il/messages/send" \
-  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
     "instance_id": "550e8400-e29b-41d4-a716-446655440000",
@@ -121,7 +121,7 @@ const message = {
 const response = await fetch('https://api.megasend.co.il/messages/send', {
   method: 'POST',
   headers: {
-    'Authorization': 'Bearer YOUR_TOKEN',
+    'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN',
     'Content-Type': 'application/json'
   },
   body: JSON.stringify(message)
@@ -141,7 +141,7 @@ message = {
 
 response = requests.post(
     'https://api.megasend.co.il/messages/send',
-    headers={'Authorization': 'Bearer YOUR_TOKEN'},
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'},
     json=message
 )
 ```
@@ -163,7 +163,7 @@ Send PDF files, Word documents, spreadsheets, and other file types:
 
 ```bash cURL
 curl -X POST "https://api.megasend.co.il/messages/send" \
-  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
     "instance_id": "550e8400-e29b-41d4-a716-446655440000",
@@ -206,7 +206,7 @@ Send video content with optional captions:
 
 ```bash cURL
 curl -X POST "https://api.megasend.co.il/messages/send" \
-  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
     "instance_id": "550e8400-e29b-41d4-a716-446655440000",
@@ -248,7 +248,7 @@ Send voice notes and audio files:
 
 ```bash cURL
 curl -X POST "https://api.megasend.co.il/messages/send" \
-  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
     "instance_id": "550e8400-e29b-41d4-a716-446655440000",
@@ -289,7 +289,7 @@ Create messages with action buttons:
 
 ```bash cURL
 curl -X POST "https://api.megasend.co.il/messages/send" \
-  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
     "instance_id": "550e8400-e29b-41d4-a716-446655440000",
@@ -378,7 +378,7 @@ Create messages with selectable lists:
 
 ```bash cURL
 curl -X POST "https://api.megasend.co.il/messages/send" \
-  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
     "instance_id": "550e8400-e29b-41d4-a716-446655440000",
@@ -481,7 +481,7 @@ Use pre-approved WhatsApp Business templates for marketing and notifications:
 
 ```bash cURL
 curl -X POST "https://api.megasend.co.il/messages/send" \
-  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
     "instance_id": "550e8400-e29b-41d4-a716-446655440000",
@@ -558,7 +558,7 @@ Share location coordinates:
 
 ```bash cURL
 curl -X POST "https://api.megasend.co.il/messages/send" \
-  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
     "instance_id": "550e8400-e29b-41d4-a716-446655440000",
@@ -597,7 +597,7 @@ Share contact information:
 
 ```bash cURL
 curl -X POST "https://api.megasend.co.il/messages/send" \
-  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
     "instance_id": "550e8400-e29b-41d4-a716-446655440000",
@@ -691,7 +691,7 @@ try {
   const response = await fetch('https://api.megasend.co.il/messages/send', {
     method: 'POST',
     headers: {
-      'Authorization': 'Bearer YOUR_TOKEN',
+      'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN',
       'Content-Type': 'application/json'
     },
     body: JSON.stringify(messageData)

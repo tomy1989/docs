@@ -28,13 +28,13 @@ Get comprehensive message delivery and engagement statistics:
 
 ```bash cURL
 curl -X GET "https://api.megasend.co.il/analytics/messages?start_date=2024-01-01&end_date=2024-01-31&instance_id=550e8400-e29b-41d4-a716-446655440000" \
-  -H "Authorization: Bearer YOUR_TOKEN"
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
 ```
 
 ```javascript JavaScript
 const response = await fetch('https://api.megasend.co.il/analytics/messages?start_date=2024-01-01&end_date=2024-01-31&instance_id=550e8400-e29b-41d4-a716-446655440000', {
   headers: {
-    'Authorization': 'Bearer YOUR_TOKEN'
+    'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'
   }
 });
 
@@ -47,7 +47,7 @@ import requests
 
 response = requests.get(
     'https://api.megasend.co.il/analytics/messages?start_date=2024-01-01&end_date=2024-01-31&instance_id=550e8400-e29b-41d4-a716-446655440000',
-    headers={'Authorization': 'Bearer YOUR_TOKEN'}
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'}
 )
 
 analytics = response.json()
@@ -121,13 +121,13 @@ Analyze performance by message type:
 
 ```bash cURL
 curl -X GET "https://api.megasend.co.il/analytics/messages/by-type?start_date=2024-01-01&end_date=2024-01-31" \
-  -H "Authorization: Bearer YOUR_TOKEN"
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
 ```
 
 ```javascript JavaScript
 const response = await fetch('https://api.megasend.co.il/analytics/messages/by-type?start_date=2024-01-01&end_date=2024-01-31', {
   headers: {
-    'Authorization': 'Bearer YOUR_TOKEN'
+    'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'
   }
 });
 
@@ -146,13 +146,13 @@ Track conversation patterns and customer journeys:
 
 ```bash cURL
 curl -X GET "https://api.megasend.co.il/analytics/conversations?start_date=2024-01-01&end_date=2024-01-31&group_by=day" \
-  -H "Authorization: Bearer YOUR_TOKEN"
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
 ```
 
 ```javascript JavaScript
 const response = await fetch('https://api.megasend.co.il/analytics/conversations?start_date=2024-01-01&end_date=2024-01-31&group_by=day', {
   headers: {
-    'Authorization': 'Bearer YOUR_TOKEN'
+    'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'
   }
 });
 
@@ -162,7 +162,7 @@ const conversationAnalytics = await response.json();
 ```python Python
 response = requests.get(
     'https://api.megasend.co.il/analytics/conversations?start_date=2024-01-01&end_date=2024-01-31&group_by=day',
-    headers={'Authorization': 'Bearer YOUR_TOKEN'}
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'}
 )
 
 conversation_analytics = response.json()
@@ -216,13 +216,13 @@ Monitor WhatsApp instance performance and reliability:
 
 ```bash cURL
 curl -X GET "https://api.megasend.co.il/analytics/instances/550e8400-e29b-41d4-a716-446655440000/performance?start_date=2024-01-01&end_date=2024-01-31" \
-  -H "Authorization: Bearer YOUR_TOKEN"
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
 ```
 
 ```javascript JavaScript
 const response = await fetch('https://api.megasend.co.il/analytics/instances/550e8400-e29b-41d4-a716-446655440000/performance?start_date=2024-01-01&end_date=2024-01-31', {
   headers: {
-    'Authorization': 'Bearer YOUR_TOKEN'
+    'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'
   }
 });
 
@@ -269,13 +269,13 @@ Analyze the performance of your WhatsApp Business templates:
 
 ```bash cURL
 curl -X GET "https://api.megasend.co.il/analytics/templates?start_date=2024-01-01&end_date=2024-01-31&sort_by=delivery_rate" \
-  -H "Authorization: Bearer YOUR_TOKEN"
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
 ```
 
 ```javascript JavaScript
 const response = await fetch('https://api.megasend.co.il/analytics/templates?start_date=2024-01-01&end_date=2024-01-31&sort_by=delivery_rate', {
   headers: {
-    'Authorization': 'Bearer YOUR_TOKEN'
+    'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'
   }
 });
 
@@ -285,7 +285,7 @@ const templateAnalytics = await response.json();
 ```python Python
 response = requests.get(
     'https://api.megasend.co.il/analytics/templates?start_date=2024-01-01&end_date=2024-01-31&sort_by=delivery_rate',
-    headers={'Authorization': 'Bearer YOUR_TOKEN'}
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'}
 )
 
 template_analytics = response.json()
@@ -344,13 +344,13 @@ Understand how customers interact with your messages:
 
 ```bash cURL
 curl -X GET "https://api.megasend.co.il/analytics/engagement?start_date=2024-01-01&end_date=2024-01-31&segment=all" \
-  -H "Authorization: Bearer YOUR_TOKEN"
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
 ```
 
 ```javascript JavaScript
 const response = await fetch('https://api.megasend.co.il/analytics/engagement?start_date=2024-01-01&end_date=2024-01-31&segment=all', {
   headers: {
-    'Authorization': 'Bearer YOUR_TOKEN'
+    'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'
   }
 });
 
@@ -416,13 +416,13 @@ Track the business impact of your WhatsApp messaging:
 
 ```bash cURL
 curl -X GET "https://api.megasend.co.il/analytics/business-intelligence?start_date=2024-01-01&end_date=2024-01-31&include_revenue=true" \
-  -H "Authorization: Bearer YOUR_TOKEN"
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
 ```
 
 ```javascript JavaScript
 const response = await fetch('https://api.megasend.co.il/analytics/business-intelligence?start_date=2024-01-01&end_date=2024-01-31&include_revenue=true', {
   headers: {
-    'Authorization': 'Bearer YOUR_TOKEN'
+    'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'
   }
 });
 
@@ -432,7 +432,7 @@ const businessAnalytics = await response.json();
 ```python Python
 response = requests.get(
     'https://api.megasend.co.il/analytics/business-intelligence?start_date=2024-01-01&end_date=2024-01-31&include_revenue=true',
-    headers={'Authorization': 'Bearer YOUR_TOKEN'}
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'}
 )
 
 business_analytics = response.json()
@@ -487,13 +487,13 @@ Get real-time metrics for live monitoring:
 
 ```bash cURL
 curl -X GET "https://api.megasend.co.il/analytics/real-time" \
-  -H "Authorization: Bearer YOUR_TOKEN"
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
 ```
 
 ```javascript JavaScript
 const response = await fetch('https://api.megasend.co.il/analytics/real-time', {
   headers: {
-    'Authorization': 'Bearer YOUR_TOKEN'
+    'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'
   }
 });
 
@@ -503,7 +503,7 @@ const liveAnalytics = await response.json();
 ```python Python
 response = requests.get(
     'https://api.megasend.co.il/analytics/real-time',
-    headers={'Authorization': 'Bearer YOUR_TOKEN'}
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'}
 )
 
 live_analytics = response.json()
@@ -552,7 +552,7 @@ Build custom analytics reports with specific metrics:
 
 ```bash cURL
 curl -X POST "https://api.megasend.co.il/analytics/custom-report" \
-  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
     "report_name": "Weekly Marketing Performance",
@@ -601,7 +601,7 @@ const reportConfig = {
 const response = await fetch('https://api.megasend.co.il/analytics/custom-report', {
   method: 'POST',
   headers: {
-    'Authorization': 'Bearer YOUR_TOKEN',
+    'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN',
     'Content-Type': 'application/json'
   },
   body: JSON.stringify(reportConfig)
@@ -635,7 +635,7 @@ class MegaSendAnalytics {
 
     const response = await fetch(`${this.baseUrl}/analytics/messages?${params}`, {
       headers: {
-        'Authorization': `Bearer ${this.apiToken}`
+        'X-MEGASEND-AUTH': `${this.apiToken}`
       }
     });
 
@@ -645,7 +645,7 @@ class MegaSendAnalytics {
   async getRealTimeMetrics() {
     const response = await fetch(`${this.baseUrl}/analytics/real-time`, {
       headers: {
-        'Authorization': `Bearer ${this.apiToken}`
+        'X-MEGASEND-AUTH': `${this.apiToken}`
       }
     });
 
@@ -658,7 +658,7 @@ class MegaSendAnalytics {
     
     const response = await fetch(`${this.baseUrl}/analytics/engagement?start_date=${startDate.toISOString()}&end_date=${endDate.toISOString()}`, {
       headers: {
-        'Authorization': `Bearer ${this.apiToken}`
+        'X-MEGASEND-AUTH': `${this.apiToken}`
       }
     });
 
@@ -720,7 +720,7 @@ class AnalyticsExporter {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': 'Bearer YOUR_BI_TOKEN'
+        'X-MEGASEND-AUTH': 'YOUR_BI_ACCESS_TOKEN'
       },
       body: JSON.stringify(data)
     });
@@ -768,7 +768,7 @@ async function fetchAnalyticsWithErrorHandling(endpoint, params) {
   try {
     const response = await fetch(`https://api.megasend.co.il/analytics/${endpoint}?${params}`, {
       headers: {
-        'Authorization': 'Bearer YOUR_TOKEN'
+        'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'
       }
     });
 

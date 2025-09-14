@@ -14,7 +14,7 @@ Retrieve complete details for a specific template:
 
 ```bash cURL
 curl -X GET "https://api.megasend.co.il/templates/550e8400-e29b-41d4-a716-446655440000/template/template_12345" \
-  -H "Authorization: Bearer YOUR_TOKEN"
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
 ```
 
 ```javascript JavaScript
@@ -24,7 +24,7 @@ const templateId = 'template_12345';
 const response = await fetch(`https://api.megasend.co.il/templates/${instanceId}/template/${templateId}`, {
   method: 'GET',
   headers: {
-    'Authorization': 'Bearer YOUR_TOKEN'
+    'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'
   }
 });
 
@@ -40,7 +40,7 @@ template_id = 'template_12345'
 response = requests.get(
     f'https://api.megasend.co.il/templates/{instance_id}/template/{template_id}',
     headers={
-        'Authorization': 'Bearer YOUR_TOKEN'
+        'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'
     }
 )
 
@@ -58,7 +58,7 @@ $response = file_get_contents(
     stream_context_create([
         'http' => [
             'method' => 'GET',
-            'header' => 'Authorization: Bearer YOUR_TOKEN'
+            'header' => 'X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN'
         ]
     ])
 );
@@ -417,7 +417,7 @@ $template = json_decode($response, true);
 ```javascript JavaScript
 // Get template details first
 const template = await fetch(`https://api.megasend.co.il/templates/${instanceId}/template/${templateId}`, {
-  headers: { 'Authorization': 'Bearer YOUR_TOKEN' }
+  headers: { 'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN' }
 }).then(r => r.json());
 
 // Validate parameter count
@@ -432,7 +432,7 @@ if (myParameters.length !== requiredParams) {
 const message = await fetch('https://api.megasend.co.il/messages/send', {
   method: 'POST',
   headers: {
-    'Authorization': 'Bearer YOUR_TOKEN',
+    'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN',
     'Content-Type': 'application/json'
   },
   body: JSON.stringify({
@@ -458,7 +458,7 @@ def send_validated_template(instance_id, template_id, recipient, parameters):
     # Get template details
     template_response = requests.get(
         f'https://api.megasend.co.il/templates/{instance_id}/template/{template_id}',
-        headers={'Authorization': 'Bearer YOUR_TOKEN'}
+        headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'}
     )
     template = template_response.json()
     
@@ -485,7 +485,7 @@ def send_validated_template(instance_id, template_id, recipient, parameters):
     
     return requests.post(
         'https://api.megasend.co.il/messages/send',
-        headers={'Authorization': 'Bearer YOUR_TOKEN', 'Content-Type': 'application/json'},
+        headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN', 'Content-Type': 'application/json'},
         json=message_data
     )
 ```

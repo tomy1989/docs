@@ -1,0 +1,170 @@
+---
+title: 'List Templates'
+description: 'Retrieve and filter WhatsApp Business message templates for your instances'
+icon: 'list'
+---
+
+Retrieve all WhatsApp Business templates associated with your instances. Templates must be approved by WhatsApp before they can be used to send messages.
+
+## List All Templates
+
+Get all templates for a specific WhatsApp Business instance:
+
+<CodeGroup>
+
+```bash cURL
+curl -X GET "https://api.megasend.co.il/templates/{instance_id}/list" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
+```
+
+```javascript JavaScript
+const response = await fetch('https://api.megasend.co.il/templates/{instance_id}/list', {
+  headers: {
+    'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'
+  }
+});
+
+const templates = await response.json();
+console.log(`Found ${templates.data.length} templates`);
+```
+
+```python Python
+import requests
+
+response = requests.get(
+    'https://api.megasend.co.il/templates/{instance_id}/list',
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'}
+)
+
+templates = response.json()
+print(f"Found {len(templates['data'])} templates")
+```
+
+```php PHP
+<?php
+$response = file_get_contents('https://api.megasend.co.il/templates/{instance_id}/list', false, stream_context_create([
+    'http' => [
+        'method' => 'GET',
+        'header' => 'X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN'
+    ]
+]));
+
+$templates = json_decode($response, true);
+echo "Found " . count($templates['data']) . " templates";
+?>
+```
+
+</CodeGroup>
+
+## Filter Templates
+
+You can filter templates by status and limit the number returned:
+
+<CodeGroup>
+
+```bash cURL
+curl -X GET "https://api.megasend.co.il/templates/{instance_id}/list?status=APPROVED&limit=10" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
+```
+
+```javascript JavaScript
+const params = new URLSearchParams({
+  status: 'APPROVED',
+  limit: '10'
+});
+
+const response = await fetch(`https://api.megasend.co.il/templates/{instance_id}/list?${params}`, {
+  headers: {
+    'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'
+  }
+});
+
+const templates = await response.json();
+```
+
+```python Python
+params = {
+    'status': 'APPROVED',
+    'limit': 10
+}
+
+response = requests.get(
+    'https://api.megasend.co.il/templates/{instance_id}/list',
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'},
+    params=params
+)
+
+templates = response.json()
+```
+
+</CodeGroup>
+
+## Query Parameters
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `status` | string | Filter by template status: `APPROVED`, `PENDING`, `REJECTED` |
+| `limit` | integer | Number of templates to return (1-200, default: 50) |
+
+## Response Format
+
+```json
+{
+  "data": [
+    {
+      "id": "1234567890",
+      "name": "welcome_message",
+      "status": "APPROVED",
+      "category": "MARKETING",
+      "language": "en",
+      "components": [
+        {
+          "type": "BODY",
+          "text": "Welcome to {{1}}! Thank you for signing up."
+        }
+      ],
+      "created_time": "2024-01-15T10:30:00Z",
+      "updated_time": "2024-01-15T12:45:00Z"
+    }
+  ],
+  "paging": {
+    "cursors": {
+      "before": "MTAxNTExOTQ1MjAwNzI5NDE=",
+      "after": "NDMyNzQyODI3OTQw"
+    }
+  }
+}
+```
+
+## Template Status Values
+
+- **APPROVED** - Template is approved and can be used for messaging
+- **PENDING** - Template is under review by WhatsApp
+- **REJECTED** - Template was rejected and cannot be used
+- **DISABLED** - Template was disabled by WhatsApp
+- **PAUSED** - Template is temporarily paused
+- **LIMIT_EXCEEDED** - Template hit quality rating limits
+
+<Note>
+Only `APPROVED` templates can be used to send messages. Templates in other statuses are returned for informational purposes.
+</Note>
+
+## Error Handling
+
+Common error responses:
+
+```json
+{
+  "error": {
+    "message": "Instance not found or access denied",
+    "type": "OAuthException",
+    "code": 190
+  }
+}
+```
+
+| Error Code | Description |
+|------------|-------------|
+| `190` | Invalid access token or instance not found |
+| `100` | Invalid parameter value |
+| `80004` | Application request limit reached |

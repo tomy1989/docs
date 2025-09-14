@@ -7,8 +7,8 @@ icon: 'key'
 The MegaSend API supports multiple authentication methods to ensure secure access to your WhatsApp Business messaging capabilities:
 
 1. **JWT Token Authentication** - For user-based authentication with Keycloak
-2. **API Access Token Authentication** - For server-to-server integrations
-3. **X-MEGASEND-AUTH Header** - Simplified authentication using custom header (recommended for most API requests)
+2. **API Access Token Authentication** - For server-to-server integrations (recommended for client applications)
+3. **X-MEGASEND-AUTH Header** - Simplified authentication using custom header
 
 ## JWT Token Authentication
 
@@ -96,10 +96,10 @@ $refreshToken = $tokens['refresh_token'];
 
 ### Using JWT Tokens
 
-Include the JWT token in the `Authorization` header with the `Bearer` prefix:
+Include the JWT token in the `X-MEGASEND-AUTH` header:
 
 ```bash
-Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJf...
+X-MEGASEND-AUTH: eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJf...
 ```
 
 ### Refreshing JWT Tokens
@@ -144,7 +144,7 @@ First, authenticate with JWT and then create an access token:
 
 ```bash cURL
 curl -X POST "https://api.megasend.co.il/access-tokens/me" \
-  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
     "description": "Production API Integration",
@@ -156,7 +156,7 @@ curl -X POST "https://api.megasend.co.il/access-tokens/me" \
 const response = await fetch('https://api.megasend.co.il/access-tokens/me', {
   method: 'POST',
   headers: {
-    'Authorization': 'Bearer YOUR_JWT_TOKEN',
+    'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN',
     'Content-Type': 'application/json',
   },
   body: JSON.stringify({
@@ -174,7 +174,7 @@ import requests
 response = requests.post(
     'https://api.megasend.co.il/access-tokens/me',
     headers={
-        'Authorization': 'Bearer YOUR_JWT_TOKEN',
+        'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN',
         'Content-Type': 'application/json'
     },
     json={
@@ -213,7 +213,7 @@ You can use access tokens in two ways:
 
 **Option 1: Authorization Header (Standard)**
 ```bash
-Authorization: Bearer mega_token_abc123def456ghi789...
+X-MEGASEND-AUTH: mega_token_abc123def456ghi789...
 ```
 
 **Option 2: X-MEGASEND-AUTH Header (Recommended)**
@@ -227,14 +227,14 @@ X-MEGASEND-AUTH: mega_token_abc123def456ghi789...
 
 ```bash
 curl -X GET "https://api.megasend.co.il/access-tokens/me" \
-  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
 ```
 
 #### Update Token Description
 
 ```bash
 curl -X PUT "https://api.megasend.co.il/access-tokens/me/{token_id}" \
-  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
     "description": "Updated description",
@@ -246,14 +246,14 @@ curl -X PUT "https://api.megasend.co.il/access-tokens/me/{token_id}" \
 
 ```bash
 curl -X POST "https://api.megasend.co.il/access-tokens/me/{token_id}/refresh" \
-  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
 ```
 
 #### Delete Token
 
 ```bash
 curl -X DELETE "https://api.megasend.co.il/access-tokens/me/{token_id}" \
-  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
 ```
 
 ## X-MEGASEND-AUTH Header Authentication
@@ -262,7 +262,7 @@ The `X-MEGASEND-AUTH` header provides a simplified authentication method that's 
 
 ### Using X-MEGASEND-AUTH Header
 
-Instead of using the `Authorization: Bearer` header, you can authenticate using your access token with the custom `X-MEGASEND-AUTH` header:
+You can authenticate using your access token with the custom `X-MEGASEND-AUTH` header:
 
 <CodeGroup>
 
@@ -434,7 +434,7 @@ Use our test endpoint to verify your authentication:
 
 ```bash
 curl -X GET "https://api.megasend.co.il/auth/me" \
-  -H "Authorization: Bearer YOUR_TOKEN"
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
 ```
 
 Successful response:
