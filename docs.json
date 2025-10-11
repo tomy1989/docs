@@ -36,6 +36,7 @@
           "messages/incoming",
           "templates/create",
           "templates/details",
+          "media/upload-guide",
           "instances/manage",
           "webhooks/setup",
           "analytics/overview",
@@ -46,7 +47,8 @@
       {
         "group": "API Reference",
         "pages": [
-          "api-reference/introduction"
+          "api-reference/introduction",
+          "media/api-reference"
         ]
       }
     ]

@@ -4,7 +4,8 @@
       "Read(//h/MegaSend - Cloud/megasend-shopify/**)",
       "Bash(find:*)",
       "Read(//h/MegaSend-CloudApi/app/routes/**)",
-      "Read(//h/MegaSend-CloudApi/**)"
+      "Read(//h/MegaSend-CloudApi/**)",
+      "Bash(git -C \"H:\\MegaSend - Cloud\\docs\" status)"
     ],
     "deny": [],
     "ask": []

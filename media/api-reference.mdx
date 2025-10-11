@@ -1,0 +1,921 @@
+---
+title: 'Media Library API Reference'
+description: 'Complete API reference for managing media files in the WhatsApp Media Library'
+icon: 'photo-film'
+---
+
+The Media Library API provides comprehensive endpoints for uploading, managing, and tracking media files used in WhatsApp messages. All media is stored on Meta's servers with metadata tracked in MegaSend for easy management.
+
+## Base URL
+
+All media endpoints use the base path:
+
+```
+https://api.megasend.co.il/media-library
+```
+
+## Authentication
+
+All requests require authentication via the `X-MEGASEND-AUTH` header:
+
+```bash
+X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN
+```
+
+## Upload Media
+
+Upload a media file to WhatsApp and track it in your media library.
+
+### Endpoint
+
+```
+POST /media-library/{instance_id}/upload
+```
+
+### Parameters
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `instance_id` | UUID | Yes | Your WhatsApp instance ID |
+| `file` | File | Yes | Media file to upload |
+| `description` | String | No | Optional description (max 500 chars) |
+| `tags` | String | No | Comma-separated tags (max 200 chars) |
+
+### Supported File Types
+
+| Type | Formats | Max Size | Notes |
+|------|---------|----------|-------|
+| **Images** | JPEG, PNG, WebP | 5 MB | For photos and graphics |
+| **Videos** | MP4, 3GPP | 16 MB | Up to 10 minutes recommended |
+| **Audio** | AAC, MP4, MPEG, AMR, OGG | 16 MB | For voice messages and audio files |
+| **Documents** | PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX, TXT | 100 MB | Office documents and PDFs |
+| **Stickers** | WebP (animated) | 500 KB | Must be 512x512 pixels |
+
+### Rate Limits
+
+- **30 uploads per hour**
+- **10 uploads per minute**
+- **Minimum 2 seconds between uploads**
+
+<Note>
+Admins are exempt from rate limiting for testing purposes.
+</Note>
+
+### Request Examples
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST "https://api.megasend.co.il/media-library/550e8400-e29b-41d4-a716-446655440000/upload" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN" \
+  -F "file=@/path/to/image.jpg" \
+  -F "description=Product catalog cover image" \
+  -F "tags=product,catalog,2024"
+```
+
+```javascript JavaScript
+const formData = new FormData();
+formData.append('file', fileInput.files[0]);
+formData.append('description', 'Product catalog cover image');
+formData.append('tags', 'product,catalog,2024');
+
+const response = await fetch(
+  'https://api.megasend.co.il/media-library/550e8400-e29b-41d4-a716-446655440000/upload',
+  {
+    method: 'POST',
+    headers: {
+      'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'
+    },
+    body: formData
+  }
+);
+
+const result = await response.json();
+```
+
+```python Python
+import requests
+
+files = {
+    'file': open('/path/to/image.jpg', 'rb')
+}
+
+data = {
+    'description': 'Product catalog cover image',
+    'tags': 'product,catalog,2024'
+}
+
+response = requests.post(
+    'https://api.megasend.co.il/media-library/550e8400-e29b-41d4-a716-446655440000/upload',
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'},
+    files=files,
+    data=data
+)
+
+result = response.json()
+```
+
+</CodeGroup>
+
+### Response
+
+```json
+{
+  "id": "7f8c9d2a-4b3e-4f1a-9c8d-2e3f4a5b6c7d",
+  "meta_media_id": "1234567890123456",
+  "filename": "image.jpg",
+  "mime_type": "image/jpeg",
+  "file_type": "image",
+  "file_size_bytes": 245632,
+  "upload_date": "2024-01-15T10:30:00Z",
+  "expiry_date": "2024-02-14T10:30:00Z",
+  "status": "active",
+  "description": "Product catalog cover image",
+  "tags": ["product", "catalog", "2024"],
+  "usage_count": 0,
+  "instance_id": "550e8400-e29b-41d4-a716-446655440000"
+}
+```
+
+### Error Codes
+
+| Code | Message | Solution |
+|------|---------|----------|
+| 400 | File type not supported | Check supported file types above |
+| 400 | File size exceeds limit | Reduce file size or use compression |
+| 429 | Rate limit exceeded | Wait before uploading again |
+| 413 | Payload too large | File exceeds maximum size for type |
+
+---
+
+## List Media Files
+
+Retrieve a paginated list of media files with filtering and sorting options.
+
+### Endpoint
+
+```
+GET /media-library/{instance_id}/list
+```
+
+### Query Parameters
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `file_type` | String | None | Filter by type: `image`, `video`, `audio`, `document`, `sticker` |
+| `status` | String | None | Filter by status: `active`, `expiring_soon`, `expired` |
+| `include_deleted` | Boolean | false | Include soft-deleted media |
+| `search` | String | None | Search by filename (max 100 chars) |
+| `tags` | String | None | Filter by tags (comma-separated) |
+| `sort_by` | String | `created_at` | Sort field: `created_at`, `upload_date`, `expiry_date`, `filename`, `usage_count`, `file_size_bytes` |
+| `order` | String | `desc` | Sort order: `asc` or `desc` |
+| `limit` | Integer | 50 | Items per page (1-100) |
+| `offset` | Integer | 0 | Pagination offset |
+
+### Request Examples
+
+<CodeGroup>
+
+```bash cURL
+curl "https://api.megasend.co.il/media-library/550e8400-e29b-41d4-a716-446655440000/list?file_type=image&limit=20&sort_by=upload_date&order=desc" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
+```
+
+```javascript JavaScript
+const params = new URLSearchParams({
+  file_type: 'image',
+  limit: '20',
+  sort_by: 'upload_date',
+  order: 'desc'
+});
+
+const response = await fetch(
+  `https://api.megasend.co.il/media-library/550e8400-e29b-41d4-a716-446655440000/list?${params}`,
+  {
+    headers: {
+      'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'
+    }
+  }
+);
+
+const result = await response.json();
+```
+
+```python Python
+params = {
+    'file_type': 'image',
+    'limit': 20,
+    'sort_by': 'upload_date',
+    'order': 'desc'
+}
+
+response = requests.get(
+    'https://api.megasend.co.il/media-library/550e8400-e29b-41d4-a716-446655440000/list',
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'},
+    params=params
+)
+
+result = response.json()
+```
+
+</CodeGroup>
+
+### Response
+
+```json
+{
+  "items": [
+    {
+      "id": "7f8c9d2a-4b3e-4f1a-9c8d-2e3f4a5b6c7d",
+      "meta_media_id": "1234567890123456",
+      "filename": "product-image.jpg",
+      "mime_type": "image/jpeg",
+      "file_type": "image",
+      "file_size_bytes": 245632,
+      "upload_date": "2024-01-15T10:30:00Z",
+      "expiry_date": "2024-02-14T10:30:00Z",
+      "status": "active",
+      "description": "Product catalog image",
+      "tags": ["product", "catalog"],
+      "usage_count": 5
+    }
+  ],
+  "total": 48,
+  "limit": 20,
+  "offset": 0,
+  "has_more": true
+}
+```
+
+---
+
+## Get Media Details
+
+Retrieve detailed information about a specific media file.
+
+### Endpoint
+
+```
+GET /media-library/item/{media_id}
+```
+
+### Request Examples
+
+<CodeGroup>
+
+```bash cURL
+curl "https://api.megasend.co.il/media-library/item/7f8c9d2a-4b3e-4f1a-9c8d-2e3f4a5b6c7d" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
+```
+
+```javascript JavaScript
+const response = await fetch(
+  'https://api.megasend.co.il/media-library/item/7f8c9d2a-4b3e-4f1a-9c8d-2e3f4a5b6c7d',
+  {
+    headers: {
+      'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'
+    }
+  }
+);
+
+const media = await response.json();
+```
+
+```python Python
+response = requests.get(
+    'https://api.megasend.co.il/media-library/item/7f8c9d2a-4b3e-4f1a-9c8d-2e3f4a5b6c7d',
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'}
+)
+
+media = response.json()
+```
+
+</CodeGroup>
+
+### Response
+
+```json
+{
+  "id": "7f8c9d2a-4b3e-4f1a-9c8d-2e3f4a5b6c7d",
+  "meta_media_id": "1234567890123456",
+  "filename": "product-catalog.pdf",
+  "mime_type": "application/pdf",
+  "file_type": "document",
+  "file_size_bytes": 1245632,
+  "upload_date": "2024-01-15T10:30:00Z",
+  "expiry_date": "2024-02-14T10:30:00Z",
+  "status": "active",
+  "description": "Q1 2024 Product Catalog",
+  "tags": ["catalog", "products", "q1-2024"],
+  "usage_count": 42,
+  "instance_id": "550e8400-e29b-41d4-a716-446655440000",
+  "created_at": "2024-01-15T10:30:00Z"
+}
+```
+
+---
+
+## Get Media Download URL
+
+Get a temporary download URL for a media file (valid for 5 minutes).
+
+### Endpoint
+
+```
+GET /media-library/item/{media_id}/url
+```
+
+<Warning>
+The returned URL requires authentication headers to download. For direct downloads without authentication, use the `/download` endpoint instead.
+</Warning>
+
+### Request Examples
+
+<CodeGroup>
+
+```bash cURL
+curl "https://api.megasend.co.il/media-library/item/7f8c9d2a-4b3e-4f1a-9c8d-2e3f4a5b6c7d/url" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
+```
+
+```javascript JavaScript
+const response = await fetch(
+  'https://api.megasend.co.il/media-library/item/7f8c9d2a-4b3e-4f1a-9c8d-2e3f4a5b6c7d/url',
+  {
+    headers: {
+      'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'
+    }
+  }
+);
+
+const urlData = await response.json();
+```
+
+```python Python
+response = requests.get(
+    'https://api.megasend.co.il/media-library/item/7f8c9d2a-4b3e-4f1a-9c8d-2e3f4a5b6c7d/url',
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'}
+)
+
+url_data = response.json()
+```
+
+</CodeGroup>
+
+### Response
+
+```json
+{
+  "url": "https://lookaside.fbsbx.com/whatsapp_business/attachments/?mid=1234567890&ext=1234567890&hash=...",
+  "mime_type": "image/jpeg",
+  "file_size_bytes": 245632,
+  "expires_at": "2024-01-15T10:35:00Z"
+}
+```
+
+---
+
+## Download Media File
+
+Download a media file directly through the MegaSend proxy (no authentication required on the download URL).
+
+### Endpoint
+
+```
+GET /media-library/item/{media_id}/download
+```
+
+<Info>
+This endpoint proxies the download through MegaSend servers, handling Meta's authentication requirements automatically. Perfect for direct download links in your application.
+</Info>
+
+### Request Examples
+
+<CodeGroup>
+
+```bash cURL
+curl "https://api.megasend.co.il/media-library/item/7f8c9d2a-4b3e-4f1a-9c8d-2e3f4a5b6c7d/download" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN" \
+  -o downloaded-file.jpg
+```
+
+```javascript JavaScript
+// Download and create blob URL
+const response = await fetch(
+  'https://api.megasend.co.il/media-library/item/7f8c9d2a-4b3e-4f1a-9c8d-2e3f4a5b6c7d/download',
+  {
+    headers: {
+      'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'
+    }
+  }
+);
+
+const blob = await response.blob();
+const url = URL.createObjectURL(blob);
+
+// Use for download link
+const a = document.createElement('a');
+a.href = url;
+a.download = 'media-file.jpg';
+a.click();
+```
+
+```python Python
+response = requests.get(
+    'https://api.megasend.co.il/media-library/item/7f8c9d2a-4b3e-4f1a-9c8d-2e3f4a5b6c7d/download',
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'},
+    stream=True
+)
+
+with open('downloaded-file.jpg', 'wb') as f:
+    for chunk in response.iter_content(chunk_size=8192):
+        f.write(chunk)
+```
+
+</CodeGroup>
+
+### Response
+
+Binary file content with appropriate headers:
+
+```
+Content-Type: image/jpeg
+Content-Disposition: attachment; filename="product-image.jpg"
+Content-Length: 245632
+```
+
+---
+
+## Update Media Metadata
+
+Update the description and tags of a media file.
+
+### Endpoint
+
+```
+PATCH /media-library/item/{media_id}
+```
+
+<Note>
+You can only update metadata (description and tags). The media file itself cannot be changed - upload a new file instead.
+</Note>
+
+### Request Body
+
+```json
+{
+  "description": "Updated description text",
+  "tags": "new,tags,here"
+}
+```
+
+### Request Examples
+
+<CodeGroup>
+
+```bash cURL
+curl -X PATCH "https://api.megasend.co.il/media-library/item/7f8c9d2a-4b3e-4f1a-9c8d-2e3f4a5b6c7d" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "description": "Updated Q1 2024 Product Catalog",
+    "tags": "catalog,products,q1-2024,updated"
+  }'
+```
+
+```javascript JavaScript
+const response = await fetch(
+  'https://api.megasend.co.il/media-library/item/7f8c9d2a-4b3e-4f1a-9c8d-2e3f4a5b6c7d',
+  {
+    method: 'PATCH',
+    headers: {
+      'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN',
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      description: 'Updated Q1 2024 Product Catalog',
+      tags: 'catalog,products,q1-2024,updated'
+    })
+  }
+);
+
+const updated = await response.json();
+```
+
+```python Python
+response = requests.patch(
+    'https://api.megasend.co.il/media-library/item/7f8c9d2a-4b3e-4f1a-9c8d-2e3f4a5b6c7d',
+    headers={
+        'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN',
+        'Content-Type': 'application/json'
+    },
+    json={
+        'description': 'Updated Q1 2024 Product Catalog',
+        'tags': 'catalog,products,q1-2024,updated'
+    }
+)
+
+updated = response.json()
+```
+
+</CodeGroup>
+
+### Response
+
+Returns the updated media object with new metadata.
+
+---
+
+## Delete Media File
+
+Delete a media file from the library and optionally from Meta's servers.
+
+### Endpoint
+
+```
+DELETE /media-library/item/{media_id}
+```
+
+### Query Parameters
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `delete_from_meta` | Boolean | true | Also delete from Meta's servers |
+
+<Warning>
+Once deleted from Meta's servers, the media cannot be used in messages. Set `delete_from_meta=false` to only soft-delete from your library while keeping it available on Meta.
+</Warning>
+
+### Request Examples
+
+<CodeGroup>
+
+```bash cURL
+# Delete from both library and Meta
+curl -X DELETE "https://api.megasend.co.il/media-library/item/7f8c9d2a-4b3e-4f1a-9c8d-2e3f4a5b6c7d?delete_from_meta=true" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
+```
+
+```javascript JavaScript
+const response = await fetch(
+  'https://api.megasend.co.il/media-library/item/7f8c9d2a-4b3e-4f1a-9c8d-2e3f4a5b6c7d?delete_from_meta=true',
+  {
+    method: 'DELETE',
+    headers: {
+      'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'
+    }
+  }
+);
+
+const result = await response.json();
+```
+
+```python Python
+response = requests.delete(
+    'https://api.megasend.co.il/media-library/item/7f8c9d2a-4b3e-4f1a-9c8d-2e3f4a5b6c7d',
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'},
+    params={'delete_from_meta': True}
+)
+
+result = response.json()
+```
+
+</CodeGroup>
+
+### Response
+
+```json
+{
+  "success": true,
+  "message": "Media deleted successfully"
+}
+```
+
+---
+
+## Bulk Delete Media
+
+Delete multiple media files at once (up to 50 files per request).
+
+### Endpoint
+
+```
+POST /media-library/bulk-delete
+```
+
+### Request Body
+
+```json
+{
+  "media_ids": [
+    "7f8c9d2a-4b3e-4f1a-9c8d-2e3f4a5b6c7d",
+    "8a9b0c1d-2e3f-4a5b-6c7d-8e9f0a1b2c3d"
+  ],
+  "delete_from_meta": true
+}
+```
+
+### Request Examples
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST "https://api.megasend.co.il/media-library/bulk-delete" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "media_ids": [
+      "7f8c9d2a-4b3e-4f1a-9c8d-2e3f4a5b6c7d",
+      "8a9b0c1d-2e3f-4a5b-6c7d-8e9f0a1b2c3d"
+    ],
+    "delete_from_meta": true
+  }'
+```
+
+```javascript JavaScript
+const response = await fetch(
+  'https://api.megasend.co.il/media-library/bulk-delete',
+  {
+    method: 'POST',
+    headers: {
+      'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN',
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      media_ids: [
+        '7f8c9d2a-4b3e-4f1a-9c8d-2e3f4a5b6c7d',
+        '8a9b0c1d-2e3f-4a5b-6c7d-8e9f0a1b2c3d'
+      ],
+      delete_from_meta: true
+    })
+  }
+);
+
+const result = await response.json();
+```
+
+```python Python
+response = requests.post(
+    'https://api.megasend.co.il/media-library/bulk-delete',
+    headers={
+        'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN',
+        'Content-Type': 'application/json'
+    },
+    json={
+        'media_ids': [
+            '7f8c9d2a-4b3e-4f1a-9c8d-2e3f4a5b6c7d',
+            '8a9b0c1d-2e3f-4a5b-6c7d-8e9f0a1b2c3d'
+        ],
+        'delete_from_meta': True
+    }
+)
+
+result = response.json()
+```
+
+</CodeGroup>
+
+### Response
+
+```json
+{
+  "deleted_count": 2,
+  "failed_count": 0,
+  "deleted_ids": [
+    "7f8c9d2a-4b3e-4f1a-9c8d-2e3f4a5b6c7d",
+    "8a9b0c1d-2e3f-4a5b-6c7d-8e9f0a1b2c3d"
+  ],
+  "failed_ids": [],
+  "errors": []
+}
+```
+
+---
+
+## Get Media Statistics
+
+Retrieve aggregated statistics about your media library.
+
+### Endpoint
+
+```
+GET /media-library/{instance_id}/stats
+```
+
+### Request Examples
+
+<CodeGroup>
+
+```bash cURL
+curl "https://api.megasend.co.il/media-library/550e8400-e29b-41d4-a716-446655440000/stats" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
+```
+
+```javascript JavaScript
+const response = await fetch(
+  'https://api.megasend.co.il/media-library/550e8400-e29b-41d4-a716-446655440000/stats',
+  {
+    headers: {
+      'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'
+    }
+  }
+);
+
+const stats = await response.json();
+```
+
+```python Python
+response = requests.get(
+    'https://api.megasend.co.il/media-library/550e8400-e29b-41d4-a716-446655440000/stats',
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'}
+)
+
+stats = response.json()
+```
+
+</CodeGroup>
+
+### Response
+
+```json
+{
+  "total_media": 156,
+  "total_size_bytes": 45623456,
+  "by_type": {
+    "image": 89,
+    "video": 12,
+    "document": 45,
+    "audio": 8,
+    "sticker": 2
+  },
+  "by_status": {
+    "active": 142,
+    "expiring_soon": 8,
+    "expired": 6
+  },
+  "expiring_within_7_days": 8,
+  "most_used": [
+    {
+      "id": "7f8c9d2a-4b3e-4f1a-9c8d-2e3f4a5b6c7d",
+      "filename": "logo.png",
+      "usage_count": 342,
+      "file_type": "image"
+    }
+  ]
+}
+```
+
+---
+
+## Search by Meta Media ID
+
+Find a media file using Meta's media ID.
+
+### Endpoint
+
+```
+GET /media-library/search/by-meta-id
+```
+
+### Query Parameters
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `meta_media_id` | String | Yes | Meta's media ID from webhooks or external sources |
+
+### Request Examples
+
+<CodeGroup>
+
+```bash cURL
+curl "https://api.megasend.co.il/media-library/search/by-meta-id?meta_media_id=1234567890123456" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
+```
+
+```javascript JavaScript
+const response = await fetch(
+  'https://api.megasend.co.il/media-library/search/by-meta-id?meta_media_id=1234567890123456',
+  {
+    headers: {
+      'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'
+    }
+  }
+);
+
+const media = await response.json();
+```
+
+```python Python
+response = requests.get(
+    'https://api.megasend.co.il/media-library/search/by-meta-id',
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'},
+    params={'meta_media_id': '1234567890123456'}
+)
+
+media = response.json()
+```
+
+</CodeGroup>
+
+### Response
+
+Returns the media object if found, or `null` if not found.
+
+---
+
+## Media Status Lifecycle
+
+Media files have different statuses based on their expiry timeline:
+
+| Status | Description | Timeline |
+|--------|-------------|----------|
+| `active` | Ready to use in messages | More than 7 days until expiry |
+| `expiring_soon` | Will expire soon | Within 7 days of expiry |
+| `expired` | No longer usable | Past expiry date (30 days after upload) |
+
+<Warning>
+Meta automatically deletes media files 30 days after upload. Plan your media usage accordingly and re-upload files that need to be used long-term.
+</Warning>
+
+---
+
+## Error Handling
+
+All endpoints return standard HTTP status codes with detailed error messages:
+
+### Common Errors
+
+| Code | Error | Cause | Solution |
+|------|-------|-------|----------|
+| 400 | Invalid request | Malformed parameters or invalid file type | Check request format and file type |
+| 401 | Unauthorized | Missing or invalid auth token | Verify your authentication token |
+| 403 | Forbidden | Insufficient permissions | Check instance ownership |
+| 404 | Not found | Media ID doesn't exist or deleted | Verify media ID is correct |
+| 413 | Payload too large | File exceeds size limit | Reduce file size or use compression |
+| 429 | Rate limit exceeded | Too many requests | Implement exponential backoff |
+| 500 | Server error | Internal server error | Retry with exponential backoff |
+| 502 | Bad gateway | Error communicating with Meta | Retry after a short delay |
+
+### Error Response Format
+
+```json
+{
+  "detail": "File size exceeds maximum limit for image type (5 MB)",
+  "status_code": 400,
+  "error_type": "validation_error"
+}
+```
+
+---
+
+## Best Practices
+
+### File Optimization
+
+1. **Compress images** - Use tools like TinyPNG to reduce file sizes
+2. **Optimize videos** - Use H.264 codec for best compatibility
+3. **Use appropriate formats** - WebP for images, MP4 for videos
+4. **Stay under limits** - Smaller files upload faster and deliver better
+
+### Metadata Management
+
+1. **Use descriptive filenames** - Makes files easier to find
+2. **Add meaningful tags** - Organize media by campaign, product, or category
+3. **Write clear descriptions** - Help team members understand content
+4. **Update regularly** - Keep metadata current as usage changes
+
+### Performance Tips
+
+1. **Reuse media** - Upload once, use many times to save bandwidth
+2. **Monitor expiry dates** - Re-upload important files before they expire
+3. **Clean up unused files** - Regularly delete old media to stay organized
+4. **Use bulk operations** - Delete multiple files at once when needed
+
+### Rate Limiting Strategy
+
+```javascript
+// Implement exponential backoff for rate limits
+async function uploadWithRetry(file, maxRetries = 3) {
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      const response = await uploadMedia(file);
+      return response;
+    } catch (error) {
+      if (error.status === 429 && attempt < maxRetries - 1) {
+        const delay = Math.pow(2, attempt) * 1000; // 1s, 2s, 4s
+        await new Promise(resolve => setTimeout(resolve, delay));
+        continue;
+      }
+      throw error;
+    }
+  }
+}
+```
+
+---
+
+## Next Steps
+
+- [Media Upload Guide](/media/upload-guide) - Learn workflows and best practices
+- [Send Messages](/messages/send) - Use media in WhatsApp messages
+- [Template Management](/templates/create) - Add media to templates
