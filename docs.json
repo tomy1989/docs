@@ -41,6 +41,7 @@
           "webhooks/setup",
           "analytics/overview",
           "contacts/manage",
+          "contacts/labels",
           "unsubscribe/manage"
         ]
       },
