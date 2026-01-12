@@ -279,63 +279,50 @@ All phone numbers must be in international E.164 format:
 - `GET /analytics/instances` - Instance analytics
 - `GET /analytics/templates` - Template performance
 
-## SDK Libraries
+## API Integration
 
-Official SDKs are available for popular programming languages:
+The MegaSend API is designed for easy integration with any programming language that supports HTTP requests. Use the code examples throughout this documentation as templates for your implementation.
 
-### JavaScript/Node.js
+### Integration Examples
+
+Each endpoint in our documentation includes ready-to-use code examples in:
+- **cURL** - Quick testing from command line
+- **JavaScript/Node.js** - Web and server applications
+- **Python** - Backend services and scripts
+- **PHP** - WordPress and traditional web apps
+
+## API Versioning
+
+The API does not use URL path versioning. All endpoints are accessed directly:
+
+```
+https://api.megasend.co.il/messages/send
+https://api.megasend.co.il/instances
+https://api.megasend.co.il/templates
+```
+
+We maintain backward compatibility and provide advance notice before any breaking changes.
+
+## Testing Your Integration
+
+### Development Recommendations
+
+1. **Start with a test WhatsApp number** - Use your own phone number for initial testing
+2. **Monitor webhook responses** - Set up webhook endpoints to track message delivery
+3. **Check rate limit headers** - Monitor `X-RateLimit-Remaining` in responses
+4. **Use instance status endpoint** - Verify your instance is connected before sending
+
+### Verifying Your Setup
+
 ```bash
-npm install @megasend/api
+# Test authentication
+curl -X GET "https://api.megasend.co.il/auth/me" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
+
+# Check instance status
+curl -X GET "https://api.megasend.co.il/instances" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
 ```
-
-### Python
-```bash
-pip install megasend-api
-```
-
-### PHP
-```bash
-composer require megasend/api
-```
-
-### Go
-```bash
-go get github.com/megasend/go-sdk
-```
-
-## Versioning
-
-The API is versioned using URL path versioning. The current version is `v1`:
-
-```
-https://api.megasend.co.il/v1/messages/send
-```
-
-When breaking changes are introduced, a new version will be released. We maintain backward compatibility for at least 12 months.
-
-## Testing
-
-### Sandbox Environment
-
-Use the sandbox environment for testing:
-
-```
-https://api.megasend.co.il
-```
-
-Sandbox features:
-- No actual messages are sent
-- All endpoints return mock responses
-- Rate limits are relaxed
-- Free to use for development
-
-### Test Phone Numbers
-
-Use these test phone numbers that don't send actual messages:
-
-- `+15551234567` - Always succeeds
-- `+15551234568` - Always fails with invalid number
-- `+15551234569` - Simulates rate limit exceeded
 
 ## Support
 
@@ -345,30 +332,22 @@ Use these test phone numbers that don't send actual messages:
 - [Webhook Setup](/webhooks/setup)
 
 ### Help & Support
-- Email: team@weblix.co.il
-- Team Contact: team@weblix.co.il
-- Documentation: https://docs.megasend.co.il
-- Status Page: https://status.megasend.co.il
-
-### Community
-- Discord: [Join our community](https://discord.gg/megasend)
-- GitHub: [View examples](https://github.com/megasend/examples)
+- **Email**: [team@weblix.co.il](mailto:team@weblix.co.il)
+- **Dashboard**: [app.megasend.co.il](https://app.megasend.co.il)
 
 ## OpenAPI Specification
 
-Download the complete OpenAPI 3.0 specification:
+Download the OpenAPI 3.0 specification for use with API tools:
 
-- [JSON Format](/openapi.json)
-- [YAML Format](/openapi.yaml)
+- [OpenAPI Specification](/openapi.json)
 
-You can use this specification with tools like:
-- [Postman](https://postman.com) - API testing
-- [Insomnia](https://insomnia.rest) - API client
-- [OpenAPI Generator](https://openapi-generator.tech) - Generate SDKs
+You can import this specification into:
+- [Postman](https://postman.com) - API testing and collections
+- [Insomnia](https://insomnia.rest) - REST client
+- [OpenAPI Generator](https://openapi-generator.tech) - Generate client libraries
 
 ## Next Steps
 
 1. [Get started with authentication](/authentication)
 2. [Send your first message](/messages/send)
 3. [Set up webhooks](/webhooks/setup)
-4. [Explore our code examples](https://github.com/megasend/examples)

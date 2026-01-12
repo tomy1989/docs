@@ -45,11 +45,10 @@ Choose your preferred authentication method:
     ```bash
     # 2. Create access token using JWT
     curl -X POST "https://api.megasend.co.il/access-tokens/me" \
-      -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN" \
+      -H "X-MEGASEND-AUTH: YOUR_JWT_TOKEN" \
       -H "Content-Type: application/json" \
       -d '{
-        "description": "Quickstart API Token",
-        "expires_at": "2024-12-31T23:59:59Z"
+        "description": "Quickstart API Token"
       }'
     ```
 
@@ -432,20 +431,17 @@ Implement exponential backoff when you hit rate limits. The API returns `429` st
 
 ## Testing & Development
 
-### Test Numbers
+### Development Tips
 
-Use these test numbers to experiment without sending real messages:
+1. **Use your own phone number first** - Test with your personal WhatsApp number before scaling
+2. **Check instance status** - Ensure your WhatsApp instance is connected before sending
+3. **Monitor webhook responses** - Set up webhooks to track delivery status
+4. **Start with text messages** - Verify your setup works before trying templates or media
 
-- `+15550100001` - Always returns successful delivery
-- `+15550100002` - Always fails with "invalid number" error
-- `+15550100003` - Simulates network timeout
-
-### Sandbox Environment
-
-For development, use our sandbox environment:
+### Base URL
 
 ```javascript
-const SANDBOX_BASE_URL = 'https://api.megasend.co.il';
+const BASE_URL = 'https://api.megasend.co.il';
 ```
 
 ## Getting Help
@@ -455,8 +451,6 @@ If you run into issues:
 1. **Check the error message** - Our API provides detailed error descriptions
 2. **Review the documentation** - Most questions are answered here
 3. **Contact support** - Email [team@weblix.co.il](mailto:team@weblix.co.il)
-4. **Contact team** - Email [team@weblix.co.il](mailto:team@weblix.co.il)
-5. **Check system status** - Visit our status page for any known issues
 
 ## Summary
 
