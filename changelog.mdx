@@ -1,0 +1,60 @@
+---
+title: 'Changelog'
+description: 'Release history for the MegaSend API — new features, breaking changes, and bug fixes in reverse chronological order'
+---
+
+This page tracks every public API release. Entries are ordered newest-first and follow the **Added / Changed / Fixed** convention. Integrate against the current stable version unless a migration path is noted.
+
+<Note>
+The current stable API version is **2.0.0**. All endpoints are served at `https://api.megasend.co.il`. Authenticate every request with the `X-MEGASEND-AUTH` header.
+</Note>
+
+---
+
+## 2026-07-13 — v2.0.0
+
+**Current stable release.**
+
+### Added
+
+- **Multi-channel messaging** — single API surface covers WhatsApp (Cloud API), Instagram Direct, Facebook Messenger, Telegram, TikTok (Login Kit), and Telnyx SMS/voice channels. Each channel is identified by a `platform` field on the instance.
+- **WhatsApp Groups** — create and manage WhatsApp groups, send group messages, and receive group webhooks.
+- **Instagram Marketing Messages** — token-based opt-in marketing broadcasts with Custom Fields and Segments (ManyChat-parity).
+- **Website Widget** — embeddable channel launcher with live-chat session tokens (Phase 1 shipped; Phase 2 in progress).
+- **Media Library** — upload once, reuse across messages, templates, and campaigns. Tracks Meta expiry (30-day window), usage counts, and supports bulk delete.
+- **Campaigns** — schedule and send bulk message campaigns with rate-limiting, audience segments, and per-recipient status tracking.
+- **Unsubscribe Management** — generate per-contact opt-out codes, process unsubscribes via public URL (no auth required), and block/unblock contacts programmatically.
+- **Analytics** — instance-level and campaign-level delivery, read-rate, and conversion metrics.
+- **Automation Flows** — keyword triggers, flow builder, and per-channel automation rules (WhatsApp, Instagram, Messenger).
+- **Contact Labels** — tag and filter contacts for targeted sends.
+- **Webhooks** — real-time delivery receipts, inbound messages, and channel health events. Meta and Telegram webhook payloads are verified server-side using HMAC-SHA256 before processing.
+
+### Authentication
+
+All API requests require the `X-MEGASEND-AUTH` header carrying a raw `secrets.token_urlsafe(32)` access token — **no** `Bearer` prefix, **no** token prefix string.
+
+```bash
+curl -X GET "https://api.megasend.co.il/instances" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
+```
+
+---
+
+## How to Add Future Entries
+
+When a new version ships, prepend a block using this template:
+
+```markdown
+## YYYY-MM-DD — vX.Y.Z
+
+### Added
+- …
+
+### Changed
+- …
+
+### Fixed
+- …
+```
+
+Keep entries factual — only document what is verifiably in the deployed API. Do not include sandbox, SLA, or rate-limit numbers unless they appear in the backend source.

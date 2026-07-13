@@ -1,0 +1,74 @@
+---
+title: 'Versioning & Deprecation'
+description: 'How the MegaSend API handles versioning and breaking-change deprecation'
+---
+
+## Current API Version
+
+The MegaSend API is currently **unversioned** — there is no `/v1/` or similar prefix in the URL path. All endpoints are served directly under the base URL:
+
+```
+https://api.megasend.co.il
+```
+
+This means a request looks like:
+
+```bash
+curl -X GET "https://api.megasend.co.il/instances" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
+```
+
+## Backward Compatibility
+
+We aim to keep all changes backward-compatible by default. The following types of changes are considered **non-breaking** and may be made at any time without prior notice:
+
+- Adding new optional request fields
+- Adding new fields to response objects
+- Adding new endpoints
+- Adding new enum values to existing fields (treat unknown enum values defensively in your client code)
+- Improving error messages or adding additional error detail
+
+## Breaking Changes
+
+A **breaking change** is any change that could cause a correctly-written client to fail or behave incorrectly. Examples include:
+
+- Removing or renaming an existing field or endpoint
+- Changing the type or format of an existing field
+- Making a previously optional request field required
+- Changing the semantics of an existing field in an incompatible way
+
+<Warning>
+Breaking changes will be announced in advance via the [Changelog](/changelog). We strongly recommend subscribing to changelog updates so you can plan any required migrations.
+</Warning>
+
+## Deprecation Process
+
+When a field or endpoint is deprecated:
+
+1. It will be documented as deprecated in the [Changelog](/changelog) with the date of the announcement.
+2. It will remain functional for a reasonable migration period — the specific timeline will be stated in the deprecation notice.
+3. It will be removed only after the migration period has elapsed and another changelog entry confirms the removal date.
+
+During the deprecation period, the deprecated item continues to behave exactly as documented. No silent behavior changes are made.
+
+## Recommendations for API Clients
+
+- **Ignore unknown fields.** Always write clients that ignore JSON fields they do not recognize. This ensures your integration survives the addition of new response fields.
+- **Handle unknown enum values gracefully.** Treat unexpected enum values as you would an unknown state rather than an error.
+- **Pin to explicit behavior, not absence.** Do not assume a field is absent — check for its value. New optional fields may appear in existing responses.
+- **Monitor the Changelog.** The [Changelog](/changelog) is the authoritative record of all API changes, deprecation notices, and removal timelines.
+
+## Authentication
+
+All authenticated API calls use the `X-MEGASEND-AUTH` header with your account access token (a raw URL-safe token with no prefix):
+
+```bash
+curl -X GET "https://api.megasend.co.il/instances" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
+```
+
+The authentication scheme itself is not versioned. See [Authentication](/authentication) for full details.
+
+## Questions & Support
+
+If you have questions about a planned migration or need to confirm whether a specific change is breaking for your integration, contact support at [team@weblix.co.il](mailto:team@weblix.co.il).

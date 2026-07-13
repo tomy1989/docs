@@ -1,0 +1,347 @@
+---
+title: 'OTP / 2FA'
+description: 'Send and verify one-time passwords over WhatsApp using AUTHENTICATION category templates'
+icon: 'shield-check'
+---
+
+# OTP / 2FA
+
+MegaSend provides a server-side OTP (one-time password) service that delivers 2FA codes through WhatsApp using Meta-approved AUTHENTICATION category templates. The code is generated and stored securely on the server — you never need to generate or store it yourself.
+
+## How it works
+
+1. Your backend calls **POST /otp/send** with the recipient phone and an approved AUTHENTICATION template.
+2. MegaSend generates a random numeric OTP, stores it in Redis with an expiry, and delivers it via WhatsApp.
+3. Your user enters the code in your app and your backend calls **POST /otp/verify** to confirm it.
+4. A successful verification consumes the code — it cannot be reused.
+
+<Note>
+Both endpoints require a WhatsApp instance that has an approved **AUTHENTICATION** category template. Create and submit the template in the [MegaSend dashboard](https://app.megasend.co.il) or directly through Meta's template manager before calling these APIs.
+</Note>
+
+---
+
+## Send OTP
+
+`POST /otp/send`
+
+Generates a numeric OTP and delivers it to the recipient via the specified AUTHENTICATION template.
+
+<Note>
+**Rate limit:** 3 OTP requests per phone number per 5-minute window.
+</Note>
+
+### Request body
+
+<ParamField body="instance_id" type="string" required>
+  WhatsApp instance ID to send the message from.
+</ParamField>
+
+<ParamField body="phone" type="string" required>
+  Recipient phone number in E.164 format, e.g. `+972501234567`.
+</ParamField>
+
+<ParamField body="template_name" type="string" required>
+  Name of the approved AUTHENTICATION category template to use.
+</ParamField>
+
+<ParamField body="language" type="string" default="en_US">
+  Template language code, e.g. `en_US` or `he`.
+</ParamField>
+
+<ParamField body="otp_length" type="integer" default="6">
+  Number of OTP digits. Must be between `4` and `8`.
+</ParamField>
+
+<ParamField body="expiry_seconds" type="integer" default="600">
+  How long the OTP remains valid, in seconds. Must be between `60` and `3600`.
+</ParamField>
+
+### Response
+
+<ResponseField name="success" type="boolean">
+  `true` when the OTP was generated and the WhatsApp message was queued.
+</ResponseField>
+
+<ResponseField name="phone" type="string">
+  The recipient phone number the OTP was sent to.
+</ResponseField>
+
+<ResponseField name="expires_in" type="integer">
+  Seconds until the OTP expires, matching the `expiry_seconds` you passed.
+</ResponseField>
+
+<ResponseField name="message_id" type="string | null">
+  WhatsApp message ID returned by Meta, if available.
+</ResponseField>
+
+### Examples
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST "https://api.megasend.co.il/otp/send" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "instance_id": "550e8400-e29b-41d4-a716-446655440000",
+    "phone": "+972501234567",
+    "template_name": "account_verification_otp",
+    "language": "en_US",
+    "otp_length": 6,
+    "expiry_seconds": 300
+  }'
+```
+
+```javascript JavaScript
+const response = await fetch('https://api.megasend.co.il/otp/send', {
+  method: 'POST',
+  headers: {
+    'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    instance_id: '550e8400-e29b-41d4-a716-446655440000',
+    phone: '+972501234567',
+    template_name: 'account_verification_otp',
+    language: 'en_US',
+    otp_length: 6,
+    expiry_seconds: 300
+  })
+});
+
+const result = await response.json();
+console.log('OTP sent, expires in:', result.expires_in, 'seconds');
+```
+
+```python Python
+import requests
+
+response = requests.post(
+    'https://api.megasend.co.il/otp/send',
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'},
+    json={
+        'instance_id': '550e8400-e29b-41d4-a716-446655440000',
+        'phone': '+972501234567',
+        'template_name': 'account_verification_otp',
+        'language': 'en_US',
+        'otp_length': 6,
+        'expiry_seconds': 300,
+    }
+)
+
+result = response.json()
+print(f"OTP sent, expires in {result['expires_in']}s")
+```
+
+</CodeGroup>
+
+### Response example
+
+```json
+{
+  "success": true,
+  "phone": "+972501234567",
+  "expires_in": 300,
+  "message_id": "wamid.HBgLNTQyNTAzNDU2NzgVAgARGBI..."
+}
+```
+
+---
+
+## Verify OTP
+
+`POST /otp/verify`
+
+Checks the code the user entered against the one stored for that phone number. The code is consumed on the first successful match — it cannot be used again.
+
+### Request body
+
+<ParamField body="phone" type="string" required>
+  Phone number the OTP was sent to, in E.164 format.
+</ParamField>
+
+<ParamField body="code" type="string" required>
+  The OTP code the user entered.
+</ParamField>
+
+### Response
+
+<ResponseField name="verified" type="boolean">
+  `true` if the code matched and was not expired. `false` otherwise.
+</ResponseField>
+
+<ResponseField name="reason" type="string | null">
+  Human-readable explanation when `verified` is `false`. Possible values: `"OTP expired or not found"`, `"Invalid OTP code"`, `"OTP data corrupted"`.
+</ResponseField>
+
+### Examples
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST "https://api.megasend.co.il/otp/verify" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "phone": "+972501234567",
+    "code": "483921"
+  }'
+```
+
+```javascript JavaScript
+const response = await fetch('https://api.megasend.co.il/otp/verify', {
+  method: 'POST',
+  headers: {
+    'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    phone: '+972501234567',
+    code: '483921'
+  })
+});
+
+const result = await response.json();
+
+if (result.verified) {
+  console.log('Phone verified — allow user access');
+} else {
+  console.warn('Verification failed:', result.reason);
+}
+```
+
+```python Python
+import requests
+
+response = requests.post(
+    'https://api.megasend.co.il/otp/verify',
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'},
+    json={
+        'phone': '+972501234567',
+        'code': '483921',
+    }
+)
+
+result = response.json()
+
+if result['verified']:
+    print('Phone verified — allow user access')
+else:
+    print(f"Verification failed: {result.get('reason')}")
+```
+
+</CodeGroup>
+
+### Response examples
+
+Successful verification:
+
+```json
+{
+  "verified": true,
+  "reason": null
+}
+```
+
+Failed verification:
+
+```json
+{
+  "verified": false,
+  "reason": "OTP expired or not found"
+}
+```
+
+---
+
+## Complete 2FA flow
+
+End-to-end example of a phone verification flow using Node.js/Express:
+
+```javascript
+const express = require('express');
+const app = express();
+app.use(express.json());
+
+const MEGASEND_TOKEN = process.env.MEGASEND_TOKEN;
+const INSTANCE_ID = process.env.MEGASEND_INSTANCE_ID;
+const BASE_URL = 'https://api.megasend.co.il';
+
+// Step 1 — send OTP when user requests verification
+app.post('/auth/send-otp', async (req, res) => {
+  const { phone } = req.body;
+
+  const response = await fetch(`${BASE_URL}/otp/send`, {
+    method: 'POST',
+    headers: {
+      'X-MEGASEND-AUTH': MEGASEND_TOKEN,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      instance_id: INSTANCE_ID,
+      phone,
+      template_name: 'account_verification_otp',
+      language: 'en_US',
+      otp_length: 6,
+      expiry_seconds: 300
+    })
+  });
+
+  const result = await response.json();
+
+  if (!result.success) {
+    return res.status(500).json({ error: 'Failed to send OTP' });
+  }
+
+  res.json({ message: 'OTP sent', expires_in: result.expires_in });
+});
+
+// Step 2 — verify the code the user typed
+app.post('/auth/verify-otp', async (req, res) => {
+  const { phone, code } = req.body;
+
+  const response = await fetch(`${BASE_URL}/otp/verify`, {
+    method: 'POST',
+    headers: {
+      'X-MEGASEND-AUTH': MEGASEND_TOKEN,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ phone, code })
+  });
+
+  const result = await response.json();
+
+  if (result.verified) {
+    // Issue a session or JWT for the verified user
+    res.json({ verified: true });
+  } else {
+    res.status(401).json({ verified: false, reason: result.reason });
+  }
+});
+```
+
+---
+
+## Authentication
+
+All OTP endpoints require your MegaSend access token in the `X-MEGASEND-AUTH` header.
+
+```http
+X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN
+```
+
+You can find your access token in the [MegaSend dashboard](https://app.megasend.co.il) under **API Settings**.
+
+---
+
+## Notes and limitations
+
+<Warning>
+The OTP is **single-use**. Once successfully verified, the code is deleted from Redis and any subsequent verify call for the same phone will return `verified: false`.
+</Warning>
+
+- **Rate limiting:** A maximum of 3 OTP requests per phone number per 5-minute window is enforced server-side, scoped to your account. Excess requests will be rejected with `429 Too Many Requests`.
+- **Expiry range:** `expiry_seconds` must be between 60 (1 minute) and 3600 (1 hour). The default is 600 seconds (10 minutes).
+- **Code length:** `otp_length` must be between 4 and 8 digits. The default is 6.
+- **Template requirement:** The `template_name` must refer to an AUTHENTICATION category template that has been approved by Meta and is available on the specified instance. Using a MARKETING or UTILITY template will result in an error from Meta.

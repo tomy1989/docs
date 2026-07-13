@@ -1,0 +1,1458 @@
+---
+title: 'Campaigns'
+description: 'Create, schedule, and monitor WhatsApp bulk messaging campaigns with Google Sheets or Contact Segment audiences'
+---
+
+# Campaigns
+
+The MegaSend Campaigns API lets you send WhatsApp template messages in bulk to large recipient audiences. Campaigns are driven by approved WhatsApp message templates and support two audience sources: **Google Sheets** (with column mapping) and **Contact Segments** (saved audience filters from your contacts database). Progress is tracked in real time via per-recipient delivery statuses, aggregate stats, and an audit log.
+
+<Note>
+Campaigns are supported on **WhatsApp instances only**. Attempts to create a campaign on Telegram, Messenger, TikTok, or Web instances will return HTTP 400.
+</Note>
+
+## Campaign Object
+
+A campaign goes through a defined lifecycle: `draft` → `running`/`scheduled` → `completed` (or `paused`, `cancelled`, `failed`).
+
+| Field | Type | Description |
+|---|---|---|
+| `id` | UUID | Campaign ID |
+| `name` | string | Display name |
+| `description` | string \| null | Optional description |
+| `template_name` | string | Approved WhatsApp template name |
+| `template_language` | string | Template language code (e.g. `he`, `en_US`) |
+| `template_id` | string \| null | WhatsApp template ID (optional) |
+| `source_type` | string | `google_sheets`, `segment`, `csv_upload`, or `manual` |
+| `source_url` | string \| null | Google Sheets URL (sheets source only) |
+| `status` | string | Current status — see [Status Values](#status-values) |
+| `send_type` | string | `immediate` or `scheduled` |
+| `scheduled_at` | datetime \| null | Execution time for scheduled campaigns |
+| `total_recipients` | integer | Accepted recipients after validation |
+| `messages_sent` | integer | Messages dispatched to WhatsApp |
+| `messages_delivered` | integer | Confirmed delivered count |
+| `messages_read` | integer | Read receipt count |
+| `messages_failed` | integer | Failed send count |
+| `throttle_rate` | integer | Messages per minute (auto-optimized unless overridden) |
+| `batch_size` | integer | Recipients per Celery batch (auto-optimized) |
+| `max_messages` | integer \| null | Budget cap — campaign stops after this many sends |
+| `image_url` | string \| null | Static header image URL or Meta media ID |
+| `video_url` | string \| null | Static header video URL or Meta media ID |
+| `document_url` | string \| null | Static header document URL or Meta media ID |
+| `expiration_time_ms` | integer \| null | Unix ms timestamp for Limited-Time Offer countdown |
+| `estimated_cost` | float \| null | Pre-send cost estimate |
+| `actual_cost` | float \| null | Actual billing cost |
+| `shopify_conversions` | integer \| null | Orders attributed to this campaign (Shopify-connected instances only) |
+| `shopify_revenue` | float \| null | Revenue attributed to this campaign |
+| `shopify_revenue_currency` | string \| null | Currency code for `shopify_revenue` |
+| `shopify_conversion_rate` | float \| null | Conversion rate percentage (conversions / messages_sent × 100) |
+| `auto_paused` | boolean \| null | `true` if system auto-paused due to error rate |
+| `pause_reason` | string \| null | Reason for auto-pause |
+| `started_at` | datetime \| null | When the campaign started running |
+| `completed_at` | datetime \| null | When the campaign finished |
+| `paused_at` | datetime \| null | When the campaign was last paused |
+| `created_at` | datetime | Creation timestamp |
+| `updated_at` | datetime | Last update timestamp |
+
+### Status Values
+
+| Status | Description |
+|---|---|
+| `draft` | Created, not yet started |
+| `scheduled` | Queued for future execution |
+| `running` | Currently sending messages |
+| `paused` | Manually or automatically paused |
+| `completed` | All recipients processed |
+| `cancelled` | Permanently stopped; pending recipients skipped |
+| `failed` | Stopped due to a system error |
+
+### Recipient Statuses
+
+Each individual recipient in a campaign has one of these statuses:
+
+| Status | Description |
+|---|---|
+| `pending` | Waiting to be sent |
+| `queued` | Picked up by Celery worker |
+| `sent` | Dispatched to WhatsApp API |
+| `delivered` | WhatsApp confirmed delivery |
+| `read` | Recipient opened the message |
+| `failed` | Send failed (see `error_message` / `error_code`) |
+| `blocked` | Recipient is on the unsubscribe list |
+| `skipped` | Skipped when campaign was cancelled |
+
+---
+
+## Authentication
+
+All campaign endpoints require the `X-MEGASEND-AUTH` header with your access token.
+
+```
+X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN
+```
+
+All requests also require an `instance_id` query parameter identifying the WhatsApp instance (phone number) to send from.
+
+---
+
+## Validate Google Sheets URL
+
+Before creating a campaign from Google Sheets, validate the sheet URL and retrieve its columns. Use this in your campaign wizard to let users map template parameters to sheet columns.
+
+**`POST /campaigns/validate-sheets?instance_id={id}`**
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST "https://api.megasend.co.il/campaigns/validate-sheets?instance_id=INSTANCE_ID" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "sheets_url": "https://docs.google.com/spreadsheets/d/SHEET_ID/edit",
+    "template_parameters": ["name", "coupon_code"]
+  }'
+```
+
+```javascript JavaScript
+const response = await fetch(
+  'https://api.megasend.co.il/campaigns/validate-sheets?instance_id=INSTANCE_ID',
+  {
+    method: 'POST',
+    headers: {
+      'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN',
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      sheets_url: 'https://docs.google.com/spreadsheets/d/SHEET_ID/edit',
+      template_parameters: ['name', 'coupon_code']
+    })
+  }
+);
+const result = await response.json();
+```
+
+```python Python
+import requests
+
+response = requests.post(
+    'https://api.megasend.co.il/campaigns/validate-sheets',
+    params={'instance_id': 'INSTANCE_ID'},
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'},
+    json={
+        'sheets_url': 'https://docs.google.com/spreadsheets/d/SHEET_ID/edit',
+        'template_parameters': ['name', 'coupon_code']
+    }
+)
+result = response.json()
+```
+
+</CodeGroup>
+
+### Request Body
+
+<ParamField body="sheets_url" type="string" required>
+  Google Sheets URL. Must start with `https://docs.google.com/spreadsheets/`. The sheet must be publicly viewable or shared with the MegaSend service account.
+</ParamField>
+
+<ParamField body="template_parameters" type="array of strings">
+  Template parameter names to validate against sheet columns (e.g. `["name", "coupon_code"]`). Returns which columns are missing.
+</ParamField>
+
+### Response
+
+<ResponseField name="valid" type="boolean">
+  Whether the sheet is accessible and valid.
+</ResponseField>
+
+<ResponseField name="sheet_id" type="string">
+  Extracted Google Sheets document ID.
+</ResponseField>
+
+<ResponseField name="columns" type="array of strings">
+  All column headers found in the sheet.
+</ResponseField>
+
+<ResponseField name="row_count" type="integer">
+  Number of data rows in the sheet.
+</ResponseField>
+
+<ResponseField name="sample_data" type="array of objects">
+  First few rows of the sheet for preview.
+</ResponseField>
+
+<ResponseField name="missing_columns" type="array of strings">
+  Template parameters with no matching column in the sheet.
+</ResponseField>
+
+<ResponseField name="error" type="string">
+  Error message if `valid` is `false`.
+</ResponseField>
+
+```json
+{
+  "valid": true,
+  "sheet_id": "1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgVE2upms",
+  "columns": ["phone", "name", "coupon_code"],
+  "row_count": 1500,
+  "sample_data": [
+    {"phone": "+972501234567", "name": "Dana", "coupon_code": "SAVE20"},
+    {"phone": "+972521234567", "name": "Eli",  "coupon_code": "SAVE20"}
+  ],
+  "missing_columns": [],
+  "required_columns": ["phone", "name", "coupon_code"],
+  "error": null
+}
+```
+
+---
+
+## Create Campaign
+
+Create a new campaign in `draft` status. Accepts either a Google Sheets audience or a saved Contact Segment — not both.
+
+**`POST /campaigns/?instance_id={id}`**
+
+<CodeGroup>
+
+```bash cURL (Google Sheets)
+curl -X POST "https://api.megasend.co.il/campaigns/?instance_id=INSTANCE_ID" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Summer Sale 2026",
+    "description": "Promote our summer sale to opted-in customers",
+    "template_name": "summer_sale_promo",
+    "template_language": "he",
+    "template_parameters": ["name", "coupon_code"],
+    "sheets_url": "https://docs.google.com/spreadsheets/d/SHEET_ID/edit",
+    "column_mapping": {
+      "phone": "phone",
+      "name": "name",
+      "coupon_code": "coupon_code"
+    },
+    "send_type": "immediate",
+    "image_url": "https://cdn.example.com/summer-sale-banner.jpg"
+  }'
+```
+
+```bash cURL (Segment)
+curl -X POST "https://api.megasend.co.il/campaigns/?instance_id=INSTANCE_ID" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "VIP Reactivation",
+    "template_name": "vip_reactivation",
+    "template_language": "en",
+    "template_parameters": ["name"],
+    "segment_id": "d9b2e5f3-1234-4abc-9876-000000000001",
+    "send_type": "scheduled",
+    "scheduled_at": "2026-07-20T10:00:00Z"
+  }'
+```
+
+```javascript JavaScript
+const response = await fetch(
+  'https://api.megasend.co.il/campaigns/?instance_id=INSTANCE_ID',
+  {
+    method: 'POST',
+    headers: {
+      'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN',
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      name: 'Summer Sale 2026',
+      template_name: 'summer_sale_promo',
+      template_language: 'he',
+      template_parameters: ['name', 'coupon_code'],
+      sheets_url: 'https://docs.google.com/spreadsheets/d/SHEET_ID/edit',
+      column_mapping: {
+        phone: 'phone',
+        name: 'name',
+        coupon_code: 'coupon_code'
+      },
+      send_type: 'immediate',
+      image_url: 'https://cdn.example.com/summer-sale-banner.jpg'
+    })
+  }
+);
+const campaign = await response.json();
+console.log('Campaign ID:', campaign.id);
+```
+
+```python Python
+import requests
+
+response = requests.post(
+    'https://api.megasend.co.il/campaigns/',
+    params={'instance_id': 'INSTANCE_ID'},
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'},
+    json={
+        'name': 'Summer Sale 2026',
+        'template_name': 'summer_sale_promo',
+        'template_language': 'he',
+        'template_parameters': ['name', 'coupon_code'],
+        'sheets_url': 'https://docs.google.com/spreadsheets/d/SHEET_ID/edit',
+        'column_mapping': {
+            'phone': 'phone',
+            'name': 'name',
+            'coupon_code': 'coupon_code',
+        },
+        'send_type': 'immediate',
+        'image_url': 'https://cdn.example.com/summer-sale-banner.jpg',
+    }
+)
+campaign = response.json()
+print('Campaign ID:', campaign['id'])
+```
+
+</CodeGroup>
+
+### Request Body
+
+<ParamField body="name" type="string" required>
+  Campaign display name (1–255 characters).
+</ParamField>
+
+<ParamField body="description" type="string">
+  Optional description (max 1000 characters).
+</ParamField>
+
+<ParamField body="template_name" type="string" required>
+  Name of an approved WhatsApp template on this instance. The template must be synced and approved locally — use [Templates](/templates/manage) to sync.
+</ParamField>
+
+<ParamField body="template_language" type="string" required>
+  Language code of the template (e.g. `he`, `en`, `en_US`). Max 10 characters.
+</ParamField>
+
+<ParamField body="template_parameters" type="array of strings" required>
+  Ordered list of parameter names that appear in the template body (e.g. `["name", "coupon_code"]`). Must match your `column_mapping` keys.
+</ParamField>
+
+<ParamField body="default_parameters" type="object">
+  Fallback values for parameters when the sheet cell is empty. Keys are parameter names, values are strings.
+</ParamField>
+
+**Audience source — provide exactly one:**
+
+<ParamField body="sheets_url" type="string">
+  Google Sheets URL. Required when not using `segment_id`. Must start with `https://docs.google.com/spreadsheets/`.
+</ParamField>
+
+<ParamField body="column_mapping" type="object">
+  Maps template parameter names (and recipient identifiers) to sheet column names. Required when using `sheets_url`. Must include at least one of `phone` or `bsuid`.
+
+  ```json
+  {
+    "phone": "Phone Number",
+    "name": "Customer Name",
+    "coupon_code": "Coupon"
+  }
+  ```
+</ParamField>
+
+<ParamField body="segment_id" type="UUID">
+  ID of a saved Contact Segment. Mutually exclusive with `sheets_url` / `column_mapping`.
+</ParamField>
+
+**Scheduling:**
+
+<ParamField body="send_type" type="string" default="immediate">
+  `immediate` to start now (or after `/start`), or `scheduled` to defer to `scheduled_at`.
+</ParamField>
+
+<ParamField body="scheduled_at" type="datetime">
+  ISO 8601 UTC datetime for scheduled campaigns. Required when `send_type` is `scheduled`. Must be in the future.
+</ParamField>
+
+**Rate and budget control:**
+
+<ParamField body="throttle_rate" type="integer">
+  Messages per minute. Auto-optimized by default (10–4800). Override only if you need to stay under a specific rate.
+</ParamField>
+
+<ParamField body="batch_size" type="integer">
+  Recipients per Celery batch. Auto-optimized by default (50–1000).
+</ParamField>
+
+<ParamField body="max_messages" type="integer">
+  Budget cap. Campaign stops after this many messages are sent. Min 1.
+</ParamField>
+
+**Header media (static — same for all recipients):**
+
+<ParamField body="image_url" type="string">
+  Image URL (`https://`) or Meta media ID (numeric string) for IMAGE header templates.
+</ParamField>
+
+<ParamField body="video_url" type="string">
+  Video URL or Meta media ID for VIDEO header templates.
+</ParamField>
+
+<ParamField body="document_url" type="string">
+  Document URL or Meta media ID for DOCUMENT header templates.
+</ParamField>
+
+**Dynamic per-recipient media (sheets source only):**
+
+<ParamField body="image_url_column" type="string">
+  Sheet column name whose value is used as the image URL for each recipient row.
+</ParamField>
+
+<ParamField body="video_url_column" type="string">
+  Sheet column name for per-recipient video URLs.
+</ParamField>
+
+<ParamField body="document_url_column" type="string">
+  Sheet column name for per-recipient document URLs.
+</ParamField>
+
+<ParamField body="expiration_time_ms" type="integer">
+  Unix timestamp in milliseconds for Limited-Time Offer (LTO) template countdown timers.
+</ParamField>
+
+### Response (HTTP 201)
+
+Returns the campaign object. For Google Sheets campaigns, the response also includes:
+
+<ResponseField name="invalid_summary" type="object">
+  Breakdown of recipients excluded during import. Fields: `blocked`, `invalid_phone`, `missing_identifier`, `other`, `total_invalid`.
+</ResponseField>
+
+<ResponseField name="truncated_rows" type="integer">
+  Sheet rows dropped because the per-campaign recipient cap was reached. `0` means no truncation occurred.
+</ResponseField>
+
+```json
+{
+  "id": "a1b2c3d4-0000-4000-8000-000000000001",
+  "user_id": "ffffffff-0000-4000-8000-000000000001",
+  "instance_id": "eeeeeeee-0000-4000-8000-000000000001",
+  "name": "Summer Sale 2026",
+  "description": "Promote our summer sale to opted-in customers",
+  "template_name": "summer_sale_promo",
+  "template_language": "he",
+  "template_id": null,
+  "source_type": "google_sheets",
+  "source_url": "https://docs.google.com/spreadsheets/d/SHEET_ID/edit",
+  "source_data": null,
+  "status": "draft",
+  "send_type": "immediate",
+  "scheduled_at": null,
+  "total_recipients": 1483,
+  "messages_sent": 0,
+  "messages_delivered": 0,
+  "messages_read": 0,
+  "messages_failed": 0,
+  "throttle_rate": 120,
+  "batch_size": 200,
+  "max_messages": null,
+  "image_url": "https://cdn.example.com/summer-sale-banner.jpg",
+  "video_url": null,
+  "document_url": null,
+  "expiration_time_ms": null,
+  "estimated_cost": 7.42,
+  "actual_cost": null,
+  "invalid_summary": {
+    "blocked": 12,
+    "invalid_phone": 5,
+    "missing_identifier": 0,
+    "other": 0,
+    "total_invalid": 17
+  },
+  "truncated_rows": 0,
+  "auto_paused": null,
+  "pause_reason": null,
+  "started_at": null,
+  "completed_at": null,
+  "paused_at": null,
+  "created_at": "2026-07-13T09:00:00Z",
+  "updated_at": "2026-07-13T09:00:00Z"
+}
+```
+
+---
+
+## List Campaigns
+
+Retrieve all campaigns for an instance with optional filtering and pagination.
+
+**`GET /campaigns/?instance_id={id}`**
+
+<CodeGroup>
+
+```bash cURL
+curl "https://api.megasend.co.il/campaigns/?instance_id=INSTANCE_ID&page=1&per_page=20&status=running" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
+```
+
+```javascript JavaScript
+const params = new URLSearchParams({
+  instance_id: 'INSTANCE_ID',
+  page: 1,
+  per_page: 20,
+  status: 'running'
+});
+const response = await fetch(
+  `https://api.megasend.co.il/campaigns/?${params}`,
+  { headers: { 'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN' } }
+);
+const result = await response.json();
+```
+
+```python Python
+response = requests.get(
+    'https://api.megasend.co.il/campaigns/',
+    params={
+        'instance_id': 'INSTANCE_ID',
+        'page': 1,
+        'per_page': 20,
+        'status': 'running'
+    },
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'}
+)
+result = response.json()
+```
+
+</CodeGroup>
+
+### Query Parameters
+
+<ParamField query="instance_id" type="string" required>
+  Instance ID.
+</ParamField>
+
+<ParamField query="page" type="integer" default="1">
+  Page number (minimum 1).
+</ParamField>
+
+<ParamField query="per_page" type="integer" default="20">
+  Items per page (1–100).
+</ParamField>
+
+<ParamField query="status" type="string">
+  Filter by campaign status: `draft`, `scheduled`, `running`, `paused`, `completed`, `cancelled`, or `failed`.
+</ParamField>
+
+<ParamField query="search" type="string">
+  Case-insensitive substring search on campaign name.
+</ParamField>
+
+### Response
+
+```json
+{
+  "items": [ /* array of campaign objects */ ],
+  "total": 42,
+  "page": 1,
+  "per_page": 20,
+  "total_pages": 3
+}
+```
+
+---
+
+## Get Campaign
+
+Retrieve a single campaign by ID.
+
+**`GET /campaigns/{campaign_id}?instance_id={id}`**
+
+<CodeGroup>
+
+```bash cURL
+curl "https://api.megasend.co.il/campaigns/CAMPAIGN_ID?instance_id=INSTANCE_ID" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
+```
+
+```javascript JavaScript
+const response = await fetch(
+  `https://api.megasend.co.il/campaigns/CAMPAIGN_ID?instance_id=INSTANCE_ID`,
+  { headers: { 'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN' } }
+);
+const campaign = await response.json();
+```
+
+```python Python
+response = requests.get(
+    f'https://api.megasend.co.il/campaigns/CAMPAIGN_ID',
+    params={'instance_id': 'INSTANCE_ID'},
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'}
+)
+campaign = response.json()
+```
+
+</CodeGroup>
+
+Returns a single [campaign object](#campaign-object).
+
+---
+
+## Aggregate Stats
+
+Get totals across all campaigns for an instance.
+
+**`GET /campaigns/stats?instance_id={id}`**
+
+<CodeGroup>
+
+```bash cURL
+curl "https://api.megasend.co.il/campaigns/stats?instance_id=INSTANCE_ID" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
+```
+
+```javascript JavaScript
+const response = await fetch(
+  'https://api.megasend.co.il/campaigns/stats?instance_id=INSTANCE_ID',
+  { headers: { 'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN' } }
+);
+const stats = await response.json();
+```
+
+```python Python
+response = requests.get(
+    'https://api.megasend.co.il/campaigns/stats',
+    params={'instance_id': 'INSTANCE_ID'},
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'}
+)
+stats = response.json()
+```
+
+</CodeGroup>
+
+### Response
+
+<ResponseField name="total_campaigns" type="integer">
+  Total non-deleted campaigns on this instance.
+</ResponseField>
+
+<ResponseField name="active_campaigns" type="integer">
+  Campaigns currently in `running` or `scheduled` status.
+</ResponseField>
+
+<ResponseField name="total_recipients" type="integer">
+  Sum of `total_recipients` across all campaigns.
+</ResponseField>
+
+<ResponseField name="messages_sent" type="integer">
+  Total messages dispatched across all campaigns.
+</ResponseField>
+
+<ResponseField name="messages_delivered" type="integer">
+  Total confirmed deliveries.
+</ResponseField>
+
+<ResponseField name="messages_read" type="integer">
+  Total read receipts.
+</ResponseField>
+
+<ResponseField name="messages_failed" type="integer">
+  Total failed sends.
+</ResponseField>
+
+<ResponseField name="pending_count" type="integer">
+  Recipients still in `pending` status across all campaigns.
+</ResponseField>
+
+<ResponseField name="progress_percentage" type="float">
+  Overall send progress as a percentage (sent / total_recipients × 100).
+</ResponseField>
+
+<ResponseField name="estimated_cost" type="float | null">
+  Sum of estimated costs across campaigns (null if all zero).
+</ResponseField>
+
+<ResponseField name="actual_cost" type="float | null">
+  Sum of actual costs across campaigns (null if all zero).
+</ResponseField>
+
+```json
+{
+  "total_campaigns": 8,
+  "active_campaigns": 1,
+  "total_recipients": 12480,
+  "messages_sent": 11950,
+  "messages_delivered": 11700,
+  "messages_read": 8200,
+  "messages_failed": 250,
+  "pending_count": 530,
+  "progress_percentage": 95.75,
+  "estimated_cost": 62.4,
+  "actual_cost": 59.75
+}
+```
+
+---
+
+## Campaign Lifecycle
+
+### Start Campaign
+
+Start sending a draft campaign immediately, or restart a failed one.
+
+**`POST /campaigns/{campaign_id}/start?instance_id={id}`**
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST "https://api.megasend.co.il/campaigns/CAMPAIGN_ID/start?instance_id=INSTANCE_ID" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
+```
+
+```javascript JavaScript
+const response = await fetch(
+  `https://api.megasend.co.il/campaigns/CAMPAIGN_ID/start?instance_id=INSTANCE_ID`,
+  { method: 'POST', headers: { 'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN' } }
+);
+const result = await response.json();
+```
+
+```python Python
+response = requests.post(
+    f'https://api.megasend.co.il/campaigns/CAMPAIGN_ID/start',
+    params={'instance_id': 'INSTANCE_ID'},
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'}
+)
+```
+
+</CodeGroup>
+
+**Query parameters:**
+
+<ParamField query="resume" type="boolean" default="false">
+  Pass `resume=true` to continue a `failed` campaign from where it stopped — only unsent recipients are re-processed. Without this flag, all recipients are reset and the campaign starts over.
+</ParamField>
+
+**Response:**
+
+```json
+{
+  "status": "running",
+  "campaign_id": "CAMPAIGN_ID",
+  "message": "Campaign started successfully"
+}
+```
+
+---
+
+### Schedule Campaign
+
+Schedule an existing draft campaign for future execution.
+
+**`POST /campaigns/{campaign_id}/schedule?instance_id={id}`**
+
+Allowed from statuses: `draft`, `completed`, `cancelled`, `failed`. For completed/cancelled/failed campaigns, all recipients are reset to `pending`.
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST "https://api.megasend.co.il/campaigns/CAMPAIGN_ID/schedule?instance_id=INSTANCE_ID" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"scheduled_at": "2026-07-20T10:00:00Z"}'
+```
+
+```javascript JavaScript
+const response = await fetch(
+  `https://api.megasend.co.il/campaigns/CAMPAIGN_ID/schedule?instance_id=INSTANCE_ID`,
+  {
+    method: 'POST',
+    headers: {
+      'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN',
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ scheduled_at: '2026-07-20T10:00:00Z' })
+  }
+);
+```
+
+```python Python
+response = requests.post(
+    f'https://api.megasend.co.il/campaigns/CAMPAIGN_ID/schedule',
+    params={'instance_id': 'INSTANCE_ID'},
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'},
+    json={'scheduled_at': '2026-07-20T10:00:00Z'}
+)
+```
+
+</CodeGroup>
+
+**Request body:**
+
+<ParamField body="scheduled_at" type="datetime" required>
+  ISO 8601 UTC datetime. Must be in the future.
+</ParamField>
+
+**Response:**
+
+```json
+{
+  "status": "scheduled",
+  "campaign_id": "CAMPAIGN_ID",
+  "scheduled_at": "2026-07-20T10:00:00Z",
+  "message": "Campaign scheduled successfully"
+}
+```
+
+---
+
+### Pause Campaign
+
+Pause a running campaign. Sending stops; the campaign can be resumed later.
+
+**`POST /campaigns/{campaign_id}/pause?instance_id={id}`**
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST "https://api.megasend.co.il/campaigns/CAMPAIGN_ID/pause?instance_id=INSTANCE_ID" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
+```
+
+```javascript JavaScript
+await fetch(
+  `https://api.megasend.co.il/campaigns/CAMPAIGN_ID/pause?instance_id=INSTANCE_ID`,
+  { method: 'POST', headers: { 'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN' } }
+);
+```
+
+```python Python
+requests.post(
+    f'https://api.megasend.co.il/campaigns/CAMPAIGN_ID/pause',
+    params={'instance_id': 'INSTANCE_ID'},
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'}
+)
+```
+
+</CodeGroup>
+
+**Response:** `{"status": "paused", "campaign_id": "...", "message": "Campaign paused successfully"}`
+
+---
+
+### Resume Campaign
+
+Resume a paused campaign. Only `paused` campaigns can be resumed.
+
+**`POST /campaigns/{campaign_id}/resume?instance_id={id}`**
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST "https://api.megasend.co.il/campaigns/CAMPAIGN_ID/resume?instance_id=INSTANCE_ID" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
+```
+
+```javascript JavaScript
+await fetch(
+  `https://api.megasend.co.il/campaigns/CAMPAIGN_ID/resume?instance_id=INSTANCE_ID`,
+  { method: 'POST', headers: { 'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN' } }
+);
+```
+
+```python Python
+requests.post(
+    f'https://api.megasend.co.il/campaigns/CAMPAIGN_ID/resume',
+    params={'instance_id': 'INSTANCE_ID'},
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'}
+)
+```
+
+</CodeGroup>
+
+**Response:** `{"status": "running", "campaign_id": "...", "message": "Campaign resumed successfully"}`
+
+---
+
+### Cancel Campaign
+
+Permanently cancel a campaign. All `pending` and `queued` recipients are marked `skipped`. Allowed from `draft`, `running`, or `paused` status.
+
+<Warning>
+Cancellation is permanent. You cannot restart a cancelled campaign — you must duplicate it instead.
+</Warning>
+
+**`POST /campaigns/{campaign_id}/cancel?instance_id={id}`**
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST "https://api.megasend.co.il/campaigns/CAMPAIGN_ID/cancel?instance_id=INSTANCE_ID" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
+```
+
+```javascript JavaScript
+await fetch(
+  `https://api.megasend.co.il/campaigns/CAMPAIGN_ID/cancel?instance_id=INSTANCE_ID`,
+  { method: 'POST', headers: { 'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN' } }
+);
+```
+
+```python Python
+requests.post(
+    f'https://api.megasend.co.il/campaigns/CAMPAIGN_ID/cancel',
+    params={'instance_id': 'INSTANCE_ID'},
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'}
+)
+```
+
+</CodeGroup>
+
+**Response:** `{"status": "cancelled", "campaign_id": "...", "message": "Campaign cancelled successfully"}`
+
+---
+
+### Duplicate Campaign
+
+Create a copy of any campaign as a new `draft`. All recipients are reset to `pending`. The copy's name is `"{original name} (Copy)"`.
+
+**`POST /campaigns/{campaign_id}/duplicate?instance_id={id}`** → HTTP 201
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST "https://api.megasend.co.il/campaigns/CAMPAIGN_ID/duplicate?instance_id=INSTANCE_ID" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
+```
+
+```javascript JavaScript
+const response = await fetch(
+  `https://api.megasend.co.il/campaigns/CAMPAIGN_ID/duplicate?instance_id=INSTANCE_ID`,
+  { method: 'POST', headers: { 'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN' } }
+);
+const newCampaign = await response.json();
+console.log('New campaign ID:', newCampaign.id);
+```
+
+```python Python
+response = requests.post(
+    f'https://api.megasend.co.il/campaigns/CAMPAIGN_ID/duplicate',
+    params={'instance_id': 'INSTANCE_ID'},
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'}
+)
+new_campaign = response.json()
+```
+
+</CodeGroup>
+
+Returns the new campaign object with `status: "draft"`.
+
+---
+
+## Update Campaign
+
+Update metadata or schedule on a non-completed campaign.
+
+**`PATCH /campaigns/{campaign_id}?instance_id={id}`**
+
+<Note>
+Running and paused campaigns can only have `throttle_rate`, `batch_size`, and `max_messages` updated. Name, description, and schedule changes require `draft` or `scheduled` status.
+</Note>
+
+<CodeGroup>
+
+```bash cURL
+curl -X PATCH "https://api.megasend.co.il/campaigns/CAMPAIGN_ID?instance_id=INSTANCE_ID" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Summer Sale 2026 (Revised)",
+    "throttle_rate": 60
+  }'
+```
+
+```javascript JavaScript
+const response = await fetch(
+  `https://api.megasend.co.il/campaigns/CAMPAIGN_ID?instance_id=INSTANCE_ID`,
+  {
+    method: 'PATCH',
+    headers: {
+      'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN',
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ throttle_rate: 60 })
+  }
+);
+const updated = await response.json();
+```
+
+```python Python
+response = requests.patch(
+    f'https://api.megasend.co.il/campaigns/CAMPAIGN_ID',
+    params={'instance_id': 'INSTANCE_ID'},
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'},
+    json={'throttle_rate': 60}
+)
+```
+
+</CodeGroup>
+
+**Request body (all fields optional):**
+
+<ParamField body="name" type="string">
+  New campaign name (1–255 chars). Draft/scheduled only.
+</ParamField>
+
+<ParamField body="description" type="string">
+  New description (max 1000 chars). Draft/scheduled only.
+</ParamField>
+
+<ParamField body="throttle_rate" type="integer">
+  New messages-per-minute rate (10–4800). Allowed on all updatable statuses.
+</ParamField>
+
+<ParamField body="batch_size" type="integer">
+  New batch size (50–1000). Allowed on all updatable statuses.
+</ParamField>
+
+<ParamField body="max_messages" type="integer">
+  New budget cap. Allowed on all updatable statuses.
+</ParamField>
+
+<ParamField body="scheduled_at" type="datetime">
+  New scheduled time. Draft/scheduled only. Must be in the future. Setting this on a `draft` campaign automatically moves it to `scheduled`.
+</ParamField>
+
+Returns the updated campaign object.
+
+---
+
+## Campaign Logs
+
+Retrieve the audit trail for a campaign — all lifecycle events including creation, start, pause, resume, cancel, and automatic pauses.
+
+**`GET /campaigns/{campaign_id}/logs?instance_id={id}`**
+
+<CodeGroup>
+
+```bash cURL
+curl "https://api.megasend.co.il/campaigns/CAMPAIGN_ID/logs?instance_id=INSTANCE_ID&limit=50" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
+```
+
+```javascript JavaScript
+const response = await fetch(
+  `https://api.megasend.co.il/campaigns/CAMPAIGN_ID/logs?instance_id=INSTANCE_ID&limit=50`,
+  { headers: { 'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN' } }
+);
+const logs = await response.json();
+```
+
+```python Python
+response = requests.get(
+    f'https://api.megasend.co.il/campaigns/CAMPAIGN_ID/logs',
+    params={'instance_id': 'INSTANCE_ID', 'limit': 50},
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'}
+)
+logs = response.json()
+```
+
+</CodeGroup>
+
+**Query parameters:**
+
+<ParamField query="limit" type="integer" default="50">
+  Number of log entries to return (1–500).
+</ParamField>
+
+**Response** — array of log entries, newest first:
+
+<ResponseField name="id" type="UUID">Log entry ID.</ResponseField>
+<ResponseField name="campaign_id" type="UUID">Campaign this log belongs to.</ResponseField>
+<ResponseField name="action" type="string">Event type, e.g. `created`, `started`, `paused`, `resumed`, `cancelled`, `scheduled`, `completed`, `deleted`, `auto_paused`.</ResponseField>
+<ResponseField name="user_id" type="UUID | null">User who triggered the action (null for system events).</ResponseField>
+<ResponseField name="details" type="object | null">Structured context — varies by action type.</ResponseField>
+<ResponseField name="error_info" type="object | null">Structured error detail for failure events.</ResponseField>
+<ResponseField name="created_at" type="datetime">When this event occurred.</ResponseField>
+
+```json
+[
+  {
+    "id": "00000001-0000-4000-8000-000000000001",
+    "campaign_id": "CAMPAIGN_ID",
+    "action": "started",
+    "user_id": "USER_ID",
+    "details": {
+      "started_by": "USER_ID",
+      "total_recipients": 1483,
+      "resume_mode": false
+    },
+    "error_info": null,
+    "created_at": "2026-07-13T09:05:00Z"
+  },
+  {
+    "id": "00000001-0000-4000-8000-000000000002",
+    "campaign_id": "CAMPAIGN_ID",
+    "action": "created",
+    "user_id": "USER_ID",
+    "details": {
+      "source": "google_sheets",
+      "total_recipients": 1483
+    },
+    "error_info": null,
+    "created_at": "2026-07-13T09:00:00Z"
+  }
+]
+```
+
+---
+
+## Campaign Recipients
+
+Retrieve a paginated list of individual recipients and their per-message delivery status.
+
+**`GET /campaigns/{campaign_id}/recipients?instance_id={id}`**
+
+<CodeGroup>
+
+```bash cURL
+curl "https://api.megasend.co.il/campaigns/CAMPAIGN_ID/recipients?instance_id=INSTANCE_ID&page=1&per_page=50&status=failed" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
+```
+
+```javascript JavaScript
+const response = await fetch(
+  `https://api.megasend.co.il/campaigns/CAMPAIGN_ID/recipients?instance_id=INSTANCE_ID&status=failed`,
+  { headers: { 'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN' } }
+);
+const result = await response.json();
+```
+
+```python Python
+response = requests.get(
+    f'https://api.megasend.co.il/campaigns/CAMPAIGN_ID/recipients',
+    params={
+        'instance_id': 'INSTANCE_ID',
+        'page': 1,
+        'per_page': 50,
+        'status': 'failed'
+    },
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'}
+)
+result = response.json()
+```
+
+</CodeGroup>
+
+**Query parameters:**
+
+<ParamField query="page" type="integer" default="1">Page number.</ParamField>
+<ParamField query="per_page" type="integer" default="20">Items per page (1–100).</ParamField>
+<ParamField query="status" type="string">Filter by recipient status: `pending`, `queued`, `sent`, `delivered`, `read`, `failed`, `blocked`, `skipped`.</ParamField>
+
+**Response:**
+
+```json
+{
+  "items": [
+    {
+      "id": "rrrrrrrr-0000-4000-8000-000000000001",
+      "campaign_id": "CAMPAIGN_ID",
+      "phone_number": "+972501234567",
+      "bsuid": null,
+      "status": "delivered",
+      "parameters": {"name": "Dana", "coupon_code": "SAVE20"},
+      "sent_at": "2026-07-13T09:05:12Z",
+      "delivered_at": "2026-07-13T09:05:14Z",
+      "read_at": "2026-07-13T09:07:30Z",
+      "failed_at": null,
+      "error_message": null,
+      "error_code": null,
+      "retry_count": 0,
+      "source_row": 2,
+      "created_at": "2026-07-13T09:00:00Z"
+    }
+  ],
+  "total": 1483,
+  "page": 1,
+  "per_page": 20,
+  "total_pages": 75
+}
+```
+
+### Export Recipients as CSV
+
+Download all recipient statuses as a streaming CSV file — useful for post-campaign analysis.
+
+**`GET /campaigns/{campaign_id}/recipients/export?instance_id={id}`**
+
+<CodeGroup>
+
+```bash cURL
+curl "https://api.megasend.co.il/campaigns/CAMPAIGN_ID/recipients/export?instance_id=INSTANCE_ID&status=failed" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN" \
+  -o recipients.csv
+```
+
+```python Python
+import requests
+
+with requests.get(
+    f'https://api.megasend.co.il/campaigns/CAMPAIGN_ID/recipients/export',
+    params={'instance_id': 'INSTANCE_ID'},
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'},
+    stream=True
+) as r:
+    with open('recipients.csv', 'wb') as f:
+        for chunk in r.iter_content(chunk_size=8192):
+            f.write(chunk)
+```
+
+</CodeGroup>
+
+Returns a streaming `text/csv` file with columns: `phone_number`, `bsuid`, `status`, `sent_at`, `delivered_at`, `read_at`, `failed_at`, `error_code`, `error_message`, `retry_count`, `source_row`.
+
+An optional `status` query parameter filters the export to a single recipient status.
+
+---
+
+## Send Test Message
+
+Send a single real template message to a test phone number before launching a campaign. Uses the normal send path — standard billing applies.
+
+**`POST /campaigns/test-send?instance_id={id}`**
+
+Rate limited to **5 test sends per minute per instance**.
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST "https://api.megasend.co.il/campaigns/test-send?instance_id=INSTANCE_ID" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "template_name": "summer_sale_promo",
+    "template_language": "he",
+    "body_params": ["Dana", "SAVE20"],
+    "recipient_phone": "+972501234567",
+    "header_media_url": "https://cdn.example.com/summer-sale-banner.jpg",
+    "header_media_type": "image"
+  }'
+```
+
+```javascript JavaScript
+const response = await fetch(
+  'https://api.megasend.co.il/campaigns/test-send?instance_id=INSTANCE_ID',
+  {
+    method: 'POST',
+    headers: {
+      'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN',
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      template_name: 'summer_sale_promo',
+      template_language: 'he',
+      body_params: ['Dana', 'SAVE20'],
+      recipient_phone: '+972501234567'
+    })
+  }
+);
+const result = await response.json();
+```
+
+```python Python
+response = requests.post(
+    'https://api.megasend.co.il/campaigns/test-send',
+    params={'instance_id': 'INSTANCE_ID'},
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'},
+    json={
+        'template_name': 'summer_sale_promo',
+        'template_language': 'he',
+        'body_params': ['Dana', 'SAVE20'],
+        'recipient_phone': '+972501234567'
+    }
+)
+```
+
+</CodeGroup>
+
+<ParamField body="template_name" type="string" required>Template name.</ParamField>
+<ParamField body="template_language" type="string" required>Template language code.</ParamField>
+<ParamField body="body_params" type="array of strings">Ordered body parameter values matching the template's placeholders.</ParamField>
+<ParamField body="button_params" type="array of strings">Ordered dynamic URL button parameter values.</ParamField>
+<ParamField body="recipient_phone" type="string" required>Test recipient phone in E.164 or local format.</ParamField>
+<ParamField body="header_media_url" type="string">Header image, video, or document URL (or Meta media ID) for templates with a media header.</ParamField>
+<ParamField body="header_media_type" type="string">Media type: `image`, `video`, or `document`. Required when `header_media_url` is set.</ParamField>
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "message_id": "wamid.HBgMMTIzNDU2Nzg5MDEVAgARGBI..."
+}
+```
+
+---
+
+## Delete Campaign
+
+Soft-delete a campaign. Deleted campaigns no longer appear in list results but are preserved for audit. Only `draft`, `completed`, `cancelled`, or `failed` campaigns can be deleted — cancel a running/paused campaign first.
+
+**`DELETE /campaigns/{campaign_id}?instance_id={id}`**
+
+<CodeGroup>
+
+```bash cURL
+curl -X DELETE "https://api.megasend.co.il/campaigns/CAMPAIGN_ID?instance_id=INSTANCE_ID" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
+```
+
+```python Python
+requests.delete(
+    f'https://api.megasend.co.il/campaigns/CAMPAIGN_ID',
+    params={'instance_id': 'INSTANCE_ID'},
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'}
+)
+```
+
+</CodeGroup>
+
+**Response:** `{"status": "deleted", "campaign_id": "...", "message": "Campaign deleted successfully"}`
+
+---
+
+## Complete Workflow Example
+
+The following end-to-end example shows the full create → start → monitor cycle.
+
+```javascript
+const API = 'https://api.megasend.co.il';
+const TOKEN = 'YOUR_ACCESS_TOKEN';
+const INSTANCE_ID = 'YOUR_INSTANCE_ID';
+
+const headers = {
+  'X-MEGASEND-AUTH': TOKEN,
+  'Content-Type': 'application/json'
+};
+
+// Step 1 — Validate the Google Sheet
+const sheetCheck = await fetch(`${API}/campaigns/validate-sheets?instance_id=${INSTANCE_ID}`, {
+  method: 'POST',
+  headers,
+  body: JSON.stringify({
+    sheets_url: 'https://docs.google.com/spreadsheets/d/SHEET_ID/edit',
+    template_parameters: ['name', 'coupon_code']
+  })
+}).then(r => r.json());
+
+if (!sheetCheck.valid) {
+  throw new Error(`Sheet invalid: ${sheetCheck.error}`);
+}
+console.log(`Sheet OK — ${sheetCheck.row_count} rows, columns: ${sheetCheck.columns.join(', ')}`);
+
+// Step 2 — Create the campaign
+const campaign = await fetch(`${API}/campaigns/?instance_id=${INSTANCE_ID}`, {
+  method: 'POST',
+  headers,
+  body: JSON.stringify({
+    name: 'Summer Sale 2026',
+    template_name: 'summer_sale_promo',
+    template_language: 'he',
+    template_parameters: ['name', 'coupon_code'],
+    sheets_url: 'https://docs.google.com/spreadsheets/d/SHEET_ID/edit',
+    column_mapping: { phone: 'phone', name: 'name', coupon_code: 'coupon_code' },
+    send_type: 'immediate',
+    image_url: 'https://cdn.example.com/summer-sale-banner.jpg'
+  })
+}).then(r => r.json());
+
+console.log(`Campaign created: ${campaign.id}`);
+console.log(`Valid recipients: ${campaign.total_recipients}`);
+if (campaign.invalid_summary?.total_invalid > 0) {
+  console.warn(`Excluded: ${JSON.stringify(campaign.invalid_summary)}`);
+}
+
+// Step 3 — Send a test message before going live
+const testResult = await fetch(`${API}/campaigns/test-send?instance_id=${INSTANCE_ID}`, {
+  method: 'POST',
+  headers,
+  body: JSON.stringify({
+    template_name: 'summer_sale_promo',
+    template_language: 'he',
+    body_params: ['Test User', 'PREVIEW'],
+    recipient_phone: '+972501234567'
+  })
+}).then(r => r.json());
+console.log('Test send:', testResult.success ? 'OK' : 'FAILED', testResult.message_id);
+
+// Step 4 — Launch the campaign
+const startResult = await fetch(
+  `${API}/campaigns/${campaign.id}/start?instance_id=${INSTANCE_ID}`,
+  { method: 'POST', headers }
+).then(r => r.json());
+console.log('Status:', startResult.status); // "running"
+
+// Step 5 — Monitor progress (poll every 30 seconds)
+async function monitorCampaign(campaignId) {
+  let done = false;
+  const terminalStatuses = ['completed', 'cancelled', 'failed'];
+
+  while (!done) {
+    await new Promise(resolve => setTimeout(resolve, 30000));
+
+    const latest = await fetch(
+      `${API}/campaigns/${campaignId}?instance_id=${INSTANCE_ID}`,
+      { headers: { 'X-MEGASEND-AUTH': TOKEN } }
+    ).then(r => r.json());
+
+    const { status, messages_sent, total_recipients, messages_delivered, messages_failed } = latest;
+    console.log(
+      `[${status.toUpperCase()}] sent=${messages_sent}/${total_recipients}` +
+      ` delivered=${messages_delivered} failed=${messages_failed}`
+    );
+
+    if (latest.auto_paused) {
+      console.warn(`Auto-paused: ${latest.pause_reason}`);
+    }
+
+    if (terminalStatuses.includes(status)) {
+      done = true;
+      console.log('Campaign finished with status:', status);
+    }
+  }
+}
+
+await monitorCampaign(campaign.id);
+
+// Step 6 — Inspect failures
+const failures = await fetch(
+  `${API}/campaigns/${campaign.id}/recipients?instance_id=${INSTANCE_ID}&status=failed&per_page=100`,
+  { headers: { 'X-MEGASEND-AUTH': TOKEN } }
+).then(r => r.json());
+
+console.log(`Failed recipients: ${failures.total}`);
+for (const r of failures.items) {
+  console.log(`  ${r.phone_number} — error ${r.error_code}: ${r.error_message}`);
+}
+```
+
+---
+
+## State Machine Reference
+
+Valid status transitions:
+
+| From | Allowed next statuses |
+|---|---|
+| `draft` | `running`, `scheduled`, `cancelled` |
+| `scheduled` | `running`, `draft`, `cancelled` |
+| `running` | `paused`, `completed`, `cancelled`, `failed` |
+| `paused` | `running`, `cancelled` |
+| `completed` | `running`, `scheduled` |
+| `cancelled` | `running`, `scheduled` |
+| `failed` | `running`, `scheduled` |
+
+---
+
+## Error Reference
+
+| HTTP Status | Scenario |
+|---|---|
+| `400` | Template not approved or not synced; unsupported channel (non-WhatsApp instance); invalid scheduled time; invalid status transition |
+| `404` | Campaign or instance not found |
+| `429` | Campaign limit reached (total or active per instance); test-send rate limit exceeded |
+
+<Note>
+Agent users can access campaign endpoints if they have the `can_manage_campaigns` permission on the instance. Campaign ownership is always attributed to the account owner, not the agent.
+</Note>

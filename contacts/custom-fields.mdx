@@ -1,0 +1,638 @@
+---
+title: 'Custom Fields'
+description: 'Define and manage typed custom attributes on contacts for segmentation and personalization'
+---
+
+# Custom Fields
+
+Custom Fields let you extend the built-in contact model with your own typed attributes — purchase tier, account manager, last product viewed, or any other business-specific data. Values are stored per-contact and are available as personalization tokens in messages, flows, and campaigns.
+
+The system is split into two concerns:
+
+- **Definitions** — a tenant-scoped registry of named, typed field descriptors.
+- **Values** — the per-contact JSONB map (`{ key: value }`) that holds the actual data.
+
+## Authentication
+
+All endpoints require the `X-MEGASEND-AUTH` header with your access token.
+
+```
+X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN
+```
+
+---
+
+## Field Types
+
+| Type | Accepted values |
+|------|----------------|
+| `text` | Any string |
+| `number` | Numeric value |
+| `date` | ISO 8601 date string |
+| `boolean` | `true` / `false` |
+| `select` | One of the strings listed in `options` |
+
+<Note>
+For `select` fields the `options` array is required and the stored value must be one of the listed choices.
+</Note>
+
+## Key Slug Rules
+
+The `key` field is the stable JSON key written into every contact's value map. It must match:
+
+```
+^[a-z][a-z0-9_]{0,63}$
+```
+
+- Must start with a lowercase letter (`a–z`)
+- May contain lowercase letters, digits, and underscores
+- Maximum 64 characters total
+- **Immutable after creation** — renaming a key would silently orphan all stored values
+
+Good examples: `plan_tier`, `account_manager`, `loyalty_score`
+
+---
+
+## Definition Endpoints
+
+### List Definitions
+
+Retrieve all custom field definitions for the authenticated tenant.
+
+<CodeGroup>
+
+```bash cURL
+curl -X GET "https://api.megasend.co.il/api/contact-custom-fields" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
+```
+
+```javascript JavaScript
+const response = await fetch('https://api.megasend.co.il/api/contact-custom-fields', {
+  headers: {
+    'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'
+  }
+});
+
+const definitions = await response.json();
+console.log(`${definitions.length} custom fields defined`);
+```
+
+```python Python
+import requests
+
+response = requests.get(
+    'https://api.megasend.co.il/api/contact-custom-fields',
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'}
+)
+
+definitions = response.json()
+print(f"{len(definitions)} custom fields defined")
+```
+
+</CodeGroup>
+
+#### Response
+
+```json
+[
+  {
+    "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "user_id": "f0e1d2c3-b4a5-6789-0abc-def123456789",
+    "key": "plan_tier",
+    "label": "Plan Tier",
+    "field_type": "select",
+    "options": ["free", "starter", "pro", "enterprise"],
+    "default_value": "free",
+    "description": "The customer's current subscription tier",
+    "created_at": "2026-01-15T10:00:00Z",
+    "updated_at": "2026-01-15T10:00:00Z"
+  }
+]
+```
+
+---
+
+### Create Definition
+
+Register a new custom field definition. Keys must be unique per tenant — duplicate keys return `409 Conflict`.
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST "https://api.megasend.co.il/api/contact-custom-fields" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "key": "plan_tier",
+    "label": "Plan Tier",
+    "field_type": "select",
+    "options": ["free", "starter", "pro", "enterprise"],
+    "default_value": "free",
+    "description": "The customer'\''s current subscription tier"
+  }'
+```
+
+```javascript JavaScript
+const response = await fetch('https://api.megasend.co.il/api/contact-custom-fields', {
+  method: 'POST',
+  headers: {
+    'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    key: 'plan_tier',
+    label: 'Plan Tier',
+    field_type: 'select',
+    options: ['free', 'starter', 'pro', 'enterprise'],
+    default_value: 'free',
+    description: "The customer's current subscription tier"
+  })
+});
+
+const definition = await response.json();
+console.log('Created definition ID:', definition.id);
+```
+
+```python Python
+import requests
+
+response = requests.post(
+    'https://api.megasend.co.il/api/contact-custom-fields',
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'},
+    json={
+        'key': 'plan_tier',
+        'label': 'Plan Tier',
+        'field_type': 'select',
+        'options': ['free', 'starter', 'pro', 'enterprise'],
+        'default_value': 'free',
+        'description': "The customer's current subscription tier"
+    }
+)
+
+definition = response.json()
+print(f"Created definition ID: {definition['id']}")
+```
+
+</CodeGroup>
+
+#### Request Body
+
+<ParamField body="key" type="string" required>
+  Slug used as the JSON key. Must match `^[a-z][a-z0-9_]{0,63}$`. Immutable after creation.
+</ParamField>
+
+<ParamField body="label" type="string" required>
+  Human-facing display label (1–128 characters).
+</ParamField>
+
+<ParamField body="field_type" type="string" required>
+  One of `text`, `number`, `date`, `boolean`, `select`.
+</ParamField>
+
+<ParamField body="options" type="array">
+  Required when `field_type` is `select`. Lists the allowable string choices.
+</ParamField>
+
+<ParamField body="default_value" type="any">
+  Optional typed default. Returned in the contact value map when no explicit value has been set.
+</ParamField>
+
+<ParamField body="description" type="string">
+  Optional internal notes (max 256 characters).
+</ParamField>
+
+#### Response — `201 Created`
+
+```json
+{
+  "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "user_id": "f0e1d2c3-b4a5-6789-0abc-def123456789",
+  "key": "plan_tier",
+  "label": "Plan Tier",
+  "field_type": "select",
+  "options": ["free", "starter", "pro", "enterprise"],
+  "default_value": "free",
+  "description": "The customer's current subscription tier",
+  "created_at": "2026-01-15T10:00:00Z",
+  "updated_at": "2026-01-15T10:00:00Z"
+}
+```
+
+---
+
+### Get Definition
+
+Retrieve a single definition by its UUID.
+
+<CodeGroup>
+
+```bash cURL
+curl -X GET "https://api.megasend.co.il/api/contact-custom-fields/a1b2c3d4-e5f6-7890-abcd-ef1234567890" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
+```
+
+```javascript JavaScript
+const definitionId = 'a1b2c3d4-e5f6-7890-abcd-ef1234567890';
+
+const response = await fetch(
+  `https://api.megasend.co.il/api/contact-custom-fields/${definitionId}`,
+  {
+    headers: { 'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN' }
+  }
+);
+
+const definition = await response.json();
+```
+
+```python Python
+import requests
+
+definition_id = 'a1b2c3d4-e5f6-7890-abcd-ef1234567890'
+
+response = requests.get(
+    f'https://api.megasend.co.il/api/contact-custom-fields/{definition_id}',
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'}
+)
+
+definition = response.json()
+```
+
+</CodeGroup>
+
+---
+
+### Update Definition
+
+Partially update a definition. The `key` field is immutable and cannot be changed. Only the fields you include in the request body are modified.
+
+<CodeGroup>
+
+```bash cURL
+curl -X PATCH "https://api.megasend.co.il/api/contact-custom-fields/a1b2c3d4-e5f6-7890-abcd-ef1234567890" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "label": "Subscription Tier",
+    "options": ["free", "starter", "pro", "enterprise", "custom"],
+    "default_value": "starter"
+  }'
+```
+
+```javascript JavaScript
+const definitionId = 'a1b2c3d4-e5f6-7890-abcd-ef1234567890';
+
+const response = await fetch(
+  `https://api.megasend.co.il/api/contact-custom-fields/${definitionId}`,
+  {
+    method: 'PATCH',
+    headers: {
+      'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN',
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      label: 'Subscription Tier',
+      options: ['free', 'starter', 'pro', 'enterprise', 'custom'],
+      default_value: 'starter'
+    })
+  }
+);
+
+const updated = await response.json();
+```
+
+```python Python
+import requests
+
+definition_id = 'a1b2c3d4-e5f6-7890-abcd-ef1234567890'
+
+response = requests.patch(
+    f'https://api.megasend.co.il/api/contact-custom-fields/{definition_id}',
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'},
+    json={
+        'label': 'Subscription Tier',
+        'options': ['free', 'starter', 'pro', 'enterprise', 'custom'],
+        'default_value': 'starter'
+    }
+)
+
+updated = response.json()
+```
+
+</CodeGroup>
+
+#### Request Body (all fields optional)
+
+<ParamField body="label" type="string">
+  Updated display label (1–128 characters).
+</ParamField>
+
+<ParamField body="field_type" type="string">
+  Updated field type (`text`, `number`, `date`, `boolean`, `select`).
+</ParamField>
+
+<ParamField body="options" type="array">
+  Updated allowable choices for `select` fields.
+</ParamField>
+
+<ParamField body="default_value" type="any">
+  Updated default value. Pass `null` to explicitly clear it.
+</ParamField>
+
+<ParamField body="description" type="string">
+  Updated description (max 256 characters). Pass `null` to explicitly clear it.
+</ParamField>
+
+---
+
+### Delete Definition
+
+Permanently removes the definition. Stored values on contacts that reference this key are not automatically cleared from the JSONB map.
+
+<CodeGroup>
+
+```bash cURL
+curl -X DELETE "https://api.megasend.co.il/api/contact-custom-fields/a1b2c3d4-e5f6-7890-abcd-ef1234567890" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
+```
+
+```javascript JavaScript
+const definitionId = 'a1b2c3d4-e5f6-7890-abcd-ef1234567890';
+
+const response = await fetch(
+  `https://api.megasend.co.il/api/contact-custom-fields/${definitionId}`,
+  {
+    method: 'DELETE',
+    headers: { 'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN' }
+  }
+);
+
+const result = await response.json();
+console.log(result.message);
+```
+
+```python Python
+import requests
+
+definition_id = 'a1b2c3d4-e5f6-7890-abcd-ef1234567890'
+
+response = requests.delete(
+    f'https://api.megasend.co.il/api/contact-custom-fields/{definition_id}',
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'}
+)
+
+result = response.json()
+print(result['message'])
+```
+
+</CodeGroup>
+
+#### Response — `200 OK`
+
+```json
+{
+  "message": "Custom field definition deleted successfully"
+}
+```
+
+---
+
+## Per-Contact Value Endpoints
+
+These endpoints operate on the `{contact_id}/values` sub-resource.
+
+- **GET** returns the **merged** view: definition defaults fill in any key that has no explicit stored value.
+- **PUT / DELETE** return the raw stored map — only keys that have been explicitly set appear. Use a subsequent GET to see the merged view including defaults.
+
+### Get Contact Field Values
+
+Returns the merged custom field map for a contact — stored values take precedence over definition defaults.
+
+<CodeGroup>
+
+```bash cURL
+curl -X GET "https://api.megasend.co.il/api/contact-custom-fields/550e8400-e29b-41d4-a716-446655440000/values" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
+```
+
+```javascript JavaScript
+const contactId = '550e8400-e29b-41d4-a716-446655440000';
+
+const response = await fetch(
+  `https://api.megasend.co.il/api/contact-custom-fields/${contactId}/values`,
+  {
+    headers: { 'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN' }
+  }
+);
+
+const fields = await response.json();
+console.log('Custom fields:', fields);
+```
+
+```python Python
+import requests
+
+contact_id = '550e8400-e29b-41d4-a716-446655440000'
+
+response = requests.get(
+    f'https://api.megasend.co.il/api/contact-custom-fields/{contact_id}/values',
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'}
+)
+
+fields = response.json()
+print('Custom fields:', fields)
+```
+
+</CodeGroup>
+
+#### Response
+
+The response is a flat object mapping each key to its current value (or its definition default).
+
+```json
+{
+  "plan_tier": "pro",
+  "loyalty_score": 4200,
+  "account_manager": "Sarah Cohen",
+  "newsletter_opted_in": true
+}
+```
+
+---
+
+### Set a Field Value
+
+Set a single custom field value on a contact. The `key` must reference an existing definition. The value is validated against the field type and, for `select` fields, against the allowed `options` list.
+
+<CodeGroup>
+
+```bash cURL
+curl -X PUT "https://api.megasend.co.il/api/contact-custom-fields/550e8400-e29b-41d4-a716-446655440000/values" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "key": "plan_tier",
+    "value": "pro"
+  }'
+```
+
+```javascript JavaScript
+const contactId = '550e8400-e29b-41d4-a716-446655440000';
+
+const response = await fetch(
+  `https://api.megasend.co.il/api/contact-custom-fields/${contactId}/values`,
+  {
+    method: 'PUT',
+    headers: {
+      'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN',
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      key: 'plan_tier',
+      value: 'pro'
+    })
+  }
+);
+
+const result = await response.json();
+console.log('Updated fields:', result.custom_fields);
+```
+
+```python Python
+import requests
+
+contact_id = '550e8400-e29b-41d4-a716-446655440000'
+
+response = requests.put(
+    f'https://api.megasend.co.il/api/contact-custom-fields/{contact_id}/values',
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'},
+    json={
+        'key': 'plan_tier',
+        'value': 'pro'
+    }
+)
+
+result = response.json()
+print('Updated fields:', result['custom_fields'])
+```
+
+</CodeGroup>
+
+#### Request Body
+
+<ParamField body="key" type="string" required>
+  The custom field key. Must have a matching definition for the tenant.
+</ParamField>
+
+<ParamField body="value" type="any" required>
+  The value to store. Validated against the field type — `422 Unprocessable Entity` is returned if the value does not match.
+</ParamField>
+
+#### Response
+
+```json
+{
+  "custom_fields": {
+    "plan_tier": "pro",
+    "loyalty_score": 4200,
+    "account_manager": "Sarah Cohen",
+    "newsletter_opted_in": true
+  }
+}
+```
+
+---
+
+### Clear a Field Value
+
+Remove a single key from a contact's custom field map. The value reverts to the definition's `default_value` on the next GET.
+
+<CodeGroup>
+
+```bash cURL
+curl -X DELETE "https://api.megasend.co.il/api/contact-custom-fields/550e8400-e29b-41d4-a716-446655440000/values?key=plan_tier" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
+```
+
+```javascript JavaScript
+const contactId = '550e8400-e29b-41d4-a716-446655440000';
+const key = 'plan_tier';
+
+const response = await fetch(
+  `https://api.megasend.co.il/api/contact-custom-fields/${contactId}/values?key=${encodeURIComponent(key)}`,
+  {
+    method: 'DELETE',
+    headers: { 'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN' }
+  }
+);
+
+const result = await response.json();
+console.log('Fields after clear:', result.custom_fields);
+```
+
+```python Python
+import requests
+
+contact_id = '550e8400-e29b-41d4-a716-446655440000'
+
+response = requests.delete(
+    f'https://api.megasend.co.il/api/contact-custom-fields/{contact_id}/values',
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'},
+    params={'key': 'plan_tier'}
+)
+
+result = response.json()
+print('Fields after clear:', result['custom_fields'])
+```
+
+</CodeGroup>
+
+#### Query Parameter
+
+<ParamField query="key" type="string" required>
+  The custom field key to clear from the contact's value map.
+</ParamField>
+
+#### Response
+
+```json
+{
+  "custom_fields": {
+    "loyalty_score": 4200,
+    "account_manager": "Sarah Cohen",
+    "newsletter_opted_in": true
+  }
+}
+```
+
+---
+
+## Using Custom Fields for Personalization
+
+Custom field values stored on a contact are available as personalization tokens in message templates and flow nodes. Reference them with the contact's key:
+
+```
+Hello {{contact.plan_tier}} member, your score is {{contact.loyalty_score}}!
+```
+
+<Note>
+Custom fields are tenant-scoped. A definition created in your account is only visible to your contacts and your message flows.
+</Note>
+
+---
+
+## Error Reference
+
+| Status | Meaning |
+|--------|---------|
+| `404 Not Found` | Definition or contact does not exist (or belongs to another tenant) |
+| `409 Conflict` | A definition with the same `key` already exists |
+| `422 Unprocessable Entity` | The value does not match the field type or allowed options |
+| `500 Internal Server Error` | Unexpected server error |
+
+---
+
+## Next Steps
+
+- [Manage Contacts](/contacts/manage) — create and update contact records
+- [Contact Labels](/contacts/labels) — organize contacts with tags
+- [Send Messages](/messages/send) — use personalization tokens in outbound messages

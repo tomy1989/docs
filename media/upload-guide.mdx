@@ -24,24 +24,29 @@ The Media Library provides centralized management for all media files used in yo
 
 ### 1. Upload Your First File
 
+<Note>
+The upload endpoint is `multipart/form-data` for the `file` field only. The optional `description` and `tags` parameters are sent as **URL query parameters**, not as form fields.
+</Note>
+
 <CodeGroup>
 
 ```bash cURL
-curl -X POST "https://api.megasend.co.il/media-library/YOUR_INSTANCE_ID/upload" \
+curl -X POST "https://api.megasend.co.il/media-library/YOUR_INSTANCE_ID/upload?description=Summer+collection+hero+image&tags=summer,collection,hero" \
   -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN" \
-  -F "file=@/path/to/product-image.jpg" \
-  -F "description=Summer collection hero image" \
-  -F "tags=summer,collection,hero"
+  -F "file=@/path/to/product-image.jpg"
 ```
 
 ```javascript JavaScript
 const formData = new FormData();
 formData.append('file', document.getElementById('fileInput').files[0]);
-formData.append('description', 'Summer collection hero image');
-formData.append('tags', 'summer,collection,hero');
+
+const params = new URLSearchParams({
+  description: 'Summer collection hero image',
+  tags: 'summer,collection,hero'
+});
 
 const response = await fetch(
-  'https://api.megasend.co.il/media-library/YOUR_INSTANCE_ID/upload',
+  `https://api.megasend.co.il/media-library/YOUR_INSTANCE_ID/upload?${params}`,
   {
     method: 'POST',
     headers: {
@@ -59,17 +64,14 @@ console.log('Uploaded media ID:', media.id);
 import requests
 
 with open('/path/to/product-image.jpg', 'rb') as f:
-    files = {'file': f}
-    data = {
-        'description': 'Summer collection hero image',
-        'tags': 'summer,collection,hero'
-    }
-
     response = requests.post(
         'https://api.megasend.co.il/media-library/YOUR_INSTANCE_ID/upload',
         headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'},
-        files=files,
-        data=data
+        files={'file': f},
+        params={
+            'description': 'Summer collection hero image',
+            'tags': 'summer,collection,hero'
+        }
     )
 
     media = response.json()
@@ -119,11 +121,14 @@ async function uploadProductImages(productId, images) {
   for (const image of images) {
     const formData = new FormData();
     formData.append('file', image);
-    formData.append('description', `Product ${productId} image`);
-    formData.append('tags', `product,${productId},catalog`);
+
+    const params = new URLSearchParams({
+      description: `Product ${productId} image`,
+      tags: `product,${productId},catalog`
+    });
 
     const response = await fetch(
-      `https://api.megasend.co.il/media-library/${instanceId}/upload`,
+      `https://api.megasend.co.il/media-library/${instanceId}/upload?${params}`,
       {
         method: 'POST',
         headers: { 'X-MEGASEND-AUTH': token },
@@ -209,17 +214,14 @@ class TemplateMediaManager:
         """Upload an image for use in template header"""
 
         with open(image_path, 'rb') as f:
-            files = {'file': f}
-            data = {
-                'description': f'Header image for template: {template_name}',
-                'tags': f'template,header,{template_name}'
-            }
-
             response = requests.post(
                 f'{self.base_url}/media-library/{self.instance_id}/upload',
                 headers={'X-MEGASEND-AUTH': self.token},
-                files=files,
-                data=data
+                files={'file': f},
+                params={
+                    'description': f'Header image for template: {template_name}',
+                    'tags': f'template,header,{template_name}'
+                }
             )
 
             return response.json()
@@ -297,11 +299,14 @@ class CampaignManager {
     for (const file of files) {
       const formData = new FormData();
       formData.append('file', file);
-      formData.append('description', `Campaign: ${campaignName}`);
-      formData.append('tags', `campaign,${campaignName},${new Date().getFullYear()}`);
+
+      const params = new URLSearchParams({
+        description: `Campaign: ${campaignName}`,
+        tags: `campaign,${campaignName},${new Date().getFullYear()}`
+      });
 
       const response = await fetch(
-        `${this.baseUrl}/media-library/${this.instanceId}/upload`,
+        `${this.baseUrl}/media-library/${this.instanceId}/upload?${params}`,
         {
           method: 'POST',
           headers: { 'X-MEGASEND-AUTH': this.token },
@@ -588,11 +593,13 @@ async function renewMedia(mediaId) {
   // 3. Re-upload with same metadata
   const formData = new FormData();
   formData.append('file', file);
-  formData.append('description', media.description);
-  formData.append('tags', media.tags.join(','));
+
+  const params = new URLSearchParams();
+  if (media.description) params.set('description', media.description);
+  if (media.tags?.length) params.set('tags', media.tags.join(','));
 
   const uploadResponse = await fetch(
-    `https://api.megasend.co.il/media-library/${instanceId}/upload`,
+    `https://api.megasend.co.il/media-library/${instanceId}/upload?${params}`,
     {
       method: 'POST',
       headers: { 'X-MEGASEND-AUTH': token },
@@ -756,7 +763,7 @@ async function uploadWithRateLimit(files) {
         {
           method: 'POST',
           headers: { 'X-MEGASEND-AUTH': token },
-          body: formData
+          body: formData  // description/tags can be added as URL query params if needed
         }
       );
 
@@ -810,7 +817,7 @@ async function validateAndUpload(file) {
     );
   }
 
-  // File is valid, upload
+  // File is valid, upload (description and tags are optional query params)
   const formData = new FormData();
   formData.append('file', file);
 
@@ -908,7 +915,7 @@ async function batchUpdateTags(mediaIds, newTags) {
 // Usage: Add 'featured' tag to top 10 most-used images
 const stats = await getMediaPerformance();
 const topIds = stats.most_used.slice(0, 10).map(m => m.id);
-await batchUpdateTags(topIds, 'featured,top-performers,high-engagement');
+await batchUpdateTags(topIds, ['featured', 'top-performers', 'high-engagement']);
 ```
 
 ---

@@ -1,0 +1,704 @@
+---
+title: 'Scheduled Messages'
+description: 'Schedule single or bulk WhatsApp messages for future delivery and manage the scheduled queue'
+icon: 'clock'
+---
+
+# Scheduled Messages
+
+The MegaSend Scheduled Messages API lets you queue a message (or a batch of messages) to be delivered at a specific future time. Celery workers process the queue at the scheduled moment. You can list, inspect, reschedule, or cancel a queued message at any point before it fires.
+
+<Note>
+`scheduled_at` must be an **ISO 8601 UTC timestamp in the future**. The server rejects any value equal to or earlier than the current time.
+
+Example: `"2026-08-01T14:30:00Z"`
+</Note>
+
+## Schedule a Single Message
+
+`POST /messages/schedule`
+
+Schedules one message to a single recipient. Inherits every field from the standard Send Message request — add `scheduled_at` to defer delivery.
+
+### Request Body
+
+<ParamField body="instance_id" type="string" required>
+  UUID of the WhatsApp instance to send from.
+</ParamField>
+
+<ParamField body="message_type" type="string" required>
+  Message type. One of: `text`, `image`, `video`, `audio`, `document`, `location`, `contact`, `sticker`, `template`, `reaction`, `remove_reaction`, `private_reply`.
+</ParamField>
+
+<ParamField body="recipient" type="string">
+  Recipient phone number in E.164 format (e.g. `+972501234567`). Required unless `recipient_bsuid` is provided.
+</ParamField>
+
+<ParamField body="recipient_bsuid" type="string">
+  WhatsApp Business-Scoped User ID for username-adopter contacts. Either `recipient` or `recipient_bsuid` must be present.
+</ParamField>
+
+<ParamField body="scheduled_at" type="string" required>
+  ISO 8601 UTC datetime when the message should be sent. Must be in the future. Example: `"2026-08-01T14:30:00Z"`.
+</ParamField>
+
+<ParamField body="text" type="string">
+  Message text (up to 4,096 characters). Required when `message_type` is `text`.
+</ParamField>
+
+<ParamField body="image_url" type="string">
+  Publicly accessible image URL. Used when `message_type` is `image`.
+</ParamField>
+
+<ParamField body="image_caption" type="string">
+  Caption for the image (up to 1,024 characters).
+</ParamField>
+
+<ParamField body="video_url" type="string">
+  Publicly accessible video URL. Used when `message_type` is `video`.
+</ParamField>
+
+<ParamField body="video_caption" type="string">
+  Caption for the video (up to 1,024 characters).
+</ParamField>
+
+<ParamField body="audio_url" type="string">
+  Publicly accessible audio URL. Used when `message_type` is `audio`.
+</ParamField>
+
+<ParamField body="document_url" type="string">
+  Publicly accessible document URL. Used when `message_type` is `document`.
+</ParamField>
+
+<ParamField body="document_filename" type="string">
+  Filename to display in the chat.
+</ParamField>
+
+<ParamField body="document_caption" type="string">
+  Caption for the document (up to 1,024 characters).
+</ParamField>
+
+<ParamField body="template_data" type="object">
+  Template payload object. Required when `message_type` is `template`.
+</ParamField>
+
+<ParamField body="source" type="string">
+  Optional source tag (e.g. `"shopify"`, `"website"`).
+</ParamField>
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST "https://api.megasend.co.il/messages/schedule" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "instance_id": "550e8400-e29b-41d4-a716-446655440000",
+    "message_type": "text",
+    "recipient": "+972501234567",
+    "text": "Reminder: your appointment is tomorrow at 10:00.",
+    "scheduled_at": "2026-08-01T07:00:00Z"
+  }'
+```
+
+```javascript JavaScript
+const response = await fetch('https://api.megasend.co.il/messages/schedule', {
+  method: 'POST',
+  headers: {
+    'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    instance_id: '550e8400-e29b-41d4-a716-446655440000',
+    message_type: 'text',
+    recipient: '+972501234567',
+    text: 'Reminder: your appointment is tomorrow at 10:00.',
+    scheduled_at: '2026-08-01T07:00:00Z'
+  })
+});
+
+const scheduled = await response.json();
+console.log('Scheduled message ID:', scheduled.id);
+```
+
+```python Python
+import requests
+
+response = requests.post(
+    'https://api.megasend.co.il/messages/schedule',
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'},
+    json={
+        'instance_id': '550e8400-e29b-41d4-a716-446655440000',
+        'message_type': 'text',
+        'recipient': '+972501234567',
+        'text': 'Reminder: your appointment is tomorrow at 10:00.',
+        'scheduled_at': '2026-08-01T07:00:00Z'
+    }
+)
+
+scheduled = response.json()
+print('Scheduled message ID:', scheduled['id'])
+```
+
+</CodeGroup>
+
+### Response
+
+<ResponseField name="id" type="string">
+  UUID of the scheduled message record.
+</ResponseField>
+
+<ResponseField name="instance_id" type="string">
+  UUID of the sending instance.
+</ResponseField>
+
+<ResponseField name="recipient" type="string">
+  Recipient phone number (E.164). May be `null` for BSUID-only contacts.
+</ResponseField>
+
+<ResponseField name="recipient_bsuid" type="string">
+  Business-Scoped User ID when applicable.
+</ResponseField>
+
+<ResponseField name="message_type" type="string">
+  The message type as submitted.
+</ResponseField>
+
+<ResponseField name="status" type="string">
+  Current status. One of: `scheduled`, `processing`, `sent`, `failed`, `cancelled`.
+</ResponseField>
+
+<ResponseField name="scheduled_at" type="string">
+  ISO 8601 UTC datetime the message is queued for.
+</ResponseField>
+
+<ResponseField name="created_at" type="string">
+  When the schedule record was created.
+</ResponseField>
+
+<ResponseField name="updated_at" type="string">
+  When the record was last modified.
+</ResponseField>
+
+<ResponseField name="processed_at" type="string">
+  When the message was processed (sent, failed, or cancelled). `null` while still pending.
+</ResponseField>
+
+<ResponseField name="attempts" type="integer">
+  Number of send attempts made so far.
+</ResponseField>
+
+<ResponseField name="max_attempts" type="integer">
+  Maximum retry attempts allowed (default `3`).
+</ResponseField>
+
+<ResponseField name="sent_message_id" type="string">
+  UUID of the resulting sent-message record once delivered. `null` until sent.
+</ResponseField>
+
+<ResponseField name="error_message" type="string">
+  Error detail if the last attempt failed.
+</ResponseField>
+
+<ResponseField name="source" type="string">
+  Source tag as provided in the request.
+</ResponseField>
+
+<ResponseField name="platform" type="string">
+  Platform detected from the request origin.
+</ResponseField>
+
+<ResponseField name="message_summary" type="object">
+  Lightweight summary of the message payload — does not include full content for security.
+  Contains: `message_type`, `recipient`, `has_text` (bool), `has_media` (bool), `has_template` (bool).
+</ResponseField>
+
+```json
+{
+  "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "instance_id": "550e8400-e29b-41d4-a716-446655440000",
+  "recipient": "+972501234567",
+  "recipient_bsuid": null,
+  "recipient_username": null,
+  "message_type": "text",
+  "status": "scheduled",
+  "scheduled_at": "2026-08-01T07:00:00Z",
+  "created_at": "2026-07-13T10:00:00Z",
+  "updated_at": "2026-07-13T10:00:00Z",
+  "processed_at": null,
+  "celery_task_id": null,
+  "attempts": 0,
+  "max_attempts": 3,
+  "sent_message_id": null,
+  "error_message": null,
+  "source": null,
+  "platform": null,
+  "message_summary": {
+    "message_type": "text",
+    "recipient": "+972501234567",
+    "has_text": true,
+    "has_media": false,
+    "has_template": false
+  }
+}
+```
+
+---
+
+## Schedule Bulk Messages
+
+`POST /messages/schedule-bulk`
+
+Schedules the same message content to up to 10 recipients at once, all delivered at the same `scheduled_at` time. Returns one `ScheduledMessageResponse` object per recipient.
+
+### Request Body
+
+<ParamField body="instance_id" type="string" required>
+  UUID of the WhatsApp instance to send from.
+</ParamField>
+
+<ParamField body="message_type" type="string" required>
+  Message type (same values as single schedule).
+</ParamField>
+
+<ParamField body="recipients" type="array" required>
+  List of recipient phone numbers in E.164 format. Maximum 10 entries.
+</ParamField>
+
+<ParamField body="scheduled_at" type="string" required>
+  ISO 8601 UTC datetime when all messages should be sent. Must be in the future.
+</ParamField>
+
+<ParamField body="text" type="string">
+  Message text for `text` type messages.
+</ParamField>
+
+<ParamField body="image_url" type="string">
+  Image URL for `image` type messages.
+</ParamField>
+
+<ParamField body="template_data" type="object">
+  Template payload for `template` type messages.
+</ParamField>
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST "https://api.megasend.co.il/messages/schedule-bulk" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "instance_id": "550e8400-e29b-41d4-a716-446655440000",
+    "message_type": "text",
+    "recipients": ["+972501234567", "+972509876543"],
+    "text": "Flash sale starts in 1 hour!",
+    "scheduled_at": "2026-08-01T09:00:00Z"
+  }'
+```
+
+```javascript JavaScript
+const response = await fetch('https://api.megasend.co.il/messages/schedule-bulk', {
+  method: 'POST',
+  headers: {
+    'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    instance_id: '550e8400-e29b-41d4-a716-446655440000',
+    message_type: 'text',
+    recipients: ['+972501234567', '+972509876543'],
+    text: 'Flash sale starts in 1 hour!',
+    scheduled_at: '2026-08-01T09:00:00Z'
+  })
+});
+
+const results = await response.json();
+console.log(`Scheduled ${results.length} messages`);
+```
+
+```python Python
+import requests
+
+response = requests.post(
+    'https://api.megasend.co.il/messages/schedule-bulk',
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'},
+    json={
+        'instance_id': '550e8400-e29b-41d4-a716-446655440000',
+        'message_type': 'text',
+        'recipients': ['+972501234567', '+972509876543'],
+        'text': 'Flash sale starts in 1 hour!',
+        'scheduled_at': '2026-08-01T09:00:00Z'
+    }
+)
+
+results = response.json()
+print(f'Scheduled {len(results)} messages')
+```
+
+</CodeGroup>
+
+### Response
+
+Returns an array of `ScheduledMessageResponse` objects — one per recipient (same shape as the single-schedule response).
+
+```json
+[
+  {
+    "id": "aaaabbbb-1111-2222-3333-444455556666",
+    "recipient": "+972501234567",
+    "status": "scheduled",
+    "scheduled_at": "2026-08-01T09:00:00Z",
+    ...
+  },
+  {
+    "id": "ccccdddd-5555-6666-7777-888899990000",
+    "recipient": "+972509876543",
+    "status": "scheduled",
+    "scheduled_at": "2026-08-01T09:00:00Z",
+    ...
+  }
+]
+```
+
+---
+
+## List Scheduled Messages
+
+`GET /messages/scheduled`
+
+Returns a paginated list of scheduled messages for an instance. Supports filtering by status, date range, message type, and recipient.
+
+### Query Parameters
+
+<ParamField query="instance_id" type="string" required>
+  UUID of the instance to query.
+</ParamField>
+
+<ParamField query="status" type="string">
+  Filter by status. One of: `scheduled`, `processing`, `sent`, `failed`, `cancelled`.
+</ParamField>
+
+<ParamField query="start_date" type="string">
+  Return only messages with `scheduled_at` on or after this ISO 8601 UTC datetime.
+</ParamField>
+
+<ParamField query="end_date" type="string">
+  Return only messages with `scheduled_at` on or before this ISO 8601 UTC datetime.
+</ParamField>
+
+<ParamField query="message_type" type="string">
+  Filter by message type (e.g. `text`, `template`).
+</ParamField>
+
+<ParamField query="recipient" type="string">
+  Filter by exact recipient phone number (E.164).
+</ParamField>
+
+<ParamField query="page" type="integer" default="1">
+  Page number (1-based).
+</ParamField>
+
+<ParamField query="per_page" type="integer" default="10">
+  Items per page. Maximum 100.
+</ParamField>
+
+<CodeGroup>
+
+```bash cURL
+curl -X GET "https://api.megasend.co.il/messages/scheduled?instance_id=550e8400-e29b-41d4-a716-446655440000&status=scheduled&page=1&per_page=20" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
+```
+
+```javascript JavaScript
+const params = new URLSearchParams({
+  instance_id: '550e8400-e29b-41d4-a716-446655440000',
+  status: 'scheduled',
+  page: '1',
+  per_page: '20'
+});
+
+const response = await fetch(`https://api.megasend.co.il/messages/scheduled?${params}`, {
+  headers: { 'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN' }
+});
+
+const data = await response.json();
+console.log(`${data.total} total, page ${data.page} of ${data.total_pages}`);
+```
+
+```python Python
+import requests
+
+response = requests.get(
+    'https://api.megasend.co.il/messages/scheduled',
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'},
+    params={
+        'instance_id': '550e8400-e29b-41d4-a716-446655440000',
+        'status': 'scheduled',
+        'page': 1,
+        'per_page': 20
+    }
+)
+
+data = response.json()
+print(f"{data['total']} total, page {data['page']} of {data['total_pages']}")
+```
+
+</CodeGroup>
+
+### Response
+
+<ResponseField name="items" type="array">
+  Array of `ScheduledMessageResponse` objects for the current page.
+</ResponseField>
+
+<ResponseField name="total" type="integer">
+  Total count of messages matching the filter.
+</ResponseField>
+
+<ResponseField name="page" type="integer">
+  Current page number.
+</ResponseField>
+
+<ResponseField name="per_page" type="integer">
+  Items returned per page.
+</ResponseField>
+
+<ResponseField name="total_pages" type="integer">
+  Total number of pages.
+</ResponseField>
+
+---
+
+## Get Summary Statistics
+
+`GET /messages/scheduled/summary`
+
+Returns aggregate counts of scheduled messages grouped by status, plus the time of the next pending message.
+
+### Query Parameters
+
+<ParamField query="instance_id" type="string" required>
+  UUID of the instance to summarize.
+</ParamField>
+
+<CodeGroup>
+
+```bash cURL
+curl -X GET "https://api.megasend.co.il/messages/scheduled/summary?instance_id=550e8400-e29b-41d4-a716-446655440000" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
+```
+
+```javascript JavaScript
+const response = await fetch(
+  'https://api.megasend.co.il/messages/scheduled/summary?instance_id=550e8400-e29b-41d4-a716-446655440000',
+  { headers: { 'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN' } }
+);
+
+const summary = await response.json();
+console.log('Pending messages:', summary.total_scheduled);
+console.log('Next message at:', summary.next_due);
+```
+
+```python Python
+import requests
+
+response = requests.get(
+    'https://api.megasend.co.il/messages/scheduled/summary',
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'},
+    params={'instance_id': '550e8400-e29b-41d4-a716-446655440000'}
+)
+
+summary = response.json()
+print('Pending messages:', summary['total_scheduled'])
+print('Next message at:', summary['next_due'])
+```
+
+</CodeGroup>
+
+### Response
+
+<ResponseField name="total_scheduled" type="integer">
+  Messages still waiting to be sent.
+</ResponseField>
+
+<ResponseField name="total_processing" type="integer">
+  Messages currently being processed by a worker.
+</ResponseField>
+
+<ResponseField name="total_sent" type="integer">
+  Messages successfully delivered.
+</ResponseField>
+
+<ResponseField name="total_failed" type="integer">
+  Messages that exhausted all retry attempts.
+</ResponseField>
+
+<ResponseField name="total_cancelled" type="integer">
+  Messages that were cancelled before delivery.
+</ResponseField>
+
+<ResponseField name="next_due" type="string">
+  ISO 8601 UTC datetime of the earliest pending (`scheduled`) message. `null` if no pending messages.
+</ResponseField>
+
+```json
+{
+  "total_scheduled": 14,
+  "total_processing": 1,
+  "total_sent": 42,
+  "total_failed": 2,
+  "total_cancelled": 3,
+  "next_due": "2026-08-01T07:00:00Z"
+}
+```
+
+---
+
+## Update a Scheduled Message
+
+`PUT /messages/scheduled/{message_id}`
+
+Reschedules a pending message to a new delivery time. Only messages with status `scheduled` can be updated. The existing Celery task is revoked and a new one is created at the updated time.
+
+### Path Parameters
+
+<ParamField path="message_id" type="string" required>
+  UUID of the scheduled message to update.
+</ParamField>
+
+### Request Body
+
+<ParamField body="scheduled_at" type="string">
+  New ISO 8601 UTC delivery time. Must be in the future. This is currently the only field that can be updated.
+</ParamField>
+
+<CodeGroup>
+
+```bash cURL
+curl -X PUT "https://api.megasend.co.il/messages/scheduled/a1b2c3d4-e5f6-7890-abcd-ef1234567890" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "scheduled_at": "2026-08-02T09:00:00Z"
+  }'
+```
+
+```javascript JavaScript
+const response = await fetch(
+  'https://api.megasend.co.il/messages/scheduled/a1b2c3d4-e5f6-7890-abcd-ef1234567890',
+  {
+    method: 'PUT',
+    headers: {
+      'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN',
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ scheduled_at: '2026-08-02T09:00:00Z' })
+  }
+);
+
+const updated = await response.json();
+console.log('New scheduled time:', updated.scheduled_at);
+```
+
+```python Python
+import requests
+
+response = requests.put(
+    'https://api.megasend.co.il/messages/scheduled/a1b2c3d4-e5f6-7890-abcd-ef1234567890',
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'},
+    json={'scheduled_at': '2026-08-02T09:00:00Z'}
+)
+
+updated = response.json()
+print('New scheduled time:', updated['scheduled_at'])
+```
+
+</CodeGroup>
+
+### Response
+
+Returns the updated `ScheduledMessageResponse` object with the new `scheduled_at` value.
+
+<Warning>
+Attempting to update a message that is already `processing`, `sent`, `failed`, or `cancelled` will return HTTP 400.
+</Warning>
+
+---
+
+## Cancel a Scheduled Message
+
+`DELETE /messages/scheduled/{message_id}`
+
+Cancels a pending scheduled message. The queued Celery task is revoked so the message will not be sent. Only messages with status `scheduled` can be cancelled.
+
+### Path Parameters
+
+<ParamField path="message_id" type="string" required>
+  UUID of the scheduled message to cancel.
+</ParamField>
+
+<CodeGroup>
+
+```bash cURL
+curl -X DELETE "https://api.megasend.co.il/messages/scheduled/a1b2c3d4-e5f6-7890-abcd-ef1234567890" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
+```
+
+```javascript JavaScript
+const response = await fetch(
+  'https://api.megasend.co.il/messages/scheduled/a1b2c3d4-e5f6-7890-abcd-ef1234567890',
+  {
+    method: 'DELETE',
+    headers: { 'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN' }
+  }
+);
+
+const result = await response.json();
+console.log('Status:', result.status); // "cancelled"
+```
+
+```python Python
+import requests
+
+response = requests.delete(
+    'https://api.megasend.co.il/messages/scheduled/a1b2c3d4-e5f6-7890-abcd-ef1234567890',
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'}
+)
+
+result = response.json()
+print('Status:', result['status'])  # "cancelled"
+```
+
+</CodeGroup>
+
+### Response
+
+```json
+{
+  "status": "cancelled",
+  "message_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+}
+```
+
+<Warning>
+Attempting to cancel a message that is `processing`, `sent`, `failed`, or already `cancelled` will return HTTP 400.
+</Warning>
+
+---
+
+## Error Reference
+
+| HTTP Status | When it occurs |
+|-------------|----------------|
+| `400` | `scheduled_at` is not in the future; invalid message ID format; message is not in `scheduled` status (for update/cancel) |
+| `403` | Access denied to the specified instance |
+| `404` | Scheduled message not found |
+| `500` | Internal error storing or rescheduling the message |
+
+---
+
+## Related
+
+- [Send a Message](/messages/send) — immediate delivery
+- [Bulk Send](/messages/bulk-send) — immediate bulk delivery
+- [Incoming Messages](/messages/incoming) — retrieve received messages

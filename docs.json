@@ -25,7 +25,8 @@
         "pages": [
           "introduction",
           "authentication",
-          "quickstart"
+          "quickstart",
+          "guides/24-hour-window"
         ]
       },
       {
@@ -33,6 +34,7 @@
         "pages": [
           "messages/send",
           "messages/bulk-send",
+          "messages/schedule",
           "messages/incoming",
           "messages/responses",
           "templates/create",
@@ -44,7 +46,16 @@
           "analytics/overview",
           "contacts/manage",
           "contacts/labels",
-          "unsubscribe/manage"
+          "contacts/custom-fields",
+          "contacts/segments",
+          "campaigns/manage",
+          "flows/manage",
+          "flows/whatsapp-flows",
+          "catalog/manage",
+          "otp/verify",
+          "utilities/overview",
+          "unsubscribe/manage",
+          "guides/24-hour-window"
         ]
       },
       {
@@ -52,6 +63,13 @@
         "pages": [
           "api-reference/introduction",
           "media/api-reference"
+        ]
+      },
+      {
+        "group": "Resources",
+        "pages": [
+          "changelog",
+          "resources/versioning"
         ]
       }
     ]

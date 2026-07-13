@@ -16,7 +16,7 @@ Before you start, make sure you have:
 - ✅ Your API credentials (JWT token or access token)
 
 <Note>
-Don't have an account yet? [Sign up for MegaSend](https://app.megasend.io) and follow our onboarding process to connect your WhatsApp Business Account.
+Don't have an account yet? [Sign up for MegaSend](https://app.megasend.co.il) and follow our onboarding process to connect your WhatsApp Business Account.
 </Note>
 
 ## Step 1: Authentication
@@ -136,11 +136,11 @@ echo "Instance ID: " . $instanceId;
 [
   {
     "id": "550e8400-e29b-41d4-a716-446655440000",
-    "name": "My Business WhatsApp",
-    "phone_number": "+1234567890",
-    "status": "connected",
+    "nickname": "My Business WhatsApp",
+    "phone_id": "1234567890",
     "business_account_id": "123456789012345",
-    "created_at": "2024-01-15T10:30:00Z"
+    "created_at": "2024-01-15T10:30:00Z",
+    "platform": "whatsapp"
   }
 ]
 ```
@@ -240,14 +240,14 @@ echo "Message sent: " . print_r($result, true);
 
 ```json
 {
-  "id": "msg_abc123def456",
-  "wa_message_id": "wamid.HBgMTIzNDU2Nzg5MDEyMzQVAgARGBI5RkY2NzAyQUIyNEE4RkQ2AA==",
+  "message_id": "550e8400-e29b-41d4-a716-446655440001",
   "status": "sent",
-  "recipient": "+1234567890",
+  "detail": "Message sent successfully",
+  "content": "Hello! This is my first message sent via MegaSend API",
   "message_type": "text",
-  "instance_id": "550e8400-e29b-41d4-a716-446655440000",
-  "created_at": "2024-01-15T10:35:00Z",
-  "estimated_delivery": "2024-01-15T10:35:03Z"
+  "timestamp": "2024-01-15T10:35:00Z",
+  "direction": "outbound",
+  "wa_message_id": "wamid.HBgMTIzNDU2Nzg5MDEyMzQVAgARGBI5RkY2NzAyQUIyNEE4RkQ2AA=="
 }
 ```
 
@@ -257,12 +257,35 @@ echo "Message sent: " . print_r($result, true);
 
 ## Step 4: Track Message Status
 
-Messages go through several status updates. You can track the delivery status:
+Messages go through several status updates. Query the `GET /messages/responses` endpoint with your instance ID to list outbound messages. You can narrow results by `status`, date range, recipient phone, or message type.
 
 ```bash
-curl -X GET "https://api.megasend.co.il/messages/responses?wa_message_id=wamid.HBgMTIzNDU2Nzg5MDEyMzQVAgARGBI5RkY2NzAyQUIyNEE4RkQ2AA==" \
+# List recent sent messages for an instance
+curl -X GET "https://api.megasend.co.il/messages/responses?instance_id=550e8400-e29b-41d4-a716-446655440000&status=sent" \
   -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
 ```
+
+```bash
+# Filter by recipient phone and a start date
+curl -X GET "https://api.megasend.co.il/messages/responses?instance_id=550e8400-e29b-41d4-a716-446655440000&recipient=%2B1234567890&start_date=2024-01-15T00:00:00Z" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
+```
+
+**Accepted query parameters for `/messages/responses`:**
+
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| `instance_id` | UUID | Yes | The instance whose messages to retrieve |
+| `status` | string | No | Filter by status: `sent`, `delivered`, `read`, `failed` |
+| `start_date` | ISO 8601 | No | Return messages created on or after this datetime |
+| `end_date` | ISO 8601 | No | Return messages created on or before this datetime |
+| `message_type` | string | No | Filter by type: `text`, `template`, `image`, etc. |
+| `recipient` | string | No | Partial-match filter on recipient phone number |
+| `source` | string | No | Filter by integration source, e.g. `shopify` |
+
+<Note>
+There is no `wa_message_id` query filter on this endpoint. To look up a message by its WhatsApp message ID, use the `wa_message_id` field in the response items to match after retrieval.
+</Note>
 
 ### Message Status Flow
 
@@ -332,17 +355,12 @@ const promoMessage = {
   instance_id: 'your-instance-id',
   recipient: '+1234567890',
   message_type: 'template',
-  template: {
+  template_data: {
     name: 'weekly_promotion',
     language: 'en',
-    components: [
-      {
-        type: 'body',
-        parameters: [
-          { type: 'text', text: 'John' },
-          { type: 'text', text: '20%' }
-        ]
-      }
+    body_params: [
+      { type: 'text', value: 'John' },
+      { type: 'text', value: '20%' }
     ]
   }
 };

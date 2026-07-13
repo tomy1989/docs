@@ -16,13 +16,13 @@ https://api.megasend.co.il
 
 ## Authentication
 
-The MegaSend API uses X-MEGASEND-AUTH header authentication. Include your access token in the X-MEGASEND-AUTH header:
+The MegaSend API uses `X-MEGASEND-AUTH` header authentication. Include your access token in the header:
 
 ```bash
 X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN
 ```
 
-You can obtain your API token from the [MegaSend Dashboard](https://app.megasend.io).
+Access tokens are raw 32-byte URL-safe strings with no prefix. You can obtain your API token from the [MegaSend Dashboard](https://app.megasend.co.il).
 
 ## Request Format
 
@@ -54,7 +54,7 @@ Successful API calls return JSON with the requested data:
 
 ```json
 {
-  "id": "msg_abc123def456",
+  "id": "550e8400-e29b-41d4-a716-446655440000",
   "status": "sent",
   "recipient": "+1234567890",
   "message_type": "text",
@@ -64,16 +64,33 @@ Successful API calls return JSON with the requested data:
 
 ### Error Responses
 
-Error responses include an error object with details:
+All error responses use FastAPI's standard `detail` envelope. For most errors, `detail` is a string:
 
 ```json
 {
-  "error": {
-    "code": "INVALID_PHONE_NUMBER",
-    "message": "The recipient phone number is not valid",
-    "details": "Phone number must be in international format (+1234567890)",
-    "request_id": "req_xyz789abc123"
-  }
+  "detail": "Instance not found"
+}
+```
+
+Validation errors (422) return a structured list:
+
+```json
+{
+  "detail": [
+    {
+      "loc": ["body", "recipient"],
+      "msg": "field required",
+      "type": "value_error.missing"
+    }
+  ]
+}
+```
+
+Unhandled server errors always return:
+
+```json
+{
+  "detail": "Internal server error"
 }
 ```
 
@@ -85,6 +102,7 @@ The API uses conventional HTTP status codes:
 |------|--------|-------------|
 | 200 | OK | Request successful |
 | 201 | Created | Resource created successfully |
+| 204 | No Content | Resource deleted successfully |
 | 400 | Bad Request | Invalid request parameters |
 | 401 | Unauthorized | Invalid or missing authentication |
 | 403 | Forbidden | Insufficient permissions |
@@ -93,50 +111,31 @@ The API uses conventional HTTP status codes:
 | 429 | Too Many Requests | Rate limit exceeded |
 | 500 | Internal Server Error | Server error |
 
-## Error Codes
-
-### Common Error Codes
-
-| Code | Description |
-|------|-------------|
-| `INVALID_TOKEN` | Authentication token is invalid |
-| `EXPIRED_TOKEN` | Authentication token has expired |
-| `INSUFFICIENT_PERMISSIONS` | Token lacks required permissions |
-| `INVALID_INSTANCE` | Instance ID is invalid or not found |
-| `INSTANCE_DISCONNECTED` | WhatsApp instance is not connected |
-| `INVALID_PHONE_NUMBER` | Phone number format is invalid |
-| `MESSAGE_TOO_LONG` | Message exceeds length limits |
-| `RATE_LIMIT_EXCEEDED` | API rate limit exceeded |
-| `TEMPLATE_NOT_FOUND` | Message template not found |
-| `TEMPLATE_NOT_APPROVED` | Template not approved by WhatsApp |
-
 ## Pagination
 
-List endpoints support pagination using cursor-based pagination:
+List endpoints use offset-based pagination via `page` and `per_page` query parameters:
 
 ### Request Parameters
 
-- `limit` (optional) - Number of items to return (default: 20, max: 100)
-- `cursor` (optional) - Pagination cursor from previous response
+- `page` (optional) - Page number, 1-based (default: 1)
+- `per_page` (optional) - Items per page (default: 10, max: 100)
 
 ### Response Format
 
 ```json
 {
-  "data": [
+  "items": [
     {
-      "id": "msg_1",
+      "id": "550e8400-e29b-41d4-a716-446655440000",
       "status": "delivered"
-    },
-    {
-      "id": "msg_2", 
-      "status": "sent"
     }
   ],
-  "pagination": {
-    "has_more": true,
-    "next_cursor": "eyJpZCI6Im1zZ18yIiwiZGlyZWN0aW9uIjoibmV4dCJ9"
-  }
+  "total": 84,
+  "page": 1,
+  "per_page": 10,
+  "total_pages": 9,
+  "has_next": true,
+  "has_prev": false
 }
 ```
 
@@ -144,74 +143,57 @@ List endpoints support pagination using cursor-based pagination:
 
 ```bash
 # First page
-curl "https://api.megasend.co.il/messages?limit=20" \
+curl "https://api.megasend.co.il/messages/responses?page=1&per_page=20" \
   -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
 
 # Next page
-curl "https://api.megasend.co.il/messages?limit=20&cursor=eyJpZCI6Im1zZ18yIiwiZGlyZWN0aW9uIjoibmV4dCJ9" \
+curl "https://api.megasend.co.il/messages/responses?page=2&per_page=20" \
   -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
 ```
 
 ## Rate Limiting
 
-The API implements rate limiting to ensure fair usage:
+The API applies targeted Redis-based rate limits on specific sensitive operations (subscription changes, media uploads, registration, authentication, etc.). There is no single global request-per-minute cap on all endpoints.
 
-### Limits
+### Rate Limit Error Response
 
-- **Global**: 1,000 requests per minute per API key
-- **Messaging**: Instance-specific limits based on WhatsApp Business tier
-- **Bulk Operations**: 10 concurrent bulk jobs per account
+When a rate limit is exceeded (429 status), the response body contains:
 
-### Headers
-
-Rate limit information is included in response headers:
-
-```http
-X-RateLimit-Limit: 1000
-X-RateLimit-Remaining: 847
-X-RateLimit-Reset: 1705320900
-```
-
-### Handling Rate Limits
-
-When rate limited (429 status), implement exponential backoff:
-
-```javascript
-async function makeRequestWithRetry(url, options, maxRetries = 3) {
-  for (let attempt = 0; attempt <= maxRetries; attempt++) {
-    try {
-      const response = await fetch(url, options);
-      
-      if (response.status === 429) {
-        const retryAfter = response.headers.get('Retry-After') || Math.pow(2, attempt);
-        await new Promise(resolve => setTimeout(resolve, retryAfter * 1000));
-        continue;
-      }
-      
-      return response;
-    } catch (error) {
-      if (attempt === maxRetries) throw error;
-      await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt) * 1000));
-    }
+```json
+{
+  "detail": {
+    "error": "Rate limit exceeded",
+    "message": "Maximum 5 plan changes per hour allowed. Try again after 14:30:00 UTC",
+    "current_count": 5,
+    "limit": 5,
+    "reset_time": "2024-01-15T14:30:00+00:00",
+    "type": "rate_limit"
   }
 }
 ```
 
-## Idempotency
+The `type` field identifies the specific limiter (e.g. `rate_limit`, `upload_rate_limit`, `upload_burst_limit`, `frequency_limit`). Media upload limiters also include a `retry_after_seconds` integer field. No `X-RateLimit-*` headers are sent.
 
-For POST requests that create resources, you can include an idempotency key to prevent duplicate requests:
+### Handling Rate Limits
 
-```bash
-curl -X POST "https://api.megasend.co.il/messages/send" \
-  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN" \
-  -H "Content-Type: application/json" \
-  -H "Idempotency-Key: msg_unique_key_123" \
-  -d '{"instance_id": "...", "recipient": "..."}'
+When rate limited (429 status), check for `retry_after_seconds` in the response body (present on media upload limits) and fall back to exponential backoff:
+
+```javascript
+async function makeRequestWithRetry(url, options, maxRetries = 3) {
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    const response = await fetch(url, options);
+
+    if (response.status === 429) {
+      const body = await response.json();
+      const retryAfter = body.detail?.retry_after_seconds ?? Math.pow(2, attempt + 1);
+      await new Promise(resolve => setTimeout(resolve, retryAfter * 1000));
+      continue;
+    }
+
+    return response;
+  }
+}
 ```
-
-## Webhooks
-
-The API supports webhooks for real-time event notifications. See [Webhook Setup](/webhooks/setup) for configuration details.
 
 ## Data Types
 
@@ -228,56 +210,83 @@ The API supports webhooks for real-time event notifications. See [Webhook Setup]
 All phone numbers must be in international E.164 format:
 
 ```
-+1234567890  ✅ Correct
-1234567890   ❌ Missing country code
-+1-234-567-890  ❌ Contains formatting
++1234567890    ✅ Correct
+1234567890     ❌ Missing country code
++1-234-567-890 ❌ Contains formatting
 ```
 
 ## API Endpoints Overview
 
 ### Authentication & Users
-- `POST /auth/login` - User authentication
+- `POST /auth/login` - User authentication (form-based)
+- `POST /auth/login/credentials` - User authentication (JSON)
 - `GET /auth/me` - Get current user info
 - `POST /auth/refresh` - Refresh access token
+- `POST /auth/logout` - Invalidate session
 
 ### Instances
-- `POST /instances/create` - Create WhatsApp instance
-- `GET /instances` - List instances
-- `GET /instances/{id}` - Get instance details
-- `PUT /instances/{id}` - Update instance
-- `DELETE /instances/{id}` - Delete instance
-- `GET /instances/{id}/status` - Check instance status
+
+Instances represent connected WhatsApp Business numbers. All instance management endpoints are scoped under `/instances/me`.
+
+- `GET /instances/me` - List your instances
+- `POST /instances/me` - Create a new instance
+- `GET /instances/me/{instance_id}` - Get instance details
+- `PUT /instances/me/{instance_id}` - Update instance
+- `DELETE /instances/me/{instance_id}` - Delete instance
+- `POST /instances/me/{instance_id}/refresh-token-state` - Refresh token state
 
 ### Messaging
-- `POST /messages/send` - Send single message
+
+- `POST /messages/send` - Send a single message
 - `POST /messages/send-bulk` - Send bulk messages
-- `GET /messages` - List messages
-- `GET /messages/{id}` - Get message details
+- `GET /messages/responses` - List outbound message responses (paginated)
+- `GET /messages/incoming` - List incoming messages (paginated)
+- `POST /messages/schedule` - Schedule a message
+- `GET /messages/scheduled` - List scheduled messages
+- `PUT /messages/scheduled/{message_id}` - Update a scheduled message
+- `DELETE /messages/scheduled/{message_id}` - Cancel a scheduled message
+
+<Note>
+There are no `GET /messages` or `GET /messages/{id}` endpoints. Use `/messages/responses` for outbound message history and `/messages/incoming` for inbound messages.
+</Note>
 
 ### Templates
-- `POST /templates/create` - Create message template
-- `GET /templates` - List templates
-- `GET /templates/{id}` - Get template details
-- `PUT /templates/{id}` - Update template
-- `DELETE /templates/{id}` - Delete template
+
+Templates are instance-scoped. All template endpoints require an `{instance_id}` path parameter.
+
+- `POST /templates/{instance_id}/create` - Create a message template
+- `GET /templates/{instance_id}/list` - List templates
+- `GET /templates/{instance_id}/template/{template_id}` - Get template details
+- `POST /templates/{instance_id}/update/{template_id}` - Update a template
+- `DELETE /templates/{instance_id}/delete` - Delete a template
+- `POST /templates/{instance_id}/upload-media` - Upload template header media
 
 ### Contacts
 - `POST /contacts` - Create contact
-- `GET /contacts` - List contacts
-- `GET /contacts/{id}` - Get contact details
-- `PUT /contacts/{id}` - Update contact
-- `DELETE /contacts/{id}` - Delete contact
+- `GET /contacts` - List contacts (paginated)
+- `GET /contacts/{contact_id}` - Get contact details
+- `PUT /contacts/{contact_id}` - Update contact
+- `DELETE /contacts/{contact_id}` - Delete contact
 
 ### Webhooks
-- `POST /webhooks/endpoints` - Create webhook endpoint
-- `GET /webhooks/endpoints` - List webhook endpoints
-- `PUT /webhooks/endpoints/{id}` - Update webhook endpoint
-- `DELETE /webhooks/endpoints/{id}` - Delete webhook endpoint
+
+WhatsApp webhook subscriptions are managed automatically by the system (Celery Beat syncs every 2 hours). There are no CRUD endpoints for webhook endpoint management.
+
+- `GET /webhook-management/status` - Get webhook subscription system status
 
 ### Analytics
-- `GET /analytics/messages` - Message analytics
-- `GET /analytics/instances` - Instance analytics
-- `GET /analytics/templates` - Template performance
+
+All analytics endpoints are scoped to a specific instance via `{instance_id}`.
+
+- `GET /analytics/overview/{instance_id}` - Instance overview metrics
+- `GET /analytics/stats/{instance_id}` - Message statistics
+- `GET /analytics/meta/analytics/{instance_id}` - Meta-reported conversation analytics
+- `GET /analytics/db/status-analytics/{instance_id}` - DB-level message status breakdown
+- `GET /analytics/db/message-flow/{instance_id}` - Message flow analytics
+
+## Webhooks
+
+The API supports webhooks for real-time event notifications. See [Webhook Setup](/webhooks/setup) for configuration details.
 
 ## API Integration
 
@@ -289,7 +298,6 @@ Each endpoint in our documentation includes ready-to-use code examples in:
 - **cURL** - Quick testing from command line
 - **JavaScript/Node.js** - Web and server applications
 - **Python** - Backend services and scripts
-- **PHP** - WordPress and traditional web apps
 
 ## API Versioning
 
@@ -297,8 +305,8 @@ The API does not use URL path versioning. All endpoints are accessed directly:
 
 ```
 https://api.megasend.co.il/messages/send
-https://api.megasend.co.il/instances
-https://api.megasend.co.il/templates
+https://api.megasend.co.il/instances/me
+https://api.megasend.co.il/templates/{instance_id}/list
 ```
 
 We maintain backward compatibility and provide advance notice before any breaking changes.
@@ -309,8 +317,7 @@ We maintain backward compatibility and provide advance notice before any breakin
 
 1. **Start with a test WhatsApp number** - Use your own phone number for initial testing
 2. **Monitor webhook responses** - Set up webhook endpoints to track message delivery
-3. **Check rate limit headers** - Monitor `X-RateLimit-Remaining` in responses
-4. **Use instance status endpoint** - Verify your instance is connected before sending
+3. **Use instance status endpoint** - Verify your instance is connected before sending
 
 ### Verifying Your Setup
 
@@ -319,8 +326,8 @@ We maintain backward compatibility and provide advance notice before any breakin
 curl -X GET "https://api.megasend.co.il/auth/me" \
   -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
 
-# Check instance status
-curl -X GET "https://api.megasend.co.il/instances" \
+# List your instances
+curl -X GET "https://api.megasend.co.il/instances/me" \
   -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
 ```
 
@@ -333,7 +340,7 @@ curl -X GET "https://api.megasend.co.il/instances" \
 
 ### Help & Support
 - **Email**: [team@weblix.co.il](mailto:team@weblix.co.il)
-- **Dashboard**: [app.megasend.io](https://app.megasend.io)
+- **Dashboard**: [app.megasend.co.il](https://app.megasend.co.il)
 
 ## OpenAPI Specification
 

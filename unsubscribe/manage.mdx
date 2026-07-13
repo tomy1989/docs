@@ -50,7 +50,7 @@ const response = await fetch('https://api.megasend.co.il/unsubscribe/create', {
 });
 
 const result = await response.json();
-console.log('Unsubscribe code:', result.code);
+console.log('Unsubscribe code:', result.unsubscribe_code);
 ```
 
 ```python Python
@@ -67,7 +67,7 @@ response = requests.post(
 )
 
 result = response.json()
-print(f"Unsubscribe code: {result['code']}")
+print(f"Unsubscribe code: {result['unsubscribe_code']}")
 ```
 
 </CodeGroup>
@@ -77,8 +77,8 @@ print(f"Unsubscribe code: {result['code']}")
 ```json
 {
   "success": true,
-  "unsubscribe_code": "unsub_abc123def456ghi789",
-  "unsubscribe_url": "https://api.megasend.co.il/api/whatsapp-cloud-api/unsubscribe/unsub_abc123def456ghi789",
+  "unsubscribe_code": "abc123def456ghi789xyz",
+  "unsubscribe_url": "https://app.megasend.co.il/api/whatsapp-cloud-api/unsubscribe/abc123def456ghi789xyz",
   "contact_id": "550e8400-e29b-41d4-a716-446655440000",
   "contact_created": false,
   "message": "Unsubscribe code created successfully"
@@ -117,21 +117,17 @@ response = requests.get(
 
 ## Process Unsubscribe
 
-Handle unsubscribe requests programmatically via API:
+Handle unsubscribe requests programmatically via API. This endpoint does not require authentication — it is designed to be called from public-facing pages using only the code:
 
 <CodeGroup>
 
 ```bash cURL
-curl -X POST "https://api.megasend.co.il/unsubscribe/process/unsub_abc123def456ghi789" \
-  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
+curl -X POST "https://api.megasend.co.il/unsubscribe/process/abc123def456ghi789xyz"
 ```
 
 ```javascript JavaScript
-const response = await fetch('https://api.megasend.co.il/unsubscribe/process/unsub_abc123def456ghi789', {
-  method: 'POST',
-  headers: {
-    'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'
-  }
+const response = await fetch('https://api.megasend.co.il/unsubscribe/process/abc123def456ghi789xyz', {
+  method: 'POST'
 });
 
 const result = await response.json();
@@ -139,8 +135,7 @@ const result = await response.json();
 
 ```python Python
 response = requests.post(
-    'https://api.megasend.co.il/unsubscribe/process/unsub_abc123def456ghi789',
-    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'}
+    'https://api.megasend.co.il/unsubscribe/process/abc123def456ghi789xyz'
 )
 ```
 
@@ -159,20 +154,20 @@ response = requests.post(
 
 ## Public Unsubscribe Page
 
-The public unsubscribe endpoint that customers use directly in their browser. This returns an HTML page, not JSON:
+The public unsubscribe endpoint that customers use directly in their browser. This returns an HTML page, not JSON. The URL embedded in messages is generated with the `/api/whatsapp-cloud-api/unsubscribe/{code}` prefix via the app domain:
 
 <CodeGroup>
 
 ```bash cURL
-curl -X GET "https://api.megasend.co.il/unsubscribe/unsub_abc123def456ghi789"
+curl -X GET "https://app.megasend.co.il/api/whatsapp-cloud-api/unsubscribe/abc123def456ghi789xyz"
 ```
 
 ```javascript Browser
-// Direct browser navigation
-window.location.href = 'https://api.megasend.co.il/unsubscribe/unsub_abc123def456ghi789';
+// Direct browser navigation — this is the URL embedded in WhatsApp messages
+window.location.href = 'https://app.megasend.co.il/api/whatsapp-cloud-api/unsubscribe/abc123def456ghi789xyz';
 
 // Or fetch the HTML content
-const response = await fetch('https://api.megasend.co.il/unsubscribe/unsub_abc123def456ghi789');
+const response = await fetch('https://app.megasend.co.il/api/whatsapp-cloud-api/unsubscribe/abc123def456ghi789xyz');
 const htmlContent = await response.text();
 ```
 
@@ -181,7 +176,7 @@ import requests
 
 # This returns HTML content, not JSON
 response = requests.get(
-    'https://api.megasend.co.il/unsubscribe/unsub_abc123def456ghi789'
+    'https://app.megasend.co.il/api/whatsapp-cloud-api/unsubscribe/abc123def456ghi789xyz'
 )
 
 html_content = response.text
@@ -316,13 +311,10 @@ class UnsubscribeManager {
     return `${messageText}\n\nTo stop receiving messages, click: ${unsubscribeUrl}`;
   }
 
-  // Process unsubscribe from webhook or web page
+  // Process unsubscribe from webhook or web page (no auth required)
   async processUnsubscribe(code) {
     const response = await fetch(`${this.baseUrl}/unsubscribe/process/${code}`, {
-      method: 'POST',
-      headers: {
-        'X-MEGASEND-AUTH': `${this.apiToken}`
-      }
+      method: 'POST'
     });
 
     return response.json();
@@ -438,10 +430,7 @@ Create a custom unsubscribe page for better brand consistency:
         document.getElementById('unsubscribeBtn').addEventListener('click', async () => {
             try {
                 const response = await fetch(`https://api.megasend.co.il/unsubscribe/process/${code}`, {
-                    method: 'POST',
-                    headers: { 
-                        'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN' // You'd need to pass this from server-side
-                    }
+                    method: 'POST'
                 });
                 
                 const result = await response.json();
@@ -515,31 +504,6 @@ async function handleUnsubscribeErrors(response) {
   
   return await response.json();
 }
-```
-
-## Analytics & Reporting
-
-Track unsubscribe metrics to improve your messaging:
-
-```javascript
-async function getUnsubscribeAnalytics(startDate, endDate) {
-  const response = await fetch(`https://api.megasend.co.il/analytics/unsubscribes?start_date=${startDate}&end_date=${endDate}`, {
-    headers: {
-      'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'
-    }
-  });
-  
-  return response.json();
-}
-
-// Get unsubscribe rate for last 30 days
-const analytics = await getUnsubscribeAnalytics(
-  '2024-01-01T00:00:00Z',
-  '2024-01-31T23:59:59Z'
-);
-
-console.log('Unsubscribe rate:', analytics.unsubscribe_rate);
-console.log('Total unsubscribes:', analytics.total_unsubscribes);
 ```
 
 ## Next Steps

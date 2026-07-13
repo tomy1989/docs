@@ -1,0 +1,1059 @@
+---
+title: 'Catalog & Commerce'
+description: 'Manage WhatsApp Commerce catalogs, products, and orders — and send address-collection and order-summary messages to customers'
+---
+
+# Catalog & Commerce
+
+MegaSend integrates with Meta Commerce Manager to let you expose a product catalog inside WhatsApp and Instagram, track orders that arrive through the chat, and send structured commerce messages to customers.
+
+## Overview
+
+- **Catalog setup** — auto-discover or manually initialise a Meta Commerce Catalog linked to an instance
+- **Product CRUD** — create, read, update, and delete products; sync from Shopify or from Meta
+- **Order management** — list, filter, and update the status of orders placed via WhatsApp cart
+- **Commerce messages** — send a native address-collection form or a formatted order-summary message
+
+<Note>
+  All endpoints require the `X-MEGASEND-AUTH` header. Obtain your access token from the [MegaSend dashboard](https://app.megasend.co.il).
+</Note>
+
+---
+
+## Catalog
+
+### Get or create catalog
+
+`GET /catalog/{instance_id}`
+
+Fetches the catalog linked to the instance. On first call for a WhatsApp instance, MegaSend auto-discovers the catalog from Meta Commerce Manager and stores it. For Instagram instances, the endpoint transparently falls back to any WhatsApp catalog owned by the same user (Meta catalog IDs are shared across channels).
+
+<CodeGroup>
+
+```bash cURL
+curl -X GET "https://api.megasend.co.il/catalog/YOUR_INSTANCE_ID" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
+```
+
+```javascript JavaScript
+const response = await fetch(
+  'https://api.megasend.co.il/catalog/YOUR_INSTANCE_ID',
+  { headers: { 'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN' } }
+);
+const catalog = await response.json();
+```
+
+```python Python
+import requests
+
+catalog = requests.get(
+    'https://api.megasend.co.il/catalog/YOUR_INSTANCE_ID',
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'}
+).json()
+```
+
+</CodeGroup>
+
+#### Response
+
+```json
+{
+  "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "instance_id": "550e8400-e29b-41d4-a716-446655440000",
+  "meta_catalog_id": "123456789012345",
+  "name": "My Store Catalog",
+  "description": null,
+  "product_count": 42,
+  "is_catalog_visible": true,
+  "is_cart_enabled": true,
+  "last_synced_at": "2026-07-13T10:30:00Z",
+  "sync_status": "completed",
+  "sync_error": null,
+  "created_at": "2026-01-01T00:00:00Z",
+  "updated_at": "2026-07-13T10:30:00Z"
+}
+```
+
+<ResponseField name="id" type="UUID">Internal catalog ID.</ResponseField>
+<ResponseField name="meta_catalog_id" type="string">Meta Commerce Manager catalog ID.</ResponseField>
+<ResponseField name="product_count" type="integer">Number of products currently in the catalog.</ResponseField>
+<ResponseField name="is_catalog_visible" type="boolean">Whether the catalog is shown to customers in WhatsApp.</ResponseField>
+<ResponseField name="is_cart_enabled" type="boolean">Whether customers can add items to a WhatsApp cart.</ResponseField>
+<ResponseField name="sync_status" type="string">One of `idle`, `pending`, `syncing`, `completed`, `error`.</ResponseField>
+
+---
+
+### Update catalog settings
+
+`PUT /catalog/{instance_id}`
+
+Updates the catalog's name, description, visibility, or cart settings.
+
+<ParamField body="name" type="string">Display name (max 255 chars).</ParamField>
+<ParamField body="description" type="string">Optional catalog description.</ParamField>
+<ParamField body="is_catalog_visible" type="boolean">Show or hide the catalog in WhatsApp.</ParamField>
+<ParamField body="is_cart_enabled" type="boolean">Allow customers to add items to a cart.</ParamField>
+
+<CodeGroup>
+
+```bash cURL
+curl -X PUT "https://api.megasend.co.il/catalog/YOUR_INSTANCE_ID" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Summer Collection",
+    "is_cart_enabled": true
+  }'
+```
+
+```javascript JavaScript
+const response = await fetch(
+  'https://api.megasend.co.il/catalog/YOUR_INSTANCE_ID',
+  {
+    method: 'PUT',
+    headers: {
+      'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN',
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ name: 'Summer Collection', is_cart_enabled: true })
+  }
+);
+const catalog = await response.json();
+```
+
+```python Python
+import requests
+
+catalog = requests.put(
+    'https://api.megasend.co.il/catalog/YOUR_INSTANCE_ID',
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'},
+    json={'name': 'Summer Collection', 'is_cart_enabled': True}
+).json()
+```
+
+</CodeGroup>
+
+---
+
+### Sync catalog from Meta
+
+`POST /catalog/{instance_id}/sync`
+
+Triggers a full product sync from Meta Commerce Manager, refreshing all product data from the upstream catalog.
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST "https://api.megasend.co.il/catalog/YOUR_INSTANCE_ID/sync" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
+```
+
+```javascript JavaScript
+const response = await fetch(
+  'https://api.megasend.co.il/catalog/YOUR_INSTANCE_ID/sync',
+  { method: 'POST', headers: { 'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN' } }
+);
+const result = await response.json();
+```
+
+```python Python
+import requests
+
+result = requests.post(
+    'https://api.megasend.co.il/catalog/YOUR_INSTANCE_ID/sync',
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'}
+).json()
+```
+
+</CodeGroup>
+
+---
+
+## Products
+
+### List products
+
+`GET /catalog/{instance_id}/products`
+
+Returns a paginated list of products. Supports text search and availability filter.
+
+<ParamField query="page" type="integer" default="1">Page number (min 1).</ParamField>
+<ParamField query="per_page" type="integer" default="20">Results per page (1–100).</ParamField>
+<ParamField query="search" type="string">Free-text search across product name and description.</ParamField>
+<ParamField query="availability" type="string">Filter by availability: `in stock` or `out of stock`.</ParamField>
+
+<CodeGroup>
+
+```bash cURL
+curl -X GET "https://api.megasend.co.il/catalog/YOUR_INSTANCE_ID/products?page=1&per_page=20&search=shirt" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
+```
+
+```javascript JavaScript
+const params = new URLSearchParams({ page: 1, per_page: 20, search: 'shirt' });
+const response = await fetch(
+  `https://api.megasend.co.il/catalog/YOUR_INSTANCE_ID/products?${params}`,
+  { headers: { 'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN' } }
+);
+const data = await response.json();
+```
+
+```python Python
+import requests
+
+data = requests.get(
+    'https://api.megasend.co.il/catalog/YOUR_INSTANCE_ID/products',
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'},
+    params={'page': 1, 'per_page': 20, 'search': 'shirt'}
+).json()
+```
+
+</CodeGroup>
+
+#### Response
+
+```json
+{
+  "products": [
+    {
+      "id": "b2c3d4e5-f6a7-8901-bcde-f12345678901",
+      "catalog_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+      "meta_retailer_id": "SKU-001",
+      "meta_product_id": "987654321098765",
+      "name": "Classic Cotton Shirt",
+      "description": "100% cotton, available in 3 colors",
+      "price": 89.99,
+      "currency": "ILS",
+      "image_url": "https://example.com/shirt.jpg",
+      "product_url": "https://example.com/products/shirt",
+      "availability": "in stock",
+      "condition": "new",
+      "brand": "MyBrand",
+      "category": "Clothing",
+      "sync_source": "manual",
+      "shopify_product_id": null,
+      "is_active": true,
+      "created_at": "2026-01-01T00:00:00Z",
+      "updated_at": "2026-07-13T10:00:00Z"
+    }
+  ],
+  "total": 42,
+  "page": 1,
+  "per_page": 20
+}
+```
+
+---
+
+### Get product
+
+`GET /catalog/{instance_id}/products/{product_id}`
+
+Returns full detail for a single product.
+
+<CodeGroup>
+
+```bash cURL
+curl -X GET "https://api.megasend.co.il/catalog/YOUR_INSTANCE_ID/products/PRODUCT_ID" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
+```
+
+```javascript JavaScript
+const response = await fetch(
+  'https://api.megasend.co.il/catalog/YOUR_INSTANCE_ID/products/PRODUCT_ID',
+  { headers: { 'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN' } }
+);
+const product = await response.json();
+```
+
+```python Python
+import requests
+
+product = requests.get(
+    'https://api.megasend.co.il/catalog/YOUR_INSTANCE_ID/products/PRODUCT_ID',
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'}
+).json()
+```
+
+</CodeGroup>
+
+---
+
+### Create product
+
+`POST /catalog/{instance_id}/products`
+
+Creates a new product in the catalog and pushes it to Meta Commerce Manager.
+
+<ParamField body="retailer_id" type="string" required>SKU or retailer ID for Meta (max 255 chars).</ParamField>
+<ParamField body="name" type="string" required>Product name (max 512 chars).</ParamField>
+<ParamField body="price" type="number" required>Unit price (must be greater than 0).</ParamField>
+<ParamField body="description" type="string">Optional product description.</ParamField>
+<ParamField body="currency" type="string" default="ILS">ISO 4217 currency code (max 3 chars).</ParamField>
+<ParamField body="image_url" type="string">URL of the product image.</ParamField>
+<ParamField body="product_url" type="string">Link to the product page.</ParamField>
+<ParamField body="availability" type="string" default="in stock">`in stock` or `out of stock`.</ParamField>
+<ParamField body="condition" type="string" default="new">Product condition (e.g. `new`, `refurbished`).</ParamField>
+<ParamField body="brand" type="string">Brand name (max 255 chars).</ParamField>
+<ParamField body="category" type="string">Product category (max 512 chars).</ParamField>
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST "https://api.megasend.co.il/catalog/YOUR_INSTANCE_ID/products" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "retailer_id": "SKU-001",
+    "name": "Classic Cotton Shirt",
+    "description": "100% cotton, available in 3 colors",
+    "price": 89.99,
+    "currency": "ILS",
+    "image_url": "https://example.com/shirt.jpg",
+    "product_url": "https://example.com/products/shirt",
+    "availability": "in stock",
+    "condition": "new",
+    "brand": "MyBrand",
+    "category": "Clothing"
+  }'
+```
+
+```javascript JavaScript
+const response = await fetch(
+  'https://api.megasend.co.il/catalog/YOUR_INSTANCE_ID/products',
+  {
+    method: 'POST',
+    headers: {
+      'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN',
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      retailer_id: 'SKU-001',
+      name: 'Classic Cotton Shirt',
+      description: '100% cotton, available in 3 colors',
+      price: 89.99,
+      currency: 'ILS',
+      image_url: 'https://example.com/shirt.jpg',
+      product_url: 'https://example.com/products/shirt',
+      availability: 'in stock',
+      condition: 'new',
+      brand: 'MyBrand',
+      category: 'Clothing'
+    })
+  }
+);
+const product = await response.json();
+```
+
+```python Python
+import requests
+
+product = requests.post(
+    'https://api.megasend.co.il/catalog/YOUR_INSTANCE_ID/products',
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'},
+    json={
+        'retailer_id': 'SKU-001',
+        'name': 'Classic Cotton Shirt',
+        'description': '100% cotton, available in 3 colors',
+        'price': 89.99,
+        'currency': 'ILS',
+        'image_url': 'https://example.com/shirt.jpg',
+        'product_url': 'https://example.com/products/shirt',
+        'availability': 'in stock',
+        'condition': 'new',
+        'brand': 'MyBrand',
+        'category': 'Clothing'
+    }
+).json()
+```
+
+</CodeGroup>
+
+---
+
+### Update product
+
+`PUT /catalog/{instance_id}/products/{product_id}`
+
+Updates an existing product. All fields are optional — only send the ones you want to change.
+
+<ParamField body="name" type="string">Product name (max 512 chars).</ParamField>
+<ParamField body="description" type="string">Product description.</ParamField>
+<ParamField body="price" type="number">Unit price (must be greater than 0).</ParamField>
+<ParamField body="currency" type="string">ISO 4217 currency code (max 3 chars).</ParamField>
+<ParamField body="image_url" type="string">Product image URL.</ParamField>
+<ParamField body="product_url" type="string">Product page URL.</ParamField>
+<ParamField body="availability" type="string">`in stock` or `out of stock`.</ParamField>
+<ParamField body="condition" type="string">Product condition.</ParamField>
+<ParamField body="brand" type="string">Brand name (max 255 chars).</ParamField>
+<ParamField body="category" type="string">Product category (max 512 chars).</ParamField>
+
+<CodeGroup>
+
+```bash cURL
+curl -X PUT "https://api.megasend.co.il/catalog/YOUR_INSTANCE_ID/products/PRODUCT_ID" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "price": 79.99,
+    "availability": "out of stock"
+  }'
+```
+
+```javascript JavaScript
+const response = await fetch(
+  'https://api.megasend.co.il/catalog/YOUR_INSTANCE_ID/products/PRODUCT_ID',
+  {
+    method: 'PUT',
+    headers: {
+      'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN',
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ price: 79.99, availability: 'out of stock' })
+  }
+);
+const product = await response.json();
+```
+
+```python Python
+import requests
+
+product = requests.put(
+    'https://api.megasend.co.il/catalog/YOUR_INSTANCE_ID/products/PRODUCT_ID',
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'},
+    json={'price': 79.99, 'availability': 'out of stock'}
+).json()
+```
+
+</CodeGroup>
+
+---
+
+### Delete product
+
+`DELETE /catalog/{instance_id}/products/{product_id}`
+
+Removes a product from the catalog.
+
+<CodeGroup>
+
+```bash cURL
+curl -X DELETE "https://api.megasend.co.il/catalog/YOUR_INSTANCE_ID/products/PRODUCT_ID" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
+```
+
+```javascript JavaScript
+const response = await fetch(
+  'https://api.megasend.co.il/catalog/YOUR_INSTANCE_ID/products/PRODUCT_ID',
+  { method: 'DELETE', headers: { 'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN' } }
+);
+const result = await response.json();
+// { "success": true, "message": "Product deleted successfully" }
+```
+
+```python Python
+import requests
+
+result = requests.delete(
+    'https://api.megasend.co.il/catalog/YOUR_INSTANCE_ID/products/PRODUCT_ID',
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'}
+).json()
+```
+
+</CodeGroup>
+
+---
+
+## Orders
+
+Orders are created automatically when a customer completes a WhatsApp cart checkout. Use these endpoints to list, inspect, and update order statuses.
+
+### List orders
+
+`GET /catalog/{instance_id}/orders`
+
+Returns a paginated list of orders with optional filtering.
+
+<ParamField query="page" type="integer" default="1">Page number (min 1).</ParamField>
+<ParamField query="per_page" type="integer" default="20">Results per page (1–100).</ParamField>
+<ParamField query="status" type="string">Filter by status: `new`, `confirmed`, `processing`, `shipped`, `delivered`, or `cancelled`.</ParamField>
+<ParamField query="customer_phone" type="string">Filter by customer phone number.</ParamField>
+
+<CodeGroup>
+
+```bash cURL
+curl -X GET "https://api.megasend.co.il/catalog/YOUR_INSTANCE_ID/orders?status=new&per_page=50" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
+```
+
+```javascript JavaScript
+const params = new URLSearchParams({ status: 'new', per_page: 50 });
+const response = await fetch(
+  `https://api.megasend.co.il/catalog/YOUR_INSTANCE_ID/orders?${params}`,
+  { headers: { 'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN' } }
+);
+const data = await response.json();
+```
+
+```python Python
+import requests
+
+data = requests.get(
+    'https://api.megasend.co.il/catalog/YOUR_INSTANCE_ID/orders',
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'},
+    params={'status': 'new', 'per_page': 50}
+).json()
+```
+
+</CodeGroup>
+
+#### Response
+
+```json
+{
+  "orders": [
+    {
+      "id": "c3d4e5f6-a7b8-9012-cdef-123456789012",
+      "customer_phone": "+972501234567",
+      "customer_name": "Yossi Cohen",
+      "status": "new",
+      "total_items": 3,
+      "total_amount": 269.97,
+      "currency": "ILS",
+      "ordered_at": "2026-07-13T09:00:00Z"
+    }
+  ],
+  "total": 17,
+  "page": 1,
+  "per_page": 50
+}
+```
+
+---
+
+### Get order stats
+
+`GET /catalog/{instance_id}/orders/stats`
+
+Returns aggregate order counts by status and total revenue.
+
+<CodeGroup>
+
+```bash cURL
+curl -X GET "https://api.megasend.co.il/catalog/YOUR_INSTANCE_ID/orders/stats" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
+```
+
+```javascript JavaScript
+const response = await fetch(
+  'https://api.megasend.co.il/catalog/YOUR_INSTANCE_ID/orders/stats',
+  { headers: { 'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN' } }
+);
+const stats = await response.json();
+```
+
+```python Python
+import requests
+
+stats = requests.get(
+    'https://api.megasend.co.il/catalog/YOUR_INSTANCE_ID/orders/stats',
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'}
+).json()
+```
+
+</CodeGroup>
+
+#### Response
+
+```json
+{
+  "total_orders": 47,
+  "new_orders": 5,
+  "confirmed_orders": 12,
+  "processing_orders": 8,
+  "shipped_orders": 15,
+  "delivered_orders": 6,
+  "cancelled_orders": 1,
+  "total_revenue": 12450.50,
+  "currency": "ILS"
+}
+```
+
+---
+
+### Get order
+
+`GET /catalog/{instance_id}/orders/{order_id}`
+
+Returns full order detail including the list of items.
+
+<CodeGroup>
+
+```bash cURL
+curl -X GET "https://api.megasend.co.il/catalog/YOUR_INSTANCE_ID/orders/ORDER_ID" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
+```
+
+```javascript JavaScript
+const response = await fetch(
+  'https://api.megasend.co.il/catalog/YOUR_INSTANCE_ID/orders/ORDER_ID',
+  { headers: { 'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN' } }
+);
+const order = await response.json();
+```
+
+```python Python
+import requests
+
+order = requests.get(
+    'https://api.megasend.co.il/catalog/YOUR_INSTANCE_ID/orders/ORDER_ID',
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'}
+).json()
+```
+
+</CodeGroup>
+
+#### Response
+
+```json
+{
+  "id": "c3d4e5f6-a7b8-9012-cdef-123456789012",
+  "instance_id": "550e8400-e29b-41d4-a716-446655440000",
+  "customer_phone": "+972501234567",
+  "customer_name": "Yossi Cohen",
+  "meta_catalog_id": "123456789012345",
+  "status": "new",
+  "total_items": 3,
+  "total_amount": 269.97,
+  "currency": "ILS",
+  "order_text": null,
+  "notes": null,
+  "items": [
+    {
+      "id": "d4e5f6a7-b8c9-0123-def0-234567890123",
+      "product_retailer_id": "SKU-001",
+      "product_name": "Classic Cotton Shirt",
+      "quantity": 3,
+      "item_price": 89.99,
+      "currency": "ILS"
+    }
+  ],
+  "ordered_at": "2026-07-13T09:00:00Z",
+  "confirmed_at": null,
+  "completed_at": null,
+  "cancelled_at": null,
+  "created_at": "2026-07-13T09:00:00Z"
+}
+```
+
+---
+
+### Update order status
+
+`PUT /catalog/{instance_id}/orders/{order_id}/status`
+
+Updates the status of an order and optionally attaches a note.
+
+<ParamField body="status" type="string" required>New status: `new`, `confirmed`, `processing`, `shipped`, `delivered`, or `cancelled`.</ParamField>
+<ParamField body="notes" type="string">Optional internal note.</ParamField>
+
+<CodeGroup>
+
+```bash cURL
+curl -X PUT "https://api.megasend.co.il/catalog/YOUR_INSTANCE_ID/orders/ORDER_ID/status" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "status": "shipped",
+    "notes": "Dispatched via Israel Post, tracking: IL123456789"
+  }'
+```
+
+```javascript JavaScript
+const response = await fetch(
+  'https://api.megasend.co.il/catalog/YOUR_INSTANCE_ID/orders/ORDER_ID/status',
+  {
+    method: 'PUT',
+    headers: {
+      'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN',
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      status: 'shipped',
+      notes: 'Dispatched via Israel Post, tracking: IL123456789'
+    })
+  }
+);
+const order = await response.json();
+```
+
+```python Python
+import requests
+
+order = requests.put(
+    'https://api.megasend.co.il/catalog/YOUR_INSTANCE_ID/orders/ORDER_ID/status',
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'},
+    json={
+        'status': 'shipped',
+        'notes': 'Dispatched via Israel Post, tracking: IL123456789'
+    }
+).json()
+```
+
+</CodeGroup>
+
+---
+
+## Shopify Sync
+
+### List syncable Shopify products
+
+`GET /catalog/{instance_id}/shopify/syncable`
+
+Returns the Shopify products available to sync to the WhatsApp catalog, including a flag indicating which products are already synced.
+
+<CodeGroup>
+
+```bash cURL
+curl -X GET "https://api.megasend.co.il/catalog/YOUR_INSTANCE_ID/shopify/syncable" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
+```
+
+```javascript JavaScript
+const response = await fetch(
+  'https://api.megasend.co.il/catalog/YOUR_INSTANCE_ID/shopify/syncable',
+  { headers: { 'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN' } }
+);
+const data = await response.json();
+```
+
+```python Python
+import requests
+
+data = requests.get(
+    'https://api.megasend.co.il/catalog/YOUR_INSTANCE_ID/shopify/syncable',
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'}
+).json()
+```
+
+</CodeGroup>
+
+#### Response
+
+```json
+{
+  "products": [
+    {
+      "shopify_product_id": "gid://shopify/Product/7654321098765",
+      "title": "Classic Cotton Shirt",
+      "handle": "classic-cotton-shirt",
+      "price": "89.99",
+      "currency": "ILS",
+      "image_url": "https://cdn.shopify.com/s/files/example.jpg",
+      "description": "100% cotton shirt",
+      "availability": "in stock",
+      "sku": "SKU-001",
+      "is_already_synced": false
+    }
+  ],
+  "already_synced_ids": ["gid://shopify/Product/1111111111111"],
+  "total_available": 24,
+  "shop_domain": "mystore.myshopify.com"
+}
+```
+
+---
+
+### Sync Shopify products
+
+`POST /catalog/{instance_id}/shopify/sync`
+
+Syncs selected Shopify products into the WhatsApp catalog. Pass up to 100 Shopify product GIDs per request.
+
+<ParamField body="shopify_product_ids" type="string[]" required>List of Shopify product GIDs to sync (1–100 items).</ParamField>
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST "https://api.megasend.co.il/catalog/YOUR_INSTANCE_ID/shopify/sync" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "shopify_product_ids": [
+      "gid://shopify/Product/7654321098765",
+      "gid://shopify/Product/7654321098766"
+    ]
+  }'
+```
+
+```javascript JavaScript
+const response = await fetch(
+  'https://api.megasend.co.il/catalog/YOUR_INSTANCE_ID/shopify/sync',
+  {
+    method: 'POST',
+    headers: {
+      'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN',
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      shopify_product_ids: [
+        'gid://shopify/Product/7654321098765',
+        'gid://shopify/Product/7654321098766'
+      ]
+    })
+  }
+);
+const result = await response.json();
+```
+
+```python Python
+import requests
+
+result = requests.post(
+    'https://api.megasend.co.il/catalog/YOUR_INSTANCE_ID/shopify/sync',
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'},
+    json={
+        'shopify_product_ids': [
+            'gid://shopify/Product/7654321098765',
+            'gid://shopify/Product/7654321098766'
+        ]
+    }
+).json()
+```
+
+</CodeGroup>
+
+#### Response
+
+```json
+{
+  "success": true,
+  "task_id": null,
+  "synced_count": 2,
+  "failed_count": 0,
+  "errors": []
+}
+```
+
+---
+
+## Commerce Messages
+
+### Send address collection message
+
+`POST /messages/address`
+
+Sends a native WhatsApp address form to the customer. The customer fills in their delivery address directly in WhatsApp and submits it. The submitted address arrives as an inbound `nfm_reply` webhook event.
+
+<Warning>
+  Address messages are only available in **India (IN)** and **Singapore (SG)**. Requests with any other country code will be rejected.
+</Warning>
+
+<ParamField body="instance_id" type="UUID" required>Instance ID to send from.</ParamField>
+<ParamField body="recipient" type="string">Recipient phone number in E.164 format. Required unless `recipient_bsuid` is provided.</ParamField>
+<ParamField body="recipient_bsuid" type="string">WhatsApp Business-Scoped User ID. Required unless `recipient` is provided.</ParamField>
+<ParamField body="recipient_username" type="string">WhatsApp @username (display only).</ParamField>
+<ParamField body="country" type="string" default="IN">Country code: `IN` (India) or `SG` (Singapore).</ParamField>
+<ParamField body="body_text" type="string" default="Please share your delivery address">Body text shown above the address form.</ParamField>
+<ParamField body="prefill_values" type="object">Optional object to pre-fill address fields. Fields: `name`, `phone_number`, `address`, `floor_number`, `building_name`, `landmark_area`, `city`, `state`, `in_pin_code` (India), `sg_post_code` (Singapore).</ParamField>
+<ParamField body="saved_addresses" type="array">Array of previously saved addresses to offer as quick-select options. Each entry: `{ "id": "string", "value": { ...AddressValue fields } }`.</ParamField>
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST "https://api.megasend.co.il/messages/address" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "instance_id": "550e8400-e29b-41d4-a716-446655440000",
+    "recipient": "+919876543210",
+    "country": "IN",
+    "body_text": "Please enter your delivery address to complete your order",
+    "prefill_values": {
+      "name": "Priya Sharma",
+      "city": "Mumbai",
+      "state": "Maharashtra"
+    }
+  }'
+```
+
+```javascript JavaScript
+const response = await fetch('https://api.megasend.co.il/messages/address', {
+  method: 'POST',
+  headers: {
+    'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    instance_id: '550e8400-e29b-41d4-a716-446655440000',
+    recipient: '+919876543210',
+    country: 'IN',
+    body_text: 'Please enter your delivery address to complete your order',
+    prefill_values: {
+      name: 'Priya Sharma',
+      city: 'Mumbai',
+      state: 'Maharashtra'
+    }
+  })
+});
+const result = await response.json();
+```
+
+```python Python
+import requests
+
+result = requests.post(
+    'https://api.megasend.co.il/messages/address',
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'},
+    json={
+        'instance_id': '550e8400-e29b-41d4-a716-446655440000',
+        'recipient': '+919876543210',
+        'country': 'IN',
+        'body_text': 'Please enter your delivery address to complete your order',
+        'prefill_values': {
+            'name': 'Priya Sharma',
+            'city': 'Mumbai',
+            'state': 'Maharashtra'
+        }
+    }
+).json()
+```
+
+</CodeGroup>
+
+---
+
+### Send order summary message
+
+`POST /messages/order`
+
+Sends a formatted text quote of an order — listing items, subtotal, tax, shipping, discount, and total — followed by a single "View Order" quick-reply button. The customer must be within the 24-hour Customer Service Window.
+
+<Note>
+  This is a formatted interactive text message, **not** a Meta `order_details` / WhatsApp Pay card. It does not require a payment gateway.
+</Note>
+
+<ParamField body="instance_id" type="UUID" required>Instance ID to send from.</ParamField>
+<ParamField body="recipient" type="string">Recipient phone number in E.164 format. Required unless `recipient_bsuid` is provided.</ParamField>
+<ParamField body="recipient_bsuid" type="string">WhatsApp Business-Scoped User ID. Required unless `recipient` is provided.</ParamField>
+<ParamField body="recipient_username" type="string">WhatsApp @username (display only).</ParamField>
+<ParamField body="order_id" type="string" required>Your internal order reference ID.</ParamField>
+<ParamField body="items" type="array" required>At least one order item. Each item: `name` (string, required), `amount` (number, required), `quantity` (integer, default 1), `image_url` (string), `retailer_id` (string).</ParamField>
+<ParamField body="subtotal" type="number" required>Order subtotal before tax, shipping, and discount.</ParamField>
+<ParamField body="total" type="number" required>Final order total.</ParamField>
+<ParamField body="currency" type="string" default="INR">ISO 4217 currency code.</ParamField>
+<ParamField body="tax" type="number">Tax amount.</ParamField>
+<ParamField body="shipping" type="number">Shipping cost.</ParamField>
+<ParamField body="discount" type="number">Discount amount.</ParamField>
+<ParamField body="payment_status" type="string" default="pending">One of `pending`, `paid`, or `failed`.</ParamField>
+<ParamField body="order_status" type="string">Optional status label shown in the message (e.g. `Confirmed`, `Shipped`).</ParamField>
+<ParamField body="body_text" type="string">Optional text displayed above the order summary.</ParamField>
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST "https://api.megasend.co.il/messages/order" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "instance_id": "550e8400-e29b-41d4-a716-446655440000",
+    "recipient": "+919876543210",
+    "order_id": "ORD-20260713-001",
+    "items": [
+      {
+        "name": "Classic Cotton Shirt",
+        "amount": 89.99,
+        "quantity": 2,
+        "retailer_id": "SKU-001"
+      }
+    ],
+    "subtotal": 179.98,
+    "tax": 18.00,
+    "shipping": 5.00,
+    "discount": 0,
+    "total": 202.98,
+    "currency": "INR",
+    "payment_status": "paid",
+    "order_status": "Confirmed",
+    "body_text": "Thank you for your order! Here is your summary:"
+  }'
+```
+
+```javascript JavaScript
+const response = await fetch('https://api.megasend.co.il/messages/order', {
+  method: 'POST',
+  headers: {
+    'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    instance_id: '550e8400-e29b-41d4-a716-446655440000',
+    recipient: '+919876543210',
+    order_id: 'ORD-20260713-001',
+    items: [
+      { name: 'Classic Cotton Shirt', amount: 89.99, quantity: 2, retailer_id: 'SKU-001' }
+    ],
+    subtotal: 179.98,
+    tax: 18.00,
+    shipping: 5.00,
+    discount: 0,
+    total: 202.98,
+    currency: 'INR',
+    payment_status: 'paid',
+    order_status: 'Confirmed',
+    body_text: 'Thank you for your order! Here is your summary:'
+  })
+});
+const result = await response.json();
+```
+
+```python Python
+import requests
+
+result = requests.post(
+    'https://api.megasend.co.il/messages/order',
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'},
+    json={
+        'instance_id': '550e8400-e29b-41d4-a716-446655440000',
+        'recipient': '+919876543210',
+        'order_id': 'ORD-20260713-001',
+        'items': [
+            {'name': 'Classic Cotton Shirt', 'amount': 89.99, 'quantity': 2, 'retailer_id': 'SKU-001'}
+        ],
+        'subtotal': 179.98,
+        'tax': 18.00,
+        'shipping': 5.00,
+        'discount': 0,
+        'total': 202.98,
+        'currency': 'INR',
+        'payment_status': 'paid',
+        'order_status': 'Confirmed',
+        'body_text': 'Thank you for your order! Here is your summary:'
+    }
+).json()
+```
+
+</CodeGroup>
+
+---
+
+## Endpoint Reference
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/catalog/{instance_id}` | Get or create catalog for instance |
+| `PUT` | `/catalog/{instance_id}` | Update catalog settings |
+| `POST` | `/catalog/{instance_id}/sync` | Sync products from Meta Commerce Manager |
+| `GET` | `/catalog/{instance_id}/products` | List products (paginated) |
+| `POST` | `/catalog/{instance_id}/products` | Create product |
+| `GET` | `/catalog/{instance_id}/products/{product_id}` | Get product detail |
+| `PUT` | `/catalog/{instance_id}/products/{product_id}` | Update product |
+| `DELETE` | `/catalog/{instance_id}/products/{product_id}` | Delete product |
+| `GET` | `/catalog/{instance_id}/orders` | List orders (paginated) |
+| `GET` | `/catalog/{instance_id}/orders/stats` | Get order statistics |
+| `GET` | `/catalog/{instance_id}/orders/{order_id}` | Get order detail |
+| `PUT` | `/catalog/{instance_id}/orders/{order_id}/status` | Update order status |
+| `GET` | `/catalog/{instance_id}/shopify/syncable` | List Shopify products available to sync |
+| `POST` | `/catalog/{instance_id}/shopify/sync` | Sync Shopify products to catalog |
+| `POST` | `/messages/address` | Send address collection message (IN/SG only) |
+| `POST` | `/messages/order` | Send order summary message |

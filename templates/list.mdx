@@ -104,7 +104,7 @@ templates = response.json()
 | Parameter | Type | Description |
 |-----------|------|-------------|
 | `status` | string | Filter by template status: `APPROVED`, `PENDING`, `REJECTED` |
-| `limit` | integer | Number of templates to return (1-200, default: 50) |
+| `limit` | integer | Number of templates to return (1–250, default: 250) |
 
 ## Response Format
 
@@ -123,18 +123,25 @@ templates = response.json()
           "text": "Welcome to {{1}}! Thank you for signing up."
         }
       ],
-      "created_time": "2024-01-15T10:30:00Z",
-      "updated_time": "2024-01-15T12:45:00Z"
+      "message_send_ttl_seconds": 604800,
+      "rejected_reason": null
     }
-  ],
-  "paging": {
-    "cursors": {
-      "before": "MTAxNTExOTQ1MjAwNzI5NDE=",
-      "after": "NDMyNzQyODI3OTQw"
-    }
-  }
+  ]
 }
 ```
+
+### Response Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | string | Meta template ID |
+| `name` | string | Template name |
+| `status` | string | Template approval status |
+| `category` | string | Template category (e.g. `MARKETING`, `UTILITY`, `AUTHENTICATION`) |
+| `language` | string | Template language code (e.g. `en`, `he`) |
+| `components` | array | Template component definitions (HEADER, BODY, FOOTER, BUTTONS) |
+| `message_send_ttl_seconds` | integer | Time-to-live for sent messages in seconds; `null` if not set |
+| `rejected_reason` | string | Reason provided by Meta if the template was rejected; `null` otherwise |
 
 ## Template Status Values
 

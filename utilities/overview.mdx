@@ -1,0 +1,404 @@
+---
+title: 'Utilities'
+description: 'Small utility endpoints: QR codes, wa.me link generation, message shortcuts, and audio transcription'
+icon: 'wrench'
+---
+
+# Utilities
+
+A collection of small, focused utility endpoints that complement the core MegaSend messaging API.
+
+---
+
+## QR Codes
+
+Generate scan-to-chat QR codes backed by the Meta Cloud API. When a customer scans the code, WhatsApp opens with a pre-filled message ready to send to your business number.
+
+### Create a QR Code
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST "https://api.megasend.co.il/qr-codes/" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "instance_id": "123e4567-e89b-12d3-a456-426614174000",
+    "prefilled_message": "Hi! I saw your store and want to learn more.",
+    "label": "Store Front QR",
+    "image_format": "PNG"
+  }'
+```
+
+```javascript JavaScript
+const response = await fetch('https://api.megasend.co.il/qr-codes/', {
+  method: 'POST',
+  headers: {
+    'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    instance_id: '123e4567-e89b-12d3-a456-426614174000',
+    prefilled_message: 'Hi! I saw your store and want to learn more.',
+    label: 'Store Front QR',
+    image_format: 'PNG'
+  })
+});
+
+const qr = await response.json();
+console.log('Deep link:', qr.deep_link_url);
+console.log('Image URL:', qr.qr_image_url);
+```
+
+```python Python
+import requests
+
+response = requests.post(
+    'https://api.megasend.co.il/qr-codes/',
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'},
+    json={
+        'instance_id': '123e4567-e89b-12d3-a456-426614174000',
+        'prefilled_message': 'Hi! I saw your store and want to learn more.',
+        'label': 'Store Front QR',
+        'image_format': 'PNG'
+    }
+)
+
+qr = response.json()
+print(f"QR image: {qr['qr_image_url']}")
+```
+
+</CodeGroup>
+
+**Request body**
+
+<ParamField body="instance_id" type="string" required>
+  UUID of the WhatsApp instance to associate this QR code with.
+</ParamField>
+
+<ParamField body="prefilled_message" type="string" required>
+  Message pre-filled in WhatsApp when the customer scans the code (1–1024 characters).
+</ParamField>
+
+<ParamField body="label" type="string">
+  User-friendly label for this QR code (max 255 characters). Stored locally only.
+</ParamField>
+
+<ParamField body="image_format" type="string" default="PNG">
+  Image format returned by Meta. Accepts `PNG` or `SVG`.
+</ParamField>
+
+**Response (201)**
+
+```json
+{
+  "id": "550e8400-e29b-41d4-a716-446655440000",
+  "instance_id": "123e4567-e89b-12d3-a456-426614174000",
+  "user_id": "abcdef01-2345-6789-abcd-ef0123456789",
+  "meta_qr_code_id": "qr_abc123",
+  "prefilled_message": "Hi! I saw your store and want to learn more.",
+  "deep_link_url": "https://wa.me/message/qr_abc123",
+  "qr_image_url": "https://example.cdn.net/qr_abc123.png",
+  "label": "Store Front QR",
+  "image_format": "PNG",
+  "scan_count": 0,
+  "created_at": "2026-07-13T10:00:00Z",
+  "updated_at": null
+}
+```
+
+<Note>
+  `qr_image_url` is only populated at creation time (Meta returns it once). Subsequent GET requests may return `null` for this field. Use `GET /qr-codes/{id}/image` to be redirected to the stored image URL.
+</Note>
+
+### Other QR Code Endpoints
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/qr-codes/` | List all QR codes. Optional `?instance_id=<uuid>` filter. |
+| `GET` | `/qr-codes/{id}` | Get a single QR code by ID. |
+| `PUT` | `/qr-codes/{id}` | Update `prefilled_message` (synced to Meta) or `label` (local only). |
+| `DELETE` | `/qr-codes/{id}` | Delete from Meta and local database. |
+| `GET` | `/qr-codes/{id}/image` | Redirect (302) to the stored QR image URL. Returns 404 if no image available. |
+
+All QR code endpoints require `X-MEGASEND-AUTH`.
+
+---
+
+## wa.me Link Generator
+
+Generate WhatsApp deep links (`wa.me`) from a phone number and optional pre-filled message text. No authentication required.
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST "https://api.megasend.co.il/links/generate" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "phone_number": "972546162881",
+    "message": "Hello, I would like to place an order."
+  }'
+```
+
+```javascript JavaScript
+const response = await fetch('https://api.megasend.co.il/links/generate', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    phone_number: '972546162881',
+    message: 'Hello, I would like to place an order.'
+  })
+});
+
+const result = await response.json();
+console.log(result.wa_me_link_with_message);
+```
+
+```python Python
+import requests
+
+response = requests.post(
+    'https://api.megasend.co.il/links/generate',
+    json={
+        'phone_number': '972546162881',
+        'message': 'Hello, I would like to place an order.'
+    }
+)
+
+result = response.json()
+print(result['wa_me_link_with_message'])
+```
+
+</CodeGroup>
+
+**Request body**
+
+<ParamField body="phone_number" type="string" required>
+  Phone number in international format without the leading `+` (e.g., `972546162881`).
+</ParamField>
+
+<ParamField body="message" type="string">
+  Optional pre-filled message text. When provided, the URL-encoded text is appended as `?text=...`.
+</ParamField>
+
+**Response (200)**
+
+```json
+{
+  "wa_me_link": "https://wa.me/972546162881",
+  "wa_me_link_with_message": "https://wa.me/972546162881?text=Hello%2C%20I%20would%20like%20to%20place%20an%20order.",
+  "phone_number": "972546162881",
+  "message": "Hello, I would like to place an order."
+}
+```
+
+`wa_me_link_with_message` is `null` when no `message` was provided.
+
+---
+
+## Message Shortcuts (Canned Replies)
+
+Store reusable message templates per WhatsApp instance. In the dashboard chat, agents type `/` to search and insert a shortcut by its key. Full CRUD is available via API.
+
+### Create a Shortcut
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST "https://api.megasend.co.il/message-shortcuts/123e4567-e89b-12d3-a456-426614174000" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Shipping Info",
+    "shortcut_key": "shipping",
+    "message_content": "Your order ships within 2 business days. Tracking will be sent by SMS.",
+    "keywords": ["ship", "delivery", "track"]
+  }'
+```
+
+```javascript JavaScript
+const instanceId = '123e4567-e89b-12d3-a456-426614174000';
+
+const response = await fetch(
+  `https://api.megasend.co.il/message-shortcuts/${instanceId}`,
+  {
+    method: 'POST',
+    headers: {
+      'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN',
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      name: 'Shipping Info',
+      shortcut_key: 'shipping',
+      message_content: 'Your order ships within 2 business days. Tracking will be sent by SMS.',
+      keywords: ['ship', 'delivery', 'track']
+    })
+  }
+);
+
+const shortcut = await response.json();
+console.log('Created shortcut:', shortcut.id);
+```
+
+```python Python
+import requests
+
+instance_id = '123e4567-e89b-12d3-a456-426614174000'
+
+response = requests.post(
+    f'https://api.megasend.co.il/message-shortcuts/{instance_id}',
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'},
+    json={
+        'name': 'Shipping Info',
+        'shortcut_key': 'shipping',
+        'message_content': 'Your order ships within 2 business days. Tracking will be sent by SMS.',
+        'keywords': ['ship', 'delivery', 'track']
+    }
+)
+
+shortcut = response.json()
+print(f"Created: {shortcut['id']}")
+```
+
+</CodeGroup>
+
+**Request body**
+
+<ParamField body="name" type="string" required>
+  Human-readable shortcut name, unique within the instance (max 100 characters).
+</ParamField>
+
+<ParamField body="shortcut_key" type="string" required>
+  Key typed after `/` to trigger the shortcut (max 50 characters). Accepts letters, numbers, hyphens, and underscores. Stored as lowercase.
+</ParamField>
+
+<ParamField body="message_content" type="string" required>
+  Full message text to be inserted when the shortcut is selected.
+</ParamField>
+
+<ParamField body="keywords" type="array">
+  Optional list of keywords to improve search matching.
+</ParamField>
+
+**Response (201)**
+
+```json
+{
+  "id": "550e8400-e29b-41d4-a716-446655440000",
+  "instance_id": "123e4567-e89b-12d3-a456-426614174000",
+  "name": "Shipping Info",
+  "shortcut_key": "shipping",
+  "message_content": "Your order ships within 2 business days. Tracking will be sent by SMS.",
+  "keywords": ["ship", "delivery", "track"],
+  "created_at": "2026-07-13T10:00:00Z",
+  "updated_at": "2026-07-13T10:00:00Z"
+}
+```
+
+### Other Shortcut Endpoints
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/message-shortcuts/{instance_id}` | List all shortcuts for an instance, sorted by name. |
+| `PUT` | `/message-shortcuts/{instance_id}/{shortcut_id}` | Update any combination of `name`, `shortcut_key`, `message_content`, `keywords` (all optional). |
+| `DELETE` | `/message-shortcuts/{instance_id}/{shortcut_id}` | Permanently delete a shortcut. |
+
+All shortcut endpoints require `X-MEGASEND-AUTH`.
+
+---
+
+## Audio Transcription
+
+Transcribe inbound WhatsApp or Instagram voice notes to text using OpenAI Whisper. Results are cached — repeat calls for the same message return instantly at no additional cost.
+
+<Note>
+  **Rate limits:** 10 transcriptions/day and 100/month per user, with a 5-second cooldown between requests. Maximum audio length is 2 minutes. Language is auto-detected.
+</Note>
+
+### Transcribe by WhatsApp Message ID
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST "https://api.megasend.co.il/transcription/messages/wamid.HBgL972546162881%3D%3D?instance_id=123e4567-e89b-12d3-a456-426614174000" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
+```
+
+```javascript JavaScript
+const waMessageId = 'wamid.HBgL972546162881==';
+const instanceId = '123e4567-e89b-12d3-a456-426614174000';
+
+const response = await fetch(
+  `https://api.megasend.co.il/transcription/messages/${encodeURIComponent(waMessageId)}?instance_id=${instanceId}`,
+  {
+    method: 'POST',
+    headers: { 'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN' }
+  }
+);
+
+const result = await response.json();
+console.log(result.text, result.language);
+```
+
+```python Python
+import requests
+
+wa_message_id = 'wamid.HBgL972546162881=='
+instance_id = '123e4567-e89b-12d3-a456-426614174000'
+
+response = requests.post(
+    f'https://api.megasend.co.il/transcription/messages/{wa_message_id}',
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'},
+    params={'instance_id': instance_id}
+)
+
+result = response.json()
+print(result['text'], result.get('language'))
+```
+
+</CodeGroup>
+
+**Path parameter**
+
+<ParamField path="wa_message_id" type="string" required>
+  The WhatsApp message ID — the `id.id` field from the frontend message object (e.g., `wamid.HBgL...`).
+</ParamField>
+
+**Query parameter**
+
+<ParamField query="instance_id" type="string" required>
+  UUID of the WhatsApp instance that received the message.
+</ParamField>
+
+**Response (200)**
+
+```json
+{
+  "text": "היי, אני רוצה לדעת מתי ההזמנה שלי תגיע",
+  "language": "he"
+}
+```
+
+<ResponseField name="text" type="string">
+  Transcribed text in the detected language.
+</ResponseField>
+
+<ResponseField name="language" type="string">
+  Detected ISO 639-1 language code (e.g., `he`, `en`, `ar`). May be `null` if detection failed.
+</ResponseField>
+
+### Transcribe by Internal Message UUID
+
+For Instagram DMs (and WhatsApp), use the internal Messages table UUID instead:
+
+```bash
+curl -X POST "https://api.megasend.co.il/transcription/messages/by-id/550e8400-e29b-41d4-a716-446655440000" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
+```
+
+### Other Transcription Endpoints
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/transcription/messages/{wa_message_id}?instance_id=<uuid>` | Return cached transcription only. Returns 404 if not yet transcribed. |
+| `GET` | `/transcription/usage` | Return today's usage, monthly usage, and rate-limit configuration for the authenticated user. |

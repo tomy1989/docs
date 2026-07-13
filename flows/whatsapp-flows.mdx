@@ -1,0 +1,839 @@
+---
+title: 'WhatsApp Flows (Forms)'
+description: 'Create, publish, and send Meta-native interactive WhatsApp Forms — surveys, appointment booking, lead capture, and more'
+icon: 'rectangle-list'
+---
+
+# WhatsApp Flows (Forms)
+
+WhatsApp Flows are Meta-native interactive multi-screen forms that open inside WhatsApp when a recipient taps a button. Use them to collect appointments, leads, survey responses, sign-ups, and support data — all without leaving the chat.
+
+<Note>
+**WhatsApp Flows are not the same as Automation Flows.** This page covers Meta's native in-app form product. For building automated message sequences and branching logic, see the [Automation Flow Builder](/flows/automation) page.
+</Note>
+
+## Overview
+
+The lifecycle of a WhatsApp Flow has three stages:
+
+1. **Create** — register the flow in Meta's system (starts as `DRAFT`)
+2. **Upload JSON + Publish** — define screens, then lock the form for sending
+3. **Send + Collect** — deliver to recipients and read their responses
+
+Only `PUBLISHED` flows can be sent to contacts. Publishing is irreversible — `PUBLISHED` flows can only be deprecated, not edited.
+
+---
+
+## Create a Flow
+
+Register a new flow. The flow is created in Meta's Graph API and stored locally in `DRAFT` status.
+
+**Valid categories:** `SIGN_UP`, `SIGN_IN`, `APPOINTMENT_BOOKING`, `LEAD_GENERATION`, `CONTACT_US`, `CUSTOMER_SUPPORT`, `SURVEY`, `OTHER`
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST "https://api.megasend.co.il/whatsapp-flows/" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "instance_id": "550e8400-e29b-41d4-a716-446655440000",
+    "name": "Appointment Booking Form",
+    "categories": ["APPOINTMENT_BOOKING"]
+  }'
+```
+
+```javascript JavaScript
+const response = await fetch('https://api.megasend.co.il/whatsapp-flows/', {
+  method: 'POST',
+  headers: {
+    'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    instance_id: '550e8400-e29b-41d4-a716-446655440000',
+    name: 'Appointment Booking Form',
+    categories: ['APPOINTMENT_BOOKING']
+  })
+});
+
+const flow = await response.json();
+console.log('Flow ID:', flow.id);
+```
+
+```python Python
+import requests
+
+response = requests.post(
+    'https://api.megasend.co.il/whatsapp-flows/',
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'},
+    json={
+        'instance_id': '550e8400-e29b-41d4-a716-446655440000',
+        'name': 'Appointment Booking Form',
+        'categories': ['APPOINTMENT_BOOKING']
+    }
+)
+
+flow = response.json()
+print('Flow ID:', flow['id'])
+```
+
+</CodeGroup>
+
+### Request Body
+
+<ParamField body="instance_id" type="string" required>
+  UUID of the WhatsApp instance to create the flow for.
+</ParamField>
+
+<ParamField body="name" type="string" required>
+  Display name for the flow (1–255 characters).
+</ParamField>
+
+<ParamField body="categories" type="array" required>
+  List of category strings. At least one is required. Valid values: `SIGN_UP`, `SIGN_IN`, `APPOINTMENT_BOOKING`, `LEAD_GENERATION`, `CONTACT_US`, `CUSTOMER_SUPPORT`, `SURVEY`, `OTHER`.
+</ParamField>
+
+<ParamField body="clone_flow_id" type="string">
+  Optional Meta flow ID to clone an existing flow's JSON definition from.
+</ParamField>
+
+### Response
+
+```json
+{
+  "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "user_id": "11111111-2222-3333-4444-555555555555",
+  "instance_id": "550e8400-e29b-41d4-a716-446655440000",
+  "meta_flow_id": "123456789012345",
+  "name": "Appointment Booking Form",
+  "categories": ["APPOINTMENT_BOOKING"],
+  "status": "DRAFT",
+  "flow_json": null,
+  "data_endpoint_url": null,
+  "preview_url": null,
+  "created_at": "2026-07-13T10:00:00Z",
+  "updated_at": "2026-07-13T10:00:00Z"
+}
+```
+
+<ResponseField name="id" type="string">
+  MegaSend-internal UUID for this flow.
+</ResponseField>
+
+<ResponseField name="meta_flow_id" type="string">
+  Meta's own Flow ID — used when calling Meta Graph API directly.
+</ResponseField>
+
+<ResponseField name="status" type="string">
+  Flow lifecycle state: `DRAFT`, `PUBLISHED`, or `DEPRECATED`.
+</ResponseField>
+
+<ResponseField name="flow_json" type="object">
+  The uploaded screen definition, or `null` if not yet uploaded.
+</ResponseField>
+
+---
+
+## Upload Flow JSON
+
+Upload the screen definitions to Meta. Only `DRAFT` flows can be updated. Once the JSON is uploaded you can preview and then publish the flow.
+
+<CodeGroup>
+
+```bash cURL
+curl -X PUT "https://api.megasend.co.il/whatsapp-flows/FLOW_ID/json" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "flow_json": {
+      "version": "5.0",
+      "screens": [
+        {
+          "id": "BOOK_APPT",
+          "title": "Book an Appointment",
+          "layout": {
+            "type": "SingleColumnLayout",
+            "children": [
+              {
+                "type": "TextInput",
+                "label": "Full Name",
+                "name": "full_name",
+                "input-type": "text",
+                "required": true
+              },
+              {
+                "type": "TextInput",
+                "label": "Phone Number",
+                "name": "phone",
+                "input-type": "phone",
+                "required": true
+              },
+              {
+                "type": "Footer",
+                "label": "Submit",
+                "on-click-action": {
+                  "name": "complete",
+                  "payload": {}
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  }'
+```
+
+```javascript JavaScript
+const response = await fetch(`https://api.megasend.co.il/whatsapp-flows/${flowId}/json`, {
+  method: 'PUT',
+  headers: {
+    'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    flow_json: {
+      version: '5.0',
+      screens: [
+        {
+          id: 'BOOK_APPT',
+          title: 'Book an Appointment',
+          layout: {
+            type: 'SingleColumnLayout',
+            children: [
+              { type: 'TextInput', label: 'Full Name', name: 'full_name', 'input-type': 'text', required: true },
+              { type: 'Footer', label: 'Submit', 'on-click-action': { name: 'complete', payload: {} } }
+            ]
+          }
+        }
+      ]
+    }
+  })
+});
+
+const flow = await response.json();
+```
+
+```python Python
+import requests
+
+response = requests.put(
+    f'https://api.megasend.co.il/whatsapp-flows/{flow_id}/json',
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'},
+    json={
+        'flow_json': {
+            'version': '5.0',
+            'screens': [
+                {
+                    'id': 'BOOK_APPT',
+                    'title': 'Book an Appointment',
+                    'layout': {
+                        'type': 'SingleColumnLayout',
+                        'children': [
+                            {'type': 'TextInput', 'label': 'Full Name', 'name': 'full_name', 'input-type': 'text', 'required': True},
+                            {'type': 'Footer', 'label': 'Submit', 'on-click-action': {'name': 'complete', 'payload': {}}}
+                        ]
+                    }
+                }
+            ]
+        }
+    }
+)
+```
+
+</CodeGroup>
+
+### Request Body
+
+<ParamField body="flow_json" type="object" required>
+  Full Meta Flow JSON definition. Must include `version` (e.g. `"5.0"`) and a `screens` array. Refer to [Meta's Flow JSON reference](https://developers.facebook.com/docs/whatsapp/flows/reference/flowjson) for the complete schema.
+</ParamField>
+
+---
+
+## Publish a Flow
+
+Lock the flow and make it available to send. **This action is irreversible** — a published flow cannot revert to `DRAFT`.
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST "https://api.megasend.co.il/whatsapp-flows/FLOW_ID/publish" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
+```
+
+```javascript JavaScript
+const response = await fetch(`https://api.megasend.co.il/whatsapp-flows/${flowId}/publish`, {
+  method: 'POST',
+  headers: { 'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN' }
+});
+
+const flow = await response.json();
+console.log('Status:', flow.status); // "PUBLISHED"
+```
+
+```python Python
+import requests
+
+response = requests.post(
+    f'https://api.megasend.co.il/whatsapp-flows/{flow_id}/publish',
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'}
+)
+```
+
+</CodeGroup>
+
+<Warning>
+Publishing is permanent. Once a flow is `PUBLISHED` it can only be deprecated — the screens and fields cannot be changed.
+</Warning>
+
+---
+
+## Send a Flow to a Contact
+
+Send an interactive WhatsApp message with a CTA button that opens the flow. Only `PUBLISHED` flows can be sent.
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST "https://api.megasend.co.il/whatsapp-flows/FLOW_ID/send" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "instance_id": "550e8400-e29b-41d4-a716-446655440000",
+    "recipient": "+972501234567",
+    "header_text": "Book your appointment",
+    "body_text": "Tap the button below to pick a time that works for you.",
+    "footer_text": "Takes less than 1 minute",
+    "flow_cta": "Book Now",
+    "screen": "BOOK_APPT"
+  }'
+```
+
+```javascript JavaScript
+const response = await fetch(`https://api.megasend.co.il/whatsapp-flows/${flowId}/send`, {
+  method: 'POST',
+  headers: {
+    'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    instance_id: '550e8400-e29b-41d4-a716-446655440000',
+    recipient: '+972501234567',
+    header_text: 'Book your appointment',
+    body_text: 'Tap the button below to pick a time that works for you.',
+    footer_text: 'Takes less than 1 minute',
+    flow_cta: 'Book Now',
+    screen: 'BOOK_APPT'
+  })
+});
+
+const result = await response.json();
+```
+
+```python Python
+import requests
+
+response = requests.post(
+    f'https://api.megasend.co.il/whatsapp-flows/{flow_id}/send',
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'},
+    json={
+        'instance_id': '550e8400-e29b-41d4-a716-446655440000',
+        'recipient': '+972501234567',
+        'header_text': 'Book your appointment',
+        'body_text': 'Tap the button below to pick a time that works for you.',
+        'footer_text': 'Takes less than 1 minute',
+        'flow_cta': 'Book Now',
+        'screen': 'BOOK_APPT'
+    }
+)
+```
+
+</CodeGroup>
+
+### Request Body
+
+<ParamField body="instance_id" type="string" required>
+  UUID of the WhatsApp instance to send from.
+</ParamField>
+
+<ParamField body="recipient" type="string" required>
+  Recipient phone number with country code (e.g. `+972501234567`).
+</ParamField>
+
+<ParamField body="body_text" type="string" required>
+  Main message body shown before the CTA button.
+</ParamField>
+
+<ParamField body="flow_cta" type="string" required>
+  Label of the call-to-action button (1–20 characters).
+</ParamField>
+
+<ParamField body="header_text" type="string">
+  Optional message header (up to 60 characters).
+</ParamField>
+
+<ParamField body="footer_text" type="string">
+  Optional message footer (up to 60 characters).
+</ParamField>
+
+<ParamField body="screen" type="string">
+  Screen ID to navigate to when the flow opens. Required when `flow_action` is `navigate` (the default).
+</ParamField>
+
+<ParamField body="data" type="object">
+  Optional initial data passed into the first screen (e.g. pre-filling fields).
+</ParamField>
+
+<ParamField body="flow_action" type="string" default="navigate">
+  `navigate` — open a specific screen immediately. `data_exchange` — call your data endpoint first. Defaults to `navigate`.
+</ParamField>
+
+<ParamField body="flow_token" type="string" default="unused">
+  Tracking token passed back in the submission webhook. Defaults to `"unused"`.
+</ParamField>
+
+<ParamField body="draft" type="boolean" default="false">
+  Send in draft/test mode. Only WABA admins and designated testers can receive draft flows.
+</ParamField>
+
+---
+
+## List Flows
+
+<CodeGroup>
+
+```bash cURL
+curl -X GET "https://api.megasend.co.il/whatsapp-flows/?instance_id=550e8400-e29b-41d4-a716-446655440000&status=PUBLISHED" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
+```
+
+```javascript JavaScript
+const params = new URLSearchParams({
+  instance_id: '550e8400-e29b-41d4-a716-446655440000',
+  status: 'PUBLISHED',
+  page: 1,
+  page_size: 20
+});
+
+const response = await fetch(`https://api.megasend.co.il/whatsapp-flows/?${params}`, {
+  headers: { 'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN' }
+});
+
+const { flows, total } = await response.json();
+```
+
+```python Python
+import requests
+
+response = requests.get(
+    'https://api.megasend.co.il/whatsapp-flows/',
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'},
+    params={
+        'instance_id': '550e8400-e29b-41d4-a716-446655440000',
+        'status': 'PUBLISHED',
+        'page': 1,
+        'page_size': 20
+    }
+)
+
+data = response.json()
+print(f"Total flows: {data['total']}")
+```
+
+</CodeGroup>
+
+### Query Parameters
+
+<ParamField query="instance_id" type="string" required>
+  Filter flows to this instance UUID.
+</ParamField>
+
+<ParamField query="page" type="integer" default="1">
+  Page number (1-based).
+</ParamField>
+
+<ParamField query="page_size" type="integer" default="20">
+  Results per page (1–100).
+</ParamField>
+
+<ParamField query="status" type="string">
+  Filter by flow status: `DRAFT`, `PUBLISHED`, or `DEPRECATED`.
+</ParamField>
+
+### Response
+
+```json
+{
+  "flows": [
+    {
+      "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+      "user_id": "11111111-2222-3333-4444-555555555555",
+      "instance_id": "550e8400-e29b-41d4-a716-446655440000",
+      "meta_flow_id": "123456789012345",
+      "name": "Appointment Booking Form",
+      "categories": ["APPOINTMENT_BOOKING"],
+      "status": "PUBLISHED",
+      "flow_json": { "version": "5.0", "screens": ["..."] },
+      "data_endpoint_url": null,
+      "preview_url": "https://business.facebook.com/wa/manage/flows/...",
+      "created_at": "2026-07-13T10:00:00Z",
+      "updated_at": "2026-07-13T11:00:00Z"
+    }
+  ],
+  "total": 1,
+  "page": 1,
+  "page_size": 20
+}
+```
+
+---
+
+## Get a Flow
+
+```bash
+GET /whatsapp-flows/{flow_id}
+```
+
+Returns a single flow by its MegaSend UUID, including the full `flow_json` and `status`.
+
+---
+
+## Get Flow Preview URL
+
+Returns a Meta-generated browser preview URL so you can inspect the flow without sending it to a phone.
+
+```bash
+GET /whatsapp-flows/{flow_id}/preview
+```
+
+### Response
+
+<ResponseField name="flow_id" type="string">
+  MegaSend UUID of the flow.
+</ResponseField>
+
+<ResponseField name="meta_flow_id" type="string">
+  Meta's flow ID.
+</ResponseField>
+
+<ResponseField name="preview_url" type="string">
+  URL to open the flow in the Meta Flows preview tool (browser, no phone required).
+</ResponseField>
+
+---
+
+## Deprecate a Flow
+
+Stop a `PUBLISHED` flow from being sent to new recipients. Only `PUBLISHED` flows can be deprecated.
+
+```bash
+POST /whatsapp-flows/{flow_id}/deprecate
+```
+
+---
+
+## Delete a Flow
+
+Soft-deletes the flow from MegaSend (it remains in Meta's system but no longer appears in the dashboard).
+
+```bash
+DELETE /whatsapp-flows/{flow_id}
+```
+
+---
+
+## Read Submissions
+
+When a recipient completes a flow, their response is automatically stored as a submission. Use the submissions endpoints to read, filter, and export those responses.
+
+### List Submissions for a Flow
+
+<CodeGroup>
+
+```bash cURL
+curl -X GET "https://api.megasend.co.il/whatsapp-flows/FLOW_ID/submissions?page=1&page_size=20&date_from=2026-07-01" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
+```
+
+```javascript JavaScript
+const params = new URLSearchParams({
+  page: 1,
+  page_size: 20,
+  date_from: '2026-07-01'
+});
+
+const response = await fetch(
+  `https://api.megasend.co.il/whatsapp-flows/${flowId}/submissions?${params}`,
+  { headers: { 'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN' } }
+);
+
+const { submissions, total } = await response.json();
+```
+
+```python Python
+import requests
+
+response = requests.get(
+    f'https://api.megasend.co.il/whatsapp-flows/{flow_id}/submissions',
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'},
+    params={
+        'page': 1,
+        'page_size': 20,
+        'date_from': '2026-07-01'
+    }
+)
+
+data = response.json()
+for sub in data['submissions']:
+    print(sub['contact_phone'], sub['response_data'])
+```
+
+</CodeGroup>
+
+### Query Parameters
+
+<ParamField query="page" type="integer" default="1">
+  Page number (1-based).
+</ParamField>
+
+<ParamField query="page_size" type="integer" default="20">
+  Results per page (1–100).
+</ParamField>
+
+<ParamField query="contact_phone" type="string">
+  Partial phone number filter (e.g. `+972` to filter by country).
+</ParamField>
+
+<ParamField query="date_from" type="string">
+  Start of date range, ISO 8601 (e.g. `2026-07-01` or `2026-07-01T00:00:00`).
+</ParamField>
+
+<ParamField query="date_to" type="string">
+  End of date range, ISO 8601.
+</ParamField>
+
+### Response
+
+```json
+{
+  "submissions": [
+    {
+      "id": "cccccccc-dddd-eeee-ffff-000000000001",
+      "flow_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+      "meta_flow_id": "123456789012345",
+      "flow_name": "Appointment Booking Form",
+      "flow_token": "unused",
+      "contact_phone": "+972501234567",
+      "contact_id": "bbbbbbbb-cccc-dddd-eeee-ffffffffffff",
+      "wa_message_id": "wamid.abc123",
+      "response_data": {
+        "full_name": "David Cohen",
+        "phone": "+972501234567"
+      },
+      "status": "completed",
+      "submitted_at": "2026-07-13T12:30:00Z",
+      "created_at": "2026-07-13T12:30:00Z"
+    }
+  ],
+  "total": 1,
+  "page": 1,
+  "page_size": 20
+}
+```
+
+<ResponseField name="response_data" type="object">
+  Key/value map of every field the contact filled in. Keys match the `name` attributes in your flow JSON.
+</ResponseField>
+
+---
+
+### Submission Stats for a Flow
+
+Returns analytics over a rolling window: total submissions, unique contacts, daily breakdown, and field value distributions.
+
+<CodeGroup>
+
+```bash cURL
+curl -X GET "https://api.megasend.co.il/whatsapp-flows/FLOW_ID/submissions/stats?days=30" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
+```
+
+```javascript JavaScript
+const response = await fetch(
+  `https://api.megasend.co.il/whatsapp-flows/${flowId}/submissions/stats?days=30`,
+  { headers: { 'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN' } }
+);
+
+const stats = await response.json();
+console.log(`${stats.total_submissions} submissions from ${stats.unique_contacts} contacts`);
+```
+
+```python Python
+import requests
+
+response = requests.get(
+    f'https://api.megasend.co.il/whatsapp-flows/{flow_id}/submissions/stats',
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'},
+    params={'days': 30}
+)
+
+stats = response.json()
+```
+
+</CodeGroup>
+
+<ParamField query="days" type="integer" default="30">
+  Stats window in days (1–365).
+</ParamField>
+
+### Response
+
+```json
+{
+  "total_submissions": 42,
+  "unique_contacts": 39,
+  "daily_submissions": [
+    { "date": "2026-07-13", "count": 8 },
+    { "date": "2026-07-12", "count": 5 }
+  ],
+  "field_distributions": {
+    "preferred_time": { "morning": 20, "afternoon": 15, "evening": 7 }
+  },
+  "recent_submission_rate": 1.4,
+  "period_days": 30
+}
+```
+
+<ResponseField name="field_distributions" type="object">
+  For each field name, a map of distinct answer values to their occurrence counts.
+</ResponseField>
+
+<ResponseField name="recent_submission_rate" type="number">
+  Average submissions per day over the requested period.
+</ResponseField>
+
+---
+
+### Export Submissions as CSV
+
+Downloads all submissions for a flow as a CSV file. Columns are auto-generated from all response field names found across submissions.
+
+<CodeGroup>
+
+```bash cURL
+curl -X GET "https://api.megasend.co.il/whatsapp-flows/FLOW_ID/submissions/export?date_from=2026-07-01" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN" \
+  -o submissions.csv
+```
+
+```javascript JavaScript
+const params = new URLSearchParams({ date_from: '2026-07-01' });
+
+const response = await fetch(
+  `https://api.megasend.co.il/whatsapp-flows/${flowId}/submissions/export?${params}`,
+  { headers: { 'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN' } }
+);
+
+const blob = await response.blob();
+const url = URL.createObjectURL(blob);
+// Trigger download
+const a = document.createElement('a');
+a.href = url;
+a.download = 'submissions.csv';
+a.click();
+```
+
+```python Python
+import requests
+
+response = requests.get(
+    f'https://api.megasend.co.il/whatsapp-flows/{flow_id}/submissions/export',
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'},
+    params={'date_from': '2026-07-01'}
+)
+
+with open('submissions.csv', 'wb') as f:
+    f.write(response.content)
+```
+
+</CodeGroup>
+
+<ParamField query="date_from" type="string">
+  Export from date (ISO 8601). Omit to export all time.
+</ParamField>
+
+<ParamField query="date_to" type="string">
+  Export to date (ISO 8601). Omit to include up to now.
+</ParamField>
+
+The response is a `text/csv` file download with the `Content-Disposition: attachment` header. The filename is `flow_{flow_id}_submissions.csv`.
+
+---
+
+### All Submissions for an Instance
+
+Read submissions across all flows on an instance (useful for a unified inbox or dashboard view).
+
+```bash
+GET /whatsapp-flows/instance/{instance_id}/submissions
+```
+
+<ParamField query="flow_id" type="string">
+  Optional UUID to restrict results to a specific flow.
+</ParamField>
+
+<ParamField query="contact_phone" type="string">
+  Optional partial phone filter.
+</ParamField>
+
+<ParamField query="page" type="integer" default="1">
+  Page number.
+</ParamField>
+
+<ParamField query="page_size" type="integer" default="20">
+  Results per page (1–100).
+</ParamField>
+
+---
+
+### Instance-Level Submission Stats
+
+```bash
+GET /whatsapp-flows/instance/{instance_id}/submissions/stats?days=30
+```
+
+Returns total submissions and a per-flow breakdown:
+
+```json
+{
+  "total_submissions": 120,
+  "flow_breakdown": [
+    { "flow_id": "a1b2...", "flow_name": "Appointment Booking Form", "submissions": 80, "unique_contacts": 75 },
+    { "flow_id": "b2c3...", "flow_name": "Lead Capture Survey", "submissions": 40, "unique_contacts": 38 }
+  ],
+  "period_days": 30
+}
+```
+
+---
+
+## Authentication
+
+All endpoints require the `X-MEGASEND-AUTH` header with your access token:
+
+```
+X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN
+```
+
+Tokens are managed in the [MegaSend dashboard](https://app.megasend.co.il) under **Settings > API Access**.
+
+---
+
+## Next Steps
+
+- [Automation Flow Builder](/flows/automation) — build branching message sequences (distinct from Meta Flows)
+- [Send Messages](/messages/send) — send plain text and media messages
+- [Contacts](/contacts/manage) — manage the contacts who fill in your forms
+- [Analytics](/analytics/overview) — track engagement across all channels

@@ -1,0 +1,712 @@
+---
+title: 'Segments'
+description: 'Create and manage rule-based dynamic audiences to target campaigns and bulk sends at the right contacts'
+icon: 'filter'
+---
+
+# Segments
+
+Segments are reusable, rule-based contact filters. Each segment stores a set of conditions and a `match_type` that controls how they combine. When you target a campaign or bulk send at a segment, MegaSend evaluates the conditions at send time against your live contact database — so the audience is always up to date.
+
+## How Segments Work
+
+A segment consists of one or more **conditions** combined by a `match_type`:
+
+- `"and"` — contact must match **all** conditions
+- `"or"` — contact must match **any** condition
+
+Each condition has four fields:
+
+| Field | Description |
+|-------|-------------|
+| `type` | `tag`, `field`, or `system` |
+| `key` | Label UUID (for `tag`), custom-field slug (for `field`), or whitelisted column name (for `system`) |
+| `op` | Comparison operator — allowed set depends on `type` (see below) |
+| `value` | Comparison value — omit for `exists` / `empty` operators |
+
+### Condition Types and Operators
+
+**`tag`** — membership in a Contact Label
+
+| Operator | Meaning |
+|----------|---------|
+| `has` | Contact has the label |
+| `not_has` | Contact does not have the label |
+
+`key` must be a valid label UUID. `value` is never required for tag conditions.
+
+**`field`** — a key inside the contact's `custom_fields` JSONB map
+
+| Operator | Meaning |
+|----------|---------|
+| `equals` | Exact match |
+| `not_equals` | Not equal |
+| `contains` | String contains |
+| `gt` | Greater than |
+| `lt` | Less than |
+| `exists` | Field key is present (no `value` needed) |
+| `empty` | Field key is absent or null (no `value` needed) |
+
+**`system`** — a real column on the contacts table
+
+Allowed `key` values: `name`, `phone_number`, `bsuid`, `wa_username`, `country_code`, `ig_username`, `notes`, `created_at`, `updated_at`, `marketing_opted_out`, `is_blocked`, `instance_id`
+
+| Operator | Meaning |
+|----------|---------|
+| `equals` | Exact match |
+| `not_equals` | Not equal |
+| `contains` | String contains |
+| `gt` | Greater than |
+| `lt` | Less than |
+| `exists` | Column is not null (no `value` needed) |
+
+<Note>
+Conditions with an invalid `type`, `op`, or `key` are rejected at the schema layer with HTTP 422 before any query runs. The filter compiler is also defensive (unknown op/key → skip), but validation ensures malformed conditions never reach it. Use the [preview endpoint](#preview-a-segment) to confirm audience size before saving a segment.
+</Note>
+
+---
+
+## Authentication
+
+All endpoints require an access token in the `X-MEGASEND-AUTH` header:
+
+```
+X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN
+```
+
+---
+
+## Create a Segment
+
+`POST /api/contact-segments`
+
+**Request body**
+
+<ParamField body="name" type="string" required>
+  Segment name (1–128 characters).
+</ParamField>
+
+<ParamField body="match_type" type="string" default="and">
+  How conditions are combined: `"and"` (all must match) or `"or"` (any must match).
+</ParamField>
+
+<ParamField body="conditions" type="ConditionSchema[]" default="[]">
+  List of filter conditions. Each object must include `type`, `key`, `op`, and optionally `value`.
+</ParamField>
+
+<ParamField body="description" type="string">
+  Optional description (max 256 characters).
+</ParamField>
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST "https://api.megasend.co.il/api/contact-segments" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "VIP customers – opted in",
+    "match_type": "and",
+    "description": "Contacts tagged VIP who have not opted out",
+    "conditions": [
+      {
+        "type": "tag",
+        "key": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+        "op": "has"
+      },
+      {
+        "type": "system",
+        "key": "marketing_opted_out",
+        "op": "equals",
+        "value": false
+      }
+    ]
+  }'
+```
+
+```javascript JavaScript
+const response = await fetch('https://api.megasend.co.il/api/contact-segments', {
+  method: 'POST',
+  headers: {
+    'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    name: 'VIP customers – opted in',
+    match_type: 'and',
+    description: 'Contacts tagged VIP who have not opted out',
+    conditions: [
+      {
+        type: 'tag',
+        key: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
+        op: 'has'
+      },
+      {
+        type: 'system',
+        key: 'marketing_opted_out',
+        op: 'equals',
+        value: false
+      }
+    ]
+  })
+});
+
+const segment = await response.json();
+console.log('Created segment ID:', segment.id);
+```
+
+```python Python
+import requests
+
+response = requests.post(
+    'https://api.megasend.co.il/api/contact-segments',
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'},
+    json={
+        'name': 'VIP customers – opted in',
+        'match_type': 'and',
+        'description': 'Contacts tagged VIP who have not opted out',
+        'conditions': [
+            {
+                'type': 'tag',
+                'key': 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
+                'op': 'has'
+            },
+            {
+                'type': 'system',
+                'key': 'marketing_opted_out',
+                'op': 'equals',
+                'value': False
+            }
+        ]
+    }
+)
+
+segment = response.json()
+print(f"Created segment ID: {segment['id']}")
+```
+
+</CodeGroup>
+
+**Response** `201 Created`
+
+```json
+{
+  "id": "550e8400-e29b-41d4-a716-446655440000",
+  "user_id": "7f3b1234-0000-4abc-9def-abcdef012345",
+  "name": "VIP customers – opted in",
+  "match_type": "and",
+  "description": "Contacts tagged VIP who have not opted out",
+  "conditions": [
+    {
+      "type": "tag",
+      "key": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+      "op": "has",
+      "value": null
+    },
+    {
+      "type": "system",
+      "key": "marketing_opted_out",
+      "op": "equals",
+      "value": false
+    }
+  ],
+  "created_at": "2026-07-13T10:00:00Z",
+  "updated_at": "2026-07-13T10:00:00Z"
+}
+```
+
+---
+
+## List Segments
+
+`GET /api/contact-segments`
+
+Returns all segments belonging to your tenant.
+
+<CodeGroup>
+
+```bash cURL
+curl "https://api.megasend.co.il/api/contact-segments" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
+```
+
+```javascript JavaScript
+const response = await fetch('https://api.megasend.co.il/api/contact-segments', {
+  headers: { 'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN' }
+});
+
+const segments = await response.json();
+console.log(`${segments.length} segments found`);
+```
+
+```python Python
+import requests
+
+segments = requests.get(
+    'https://api.megasend.co.il/api/contact-segments',
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'}
+).json()
+
+print(f"{len(segments)} segments found")
+```
+
+</CodeGroup>
+
+**Response** `200 OK` — array of [SegmentResponse](#create-a-segment) objects.
+
+---
+
+## Get a Segment
+
+`GET /api/contact-segments/{id}`
+
+<ParamField path="id" type="string (UUID)" required>
+  The segment ID.
+</ParamField>
+
+<CodeGroup>
+
+```bash cURL
+curl "https://api.megasend.co.il/api/contact-segments/550e8400-e29b-41d4-a716-446655440000" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
+```
+
+```javascript JavaScript
+const id = '550e8400-e29b-41d4-a716-446655440000';
+const response = await fetch(
+  `https://api.megasend.co.il/api/contact-segments/${id}`,
+  { headers: { 'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN' } }
+);
+
+const segment = await response.json();
+```
+
+```python Python
+import requests
+
+segment_id = '550e8400-e29b-41d4-a716-446655440000'
+segment = requests.get(
+    f'https://api.megasend.co.il/api/contact-segments/{segment_id}',
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'}
+).json()
+```
+
+</CodeGroup>
+
+Returns a single [SegmentResponse](#create-a-segment) or `404` if not found.
+
+---
+
+## Update a Segment
+
+`PUT /api/contact-segments/{id}`
+
+Partial update — only fields present in the request body are changed.
+
+<ParamField path="id" type="string (UUID)" required>
+  The segment ID.
+</ParamField>
+
+<ParamField body="name" type="string">
+  New segment name (1–128 characters).
+</ParamField>
+
+<ParamField body="match_type" type="string">
+  `"and"` or `"or"`.
+</ParamField>
+
+<ParamField body="conditions" type="ConditionSchema[]">
+  Replaces the full conditions list.
+</ParamField>
+
+<ParamField body="description" type="string">
+  New description. Send an empty string `""` to clear an existing description.
+</ParamField>
+
+<CodeGroup>
+
+```bash cURL
+curl -X PUT "https://api.megasend.co.il/api/contact-segments/550e8400-e29b-41d4-a716-446655440000" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "VIP customers – opted in (updated)",
+    "conditions": [
+      {
+        "type": "tag",
+        "key": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+        "op": "has"
+      },
+      {
+        "type": "system",
+        "key": "marketing_opted_out",
+        "op": "equals",
+        "value": false
+      },
+      {
+        "type": "field",
+        "key": "tier",
+        "op": "equals",
+        "value": "gold"
+      }
+    ]
+  }'
+```
+
+```javascript JavaScript
+const id = '550e8400-e29b-41d4-a716-446655440000';
+
+const response = await fetch(
+  `https://api.megasend.co.il/api/contact-segments/${id}`,
+  {
+    method: 'PUT',
+    headers: {
+      'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN',
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      name: 'VIP customers – opted in (updated)',
+      conditions: [
+        { type: 'tag', key: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890', op: 'has' },
+        { type: 'system', key: 'marketing_opted_out', op: 'equals', value: false },
+        { type: 'field', key: 'tier', op: 'equals', value: 'gold' }
+      ]
+    })
+  }
+);
+
+const updated = await response.json();
+```
+
+```python Python
+import requests
+
+segment_id = '550e8400-e29b-41d4-a716-446655440000'
+
+updated = requests.put(
+    f'https://api.megasend.co.il/api/contact-segments/{segment_id}',
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'},
+    json={
+        'name': 'VIP customers – opted in (updated)',
+        'conditions': [
+            {'type': 'tag', 'key': 'a1b2c3d4-e5f6-7890-abcd-ef1234567890', 'op': 'has'},
+            {'type': 'system', 'key': 'marketing_opted_out', 'op': 'equals', 'value': False},
+            {'type': 'field', 'key': 'tier', 'op': 'equals', 'value': 'gold'}
+        ]
+    }
+).json()
+```
+
+</CodeGroup>
+
+Returns the updated [SegmentResponse](#create-a-segment) or `404` if not found.
+
+---
+
+## Delete a Segment
+
+`DELETE /api/contact-segments/{id}`
+
+<ParamField path="id" type="string (UUID)" required>
+  The segment ID.
+</ParamField>
+
+<CodeGroup>
+
+```bash cURL
+curl -X DELETE "https://api.megasend.co.il/api/contact-segments/550e8400-e29b-41d4-a716-446655440000" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
+```
+
+```javascript JavaScript
+const id = '550e8400-e29b-41d4-a716-446655440000';
+
+await fetch(`https://api.megasend.co.il/api/contact-segments/${id}`, {
+  method: 'DELETE',
+  headers: { 'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN' }
+});
+```
+
+```python Python
+import requests
+
+segment_id = '550e8400-e29b-41d4-a716-446655440000'
+
+requests.delete(
+    f'https://api.megasend.co.il/api/contact-segments/{segment_id}',
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'}
+)
+```
+
+</CodeGroup>
+
+**Response** `200 OK`
+
+```json
+{ "message": "Contact segment deleted successfully" }
+```
+
+Returns `404` if the segment does not exist or belongs to a different tenant.
+
+---
+
+## Preview a Segment
+
+`POST /api/contact-segments/preview`
+
+Count how many contacts match an ad-hoc set of conditions **without saving a segment**. Use this to tune your conditions before committing them.
+
+<ParamField body="match_type" type="string" default="and">
+  `"and"` or `"or"`.
+</ParamField>
+
+<ParamField body="conditions" type="ConditionSchema[]" default="[]">
+  Conditions to evaluate.
+</ParamField>
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST "https://api.megasend.co.il/api/contact-segments/preview" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "match_type": "and",
+    "conditions": [
+      {
+        "type": "system",
+        "key": "country_code",
+        "op": "equals",
+        "value": "IL"
+      },
+      {
+        "type": "system",
+        "key": "marketing_opted_out",
+        "op": "equals",
+        "value": false
+      }
+    ]
+  }'
+```
+
+```javascript JavaScript
+const response = await fetch('https://api.megasend.co.il/api/contact-segments/preview', {
+  method: 'POST',
+  headers: {
+    'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    match_type: 'and',
+    conditions: [
+      { type: 'system', key: 'country_code', op: 'equals', value: 'IL' },
+      { type: 'system', key: 'marketing_opted_out', op: 'equals', value: false }
+    ]
+  })
+});
+
+const { count } = await response.json();
+console.log(`${count} contacts would be targeted`);
+```
+
+```python Python
+import requests
+
+result = requests.post(
+    'https://api.megasend.co.il/api/contact-segments/preview',
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'},
+    json={
+        'match_type': 'and',
+        'conditions': [
+            {'type': 'system', 'key': 'country_code', 'op': 'equals', 'value': 'IL'},
+            {'type': 'system', 'key': 'marketing_opted_out', 'op': 'equals', 'value': False}
+        ]
+    }
+).json()
+
+print(f"{result['count']} contacts would be targeted")
+```
+
+</CodeGroup>
+
+**Response** `200 OK`
+
+```json
+{ "count": 1482 }
+```
+
+---
+
+## Get Segment Contacts
+
+`GET /api/contact-segments/{id}/contacts`
+
+Resolve a saved segment to a paginated list of matching contacts.
+
+<ParamField path="id" type="string (UUID)" required>
+  The segment ID.
+</ParamField>
+
+<ParamField query="page" type="integer" default="1">
+  Page number (1-based).
+</ParamField>
+
+<ParamField query="per_page" type="integer" default="50">
+  Items per page (max 200).
+</ParamField>
+
+<CodeGroup>
+
+```bash cURL
+curl "https://api.megasend.co.il/api/contact-segments/550e8400-e29b-41d4-a716-446655440000/contacts?page=1&per_page=50" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
+```
+
+```javascript JavaScript
+const id = '550e8400-e29b-41d4-a716-446655440000';
+const params = new URLSearchParams({ page: 1, per_page: 50 });
+
+const response = await fetch(
+  `https://api.megasend.co.il/api/contact-segments/${id}/contacts?${params}`,
+  { headers: { 'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN' } }
+);
+
+const { items, total, page, per_page, pages } = await response.json();
+console.log(`Page ${page}/${pages} — ${total} total contacts`);
+```
+
+```python Python
+import requests
+
+segment_id = '550e8400-e29b-41d4-a716-446655440000'
+
+data = requests.get(
+    f'https://api.megasend.co.il/api/contact-segments/{segment_id}/contacts',
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'},
+    params={'page': 1, 'per_page': 50}
+).json()
+
+print(f"Page {data['page']}/{data['pages']} — {data['total']} total contacts")
+for contact in data['items']:
+    print(f"  {contact['name']} ({contact['phone_number']})")
+```
+
+</CodeGroup>
+
+**Response** `200 OK`
+
+```json
+{
+  "items": [
+    {
+      "id": "c1234567-0000-4000-a000-000000000001",
+      "name": "Dana Levi",
+      "phone_number": "+972501234567",
+      "bsuid": "972501234567@s.whatsapp.net",
+      "wa_username": null,
+      "ig_username": null,
+      "instance_id": "9f000000-0000-4000-a000-000000000099",
+      "custom_fields": { "tier": "gold" },
+      "created_at": "2026-01-15T08:30:00Z"
+    }
+  ],
+  "total": 1482,
+  "page": 1,
+  "per_page": 50,
+  "pages": 30
+}
+```
+
+### Response Fields
+
+<ResponseField name="items" type="SegmentContact[]">
+  Page of matching contacts.
+
+  <Expandable title="SegmentContact fields">
+    <ResponseField name="id" type="string (UUID)">Contact ID.</ResponseField>
+    <ResponseField name="name" type="string | null">Display name.</ResponseField>
+    <ResponseField name="phone_number" type="string | null">E.164 phone number.</ResponseField>
+    <ResponseField name="bsuid" type="string | null">WhatsApp business-scoped user ID.</ResponseField>
+    <ResponseField name="wa_username" type="string | null">WhatsApp username.</ResponseField>
+    <ResponseField name="ig_username" type="string | null">Instagram username.</ResponseField>
+    <ResponseField name="instance_id" type="string (UUID) | null">Owning instance.</ResponseField>
+    <ResponseField name="custom_fields" type="object | null">Custom field key-value map.</ResponseField>
+    <ResponseField name="created_at" type="string (ISO 8601) | null">Contact creation timestamp.</ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="total" type="integer">
+  Total number of contacts matching the segment.
+</ResponseField>
+
+<ResponseField name="page" type="integer">
+  Current page number (1-based).
+</ResponseField>
+
+<ResponseField name="per_page" type="integer">
+  Items returned per page.
+</ResponseField>
+
+<ResponseField name="pages" type="integer">
+  Total number of pages.
+</ResponseField>
+
+---
+
+## Targeting a Campaign at a Segment
+
+Segments are designed to feed into bulk sends and campaigns. Use `/api/contact-segments/{id}/contacts` to iterate over all matching contacts page by page and pass each contact's `phone_number` (or `bsuid` / `ig_username` depending on the channel) to your message-send endpoint.
+
+```javascript
+async function sendToSegment(segmentId, buildMessage, accessToken) {
+  const BASE = 'https://api.megasend.co.il';
+  const headers = { 'X-MEGASEND-AUTH': accessToken, 'Content-Type': 'application/json' };
+
+  let page = 1;
+  let pages = null;
+
+  do {
+    const res = await fetch(
+      `${BASE}/api/contact-segments/${segmentId}/contacts?page=${page}&per_page=200`,
+      { headers }
+    );
+    const data = await res.json();
+    pages = data.pages;
+
+    for (const contact of data.items) {
+      if (!contact.phone_number) continue;
+      await fetch(`${BASE}/api/messages/send`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(buildMessage(contact))
+      });
+    }
+
+    page++;
+  } while (page <= pages);
+}
+
+// Example usage
+await sendToSegment(
+  '550e8400-e29b-41d4-a716-446655440000',
+  (contact) => ({
+    instance_id: 'YOUR_INSTANCE_ID',
+    recipient: contact.phone_number,
+    message_type: 'text',
+    text: `Hi ${contact.name || 'there'}, here is your exclusive offer!`
+  }),
+  'YOUR_ACCESS_TOKEN'
+);
+```
+
+<Note>
+Preview the segment first with `POST /api/contact-segments/preview` to confirm the audience size before dispatching a bulk send.
+</Note>
+
+---
+
+## Next Steps
+
+- [Contact Labels](/contacts/labels) — Create and assign labels to use in `tag` conditions
+- [Manage Contacts](/contacts/manage) — Add custom fields to contacts for use in `field` conditions
+- [Send Messages](/messages/send) — Send individual messages

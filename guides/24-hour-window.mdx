@@ -1,0 +1,444 @@
+---
+title: 'The 24-Hour Window & Opt-in'
+description: 'Understand the WhatsApp customer-service window, when to use templates vs free-form text, and how to handle the most common messaging failure.'
+icon: 'clock'
+---
+
+# The 24-Hour Window & Opt-in
+
+The single most common cause of failed WhatsApp messages in production is sending free-form text outside the customer-service window. This guide explains what the window is, when it applies, and exactly what happens when you get it wrong — so you can build around it correctly from the start.
+
+---
+
+## What the 24-hour window is
+
+WhatsApp distinguishes between two contexts for messaging a customer:
+
+| Context | What you can send | Cost model |
+|---|---|---|
+| Inside the 24-hour window | Any message type: text, image, audio, document, template, interactive buttons, etc. | Conversation-based (service category) |
+| Outside the 24-hour window | Approved templates only (UTILITY, MARKETING, or AUTHENTICATION category) | Conversation-based (marketing or utility category) |
+
+**The window opens** the moment a customer sends your WhatsApp number an inbound message — any message type counts (text, image, voice note, button tap, etc.).
+
+**The window closes** exactly 24 hours after that inbound message. If the customer sends another inbound message, the clock resets to 24 hours from that new message.
+
+**The window never opens** if you send the customer a message first and they never reply. In that case there is no window at all — you can only send approved templates.
+
+<Note>
+This rule is enforced at the MegaSend API layer before the request reaches Meta. A send that would violate the window is rejected immediately, protecting your message quota and preventing unnecessary Meta API calls.
+</Note>
+
+---
+
+## Opt-in requirements
+
+Before you can send **any** WhatsApp message to a customer — inside the window or outside it — Meta requires that the recipient has opted in to receive messages from your business on WhatsApp.
+
+What counts as opt-in:
+- A customer messaging your number first (the inbound message itself is evidence of opt-in intent).
+- A customer submitting a web form, checking a box, or completing a flow that explicitly captures WhatsApp messaging consent.
+- A customer scanning a QR code that initiates a WhatsApp conversation with your number.
+
+What does **not** count:
+- A phone number collected from a purchase or registration without explicit WhatsApp consent.
+- A pre-checked opt-in box the customer did not actively interact with.
+- Consent collected via a different channel (email, SMS) without mentioning WhatsApp specifically.
+
+<Warning>
+Sending to contacts who have not opted in risks your WhatsApp Business Account being flagged or suspended by Meta. Always capture explicit consent before messaging.
+</Warning>
+
+---
+
+## Sending inside the window
+
+When a customer has messaged you within the last 24 hours, you can send free-form text (or any other message type) directly via `/messages/send`:
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST "https://api.megasend.co.il/messages/send" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "instance_id": "550e8400-e29b-41d4-a716-446655440000",
+    "recipient": "+1234567890",
+    "message_type": "text",
+    "text": "Hi! Thanks for reaching out. How can I help you today?"
+  }'
+```
+
+```javascript JavaScript
+const response = await fetch('https://api.megasend.co.il/messages/send', {
+  method: 'POST',
+  headers: {
+    'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    instance_id: '550e8400-e29b-41d4-a716-446655440000',
+    recipient: '+1234567890',
+    message_type: 'text',
+    text: 'Hi! Thanks for reaching out. How can I help you today?'
+  })
+});
+
+const result = await response.json();
+// result.status === 'sent'
+// result.wa_message_id contains the WhatsApp message ID
+```
+
+```python Python
+import requests
+
+response = requests.post(
+    'https://api.megasend.co.il/messages/send',
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'},
+    json={
+        'instance_id': '550e8400-e29b-41d4-a716-446655440000',
+        'recipient': '+1234567890',
+        'message_type': 'text',
+        'text': 'Hi! Thanks for reaching out. How can I help you today?'
+    }
+)
+
+result = response.json()
+# result['status'] == 'sent'
+```
+
+</CodeGroup>
+
+### Successful response
+
+```json
+{
+  "message_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "status": "sent",
+  "detail": "Message sent successfully",
+  "message_type": "text",
+  "wa_message_id": "wamid.HBgLMTIzNDU2Nzg5OBUCABIYFDNBMjVBMUI2NDc0MTk5ODE5AA==",
+  "timestamp": "2026-07-13T10:00:00Z",
+  "direction": "outbound"
+}
+```
+
+---
+
+## What happens outside the window
+
+If you send a free-form text message and more than 24 hours have passed since the contact's last inbound message, the MegaSend API blocks the send before it reaches Meta. The request returns HTTP `400` with a structured error body:
+
+```json
+{
+  "detail": {
+    "error": "csw_closed",
+    "message": "Outside the 24h customer service window — send a template message instead, or wait for the customer to message you."
+  }
+}
+```
+
+No message record is created and no Meta API call is made. The error is surfaced at the MegaSend layer so your integration receives a clear, actionable signal without parsing Meta error codes.
+
+<Note>
+If you receive HTTP `422` with `"error": "re_engagement_required"`, this is the Meta Cloud API error code 131047 surfaced when the window check is bypassed. The detail string will read: "More than 24 hours have passed since the customer's last message. Use a template message to re-engage." Handle both `400 csw_closed` and `422 re_engagement_required` the same way — switch to a template send.
+</Note>
+
+---
+
+## Sending outside the window: use a template
+
+When the customer-service window is closed, you must send an approved template. Templates are pre-approved by Meta and can be sent at any time to any opted-in customer.
+
+### Step 1: Create and get a template approved
+
+First create a UTILITY or MARKETING template via `/templates/{instance_id}/create`. The template goes through Meta's review process (typically minutes for UTILITY, longer for MARKETING).
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST "https://api.megasend.co.il/templates/550e8400-e29b-41d4-a716-446655440000/create" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "order_shipped_notification",
+    "category": "UTILITY",
+    "language": "en",
+    "components": [
+      {
+        "type": "BODY",
+        "text": "Hi {{1}}, your order #{{2}} has shipped and will arrive by {{3}}."
+      },
+      {
+        "type": "FOOTER",
+        "text": "Reply STOP to unsubscribe"
+      }
+    ]
+  }'
+```
+
+```javascript JavaScript
+const response = await fetch(
+  'https://api.megasend.co.il/templates/550e8400-e29b-41d4-a716-446655440000/create',
+  {
+    method: 'POST',
+    headers: {
+      'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN',
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      name: 'order_shipped_notification',
+      category: 'UTILITY',
+      language: 'en',
+      components: [
+        {
+          type: 'BODY',
+          text: 'Hi {{1}}, your order #{{2}} has shipped and will arrive by {{3}}.'
+        },
+        {
+          type: 'FOOTER',
+          text: 'Reply STOP to unsubscribe'
+        }
+      ]
+    })
+  }
+);
+
+const template = await response.json();
+// template.status === 'PENDING' initially; becomes 'APPROVED' after Meta review
+```
+
+```python Python
+import requests
+
+response = requests.post(
+    'https://api.megasend.co.il/templates/550e8400-e29b-41d4-a716-446655440000/create',
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'},
+    json={
+        'name': 'order_shipped_notification',
+        'category': 'UTILITY',
+        'language': 'en',
+        'components': [
+            {
+                'type': 'BODY',
+                'text': 'Hi {{1}}, your order #{{2}} has shipped and will arrive by {{3}}.'
+            },
+            {
+                'type': 'FOOTER',
+                'text': 'Reply STOP to unsubscribe'
+            }
+        ]
+    }
+)
+
+template = response.json()
+# template['status'] == 'PENDING' initially
+```
+
+</CodeGroup>
+
+Template creation response:
+
+```json
+{
+  "id": "meta_template_id_from_meta",
+  "status": "PENDING",
+  "category": "UTILITY"
+}
+```
+
+### Step 2: Send the approved template
+
+Once the template status is `APPROVED`, use `message_type: "template"` and supply parameter values via `template_data`:
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST "https://api.megasend.co.il/messages/send" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "instance_id": "550e8400-e29b-41d4-a716-446655440000",
+    "recipient": "+1234567890",
+    "message_type": "template",
+    "template_data": {
+      "name": "order_shipped_notification",
+      "language": "en",
+      "body_params": [
+        { "type": "text", "value": "Sarah" },
+        { "type": "text", "value": "ORD-9988" },
+        { "type": "text", "value": "Wednesday, July 16" }
+      ]
+    }
+  }'
+```
+
+```javascript JavaScript
+const response = await fetch('https://api.megasend.co.il/messages/send', {
+  method: 'POST',
+  headers: {
+    'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    instance_id: '550e8400-e29b-41d4-a716-446655440000',
+    recipient: '+1234567890',
+    message_type: 'template',
+    template_data: {
+      name: 'order_shipped_notification',
+      language: 'en',
+      body_params: [
+        { type: 'text', value: 'Sarah' },
+        { type: 'text', value: 'ORD-9988' },
+        { type: 'text', value: 'Wednesday, July 16' }
+      ]
+    }
+  })
+});
+
+const result = await response.json();
+// result.status === 'sent'
+```
+
+```python Python
+import requests
+
+response = requests.post(
+    'https://api.megasend.co.il/messages/send',
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'},
+    json={
+        'instance_id': '550e8400-e29b-41d4-a716-446655440000',
+        'recipient': '+1234567890',
+        'message_type': 'template',
+        'template_data': {
+            'name': 'order_shipped_notification',
+            'language': 'en',
+            'body_params': [
+                {'type': 'text', 'value': 'Sarah'},
+                {'type': 'text', 'value': 'ORD-9988'},
+                {'type': 'text', 'value': 'Wednesday, July 16'}
+            ]
+        }
+    }
+)
+
+result = response.json()
+# result['status'] == 'sent'
+```
+
+</CodeGroup>
+
+---
+
+## Practical pattern: window-aware send
+
+A robust integration checks whether the window is open before deciding what to send. Use the `customer_service_window` field available in the chat/conversation context, or rely on the API error to route your logic:
+
+```javascript
+async function sendWithFallback(instanceId, recipient, freeformText, templateName, templateParams) {
+  const payload = {
+    instance_id: instanceId,
+    recipient: recipient,
+    message_type: 'text',
+    text: freeformText
+  };
+
+  const response = await fetch('https://api.megasend.co.il/messages/send', {
+    method: 'POST',
+    headers: {
+      'X-MEGASEND-AUTH': process.env.MEGASEND_TOKEN,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(payload)
+  });
+
+  const result = await response.json();
+
+  // If the window is closed the API returns 400 (csw_closed) or, in some
+  // configurations, 422 (re_engagement_required). Fall back to an approved
+  // template in either case.
+  const windowClosed =
+    (response.status === 400 && result.detail?.error === 'csw_closed') ||
+    (response.status === 422 && result.status === 'failed');
+
+  if (windowClosed) {
+    const templateResponse = await fetch('https://api.megasend.co.il/messages/send', {
+      method: 'POST',
+      headers: {
+        'X-MEGASEND-AUTH': process.env.MEGASEND_TOKEN,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        instance_id: instanceId,
+        recipient: recipient,
+        message_type: 'template',
+        template_data: {
+          name: templateName,
+          language: 'en',
+          body_params: templateParams
+        }
+      })
+    });
+
+    return templateResponse.json();
+  }
+
+  return result;
+}
+
+// Usage
+await sendWithFallback(
+  '550e8400-e29b-41d4-a716-446655440000',
+  '+1234567890',
+  'Following up on your recent order — is everything okay?',
+  'order_followup_utility',
+  [{ type: 'text', value: 'ORD-9988' }]
+);
+```
+
+---
+
+## Template categories and when to use each
+
+| Category | Use case | Can be sent outside the window? | Notes |
+|---|---|---|---|
+| `UTILITY` | Order confirmations, shipping notifications, appointment reminders, account alerts | Yes | Lower cost than MARKETING; must be genuinely transactional |
+| `MARKETING` | Promotions, product announcements, re-engagement offers | Yes | Higher cost; subject to Meta's marketing message limits |
+| `AUTHENTICATION` | OTP codes, verification codes | Yes | Restricted format; no custom body text |
+
+<Note>
+Choose `UTILITY` for transactional messages triggered by a customer action. Reserve `MARKETING` for proactive promotional outreach. Meta may re-categorise a submitted template if it does not match the declared category.
+</Note>
+
+---
+
+## Common failure modes
+
+### Sending text to a customer who has never messaged you
+
+There is no window. The send returns `status: failed` with the re-engagement detail. You must send a template.
+
+### Sending text to a customer who messaged you 25 hours ago
+
+The window expired. Same failure. Even a message from 24 hours and one minute ago closes the window.
+
+### Sending a template that is still PENDING
+
+Meta rejects the send. Verify template status is `APPROVED` via `/templates/{instance_id}/list` before sending.
+
+### Sending a template with wrong parameter count
+
+If the template has three `{{1}}` `{{2}}` `{{3}}` placeholders and you supply only two `body_params`, Meta returns a validation error. The parameter arrays in `template_data` must exactly match the placeholder count in the approved template.
+
+### Sending to a contact who unsubscribed
+
+If the contact has blocked your number or reported your messages as spam, Meta will reject the send regardless of window status. Honor opt-out signals promptly.
+
+---
+
+## Next steps
+
+- [Send a message](/messages/send) — full reference for `/messages/send`
+- [Create a template](/templates/create) — create and submit templates for approval
+- [List templates](/templates/list) — check template status before sending
+- [Unsubscribe management](/unsubscribe/manage) — honor opt-out requests correctly

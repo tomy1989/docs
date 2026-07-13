@@ -54,7 +54,6 @@ MegaSend is a powerful WhatsApp Business API platform that enables businesses to
 ## Key Features
 
 ### 🚀 Enterprise-Ready
-- **High Availability**: 99.9% uptime with redundant infrastructure
 - **Rate Limiting**: Intelligent throttling to respect WhatsApp limits
 - **Auto-Scaling**: Handle millions of messages with automatic scaling
 - **Security**: Enterprise-grade encryption and authentication
@@ -68,9 +67,9 @@ MegaSend is a powerful WhatsApp Business API platform that enables businesses to
 ### 🔧 Developer Experience
 - **RESTful API**: Clean, intuitive endpoints with comprehensive documentation
 - **Simple Authentication**: Multiple auth methods including the convenient X-MEGASEND-AUTH header
-- **SDKs Available**: Official libraries for popular programming languages
+- **OpenAPI Client Generation**: Generate a typed client in any language from our spec at `/openapi.json`
 - **Webhooks**: Real-time event notifications for message status updates
-- **Testing Tools**: Sandbox environment for development and testing
+- **Local Testing**: Test using your own WhatsApp number; use [ngrok](https://ngrok.com) to expose local webhook endpoints during development
 
 ### 📊 Analytics & Monitoring
 - **Real-time Metrics**: Message delivery, read rates, and engagement analytics
@@ -124,20 +123,14 @@ Our RESTful API uses clean, predictable URLs without version prefixes. All endpo
 
 ## Rate Limits
 
-To ensure optimal performance for all users, our API implements intelligent rate limiting:
-
-- **Standard Plan**: 1,000 requests per minute
-- **Professional Plan**: 5,000 requests per minute  
-- **Enterprise Plan**: Custom limits based on your needs
-
-Rate limit headers are included in all API responses to help you monitor your usage.
+To ensure optimal performance for all users, our API implements intelligent rate limiting that respects WhatsApp Business API quotas. When a rate limit is exceeded, the API returns `429 Too Many Requests` with a JSON body containing a `retry_after_seconds` field. There are no `X-RateLimit-*` response headers.
 
 ## Support
 
 Need help? Our support team is here to assist you:
 
 - **Email Support**: [team@weblix.co.il](mailto:team@weblix.co.il)
-- **Dashboard**: [app.megasend.io](https://app.megasend.io)
+- **Dashboard**: [app.megasend.co.il](https://app.megasend.co.il)
 - **Documentation**: Comprehensive guides and examples in this documentation
 
 Let's get started building amazing WhatsApp experiences with MegaSend! 

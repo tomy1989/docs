@@ -1,17 +1,19 @@
 ---
 title: 'Media Library API Reference'
-description: 'Complete API reference for managing media files in the WhatsApp Media Library'
+description: 'Complete API reference for managing media files in the WhatsApp Media Library and retrieving inbound media from messages'
 icon: 'photo-film'
 ---
 
 The Media Library API provides comprehensive endpoints for uploading, managing, and tracking media files used in WhatsApp messages. All media is stored on Meta's servers with metadata tracked in MegaSend for easy management.
 
+A separate set of `/media` and `/messages` endpoints covers inbound media retrieval — fetching the binary or URL for media that arrived in an incoming WhatsApp or Instagram DM.
+
 ## Base URL
 
-All media endpoints use the base path:
+All endpoints use:
 
 ```
-https://api.megasend.co.il/media-library
+https://api.megasend.co.il
 ```
 
 ## Authentication
@@ -21,6 +23,8 @@ All requests require authentication via the `X-MEGASEND-AUTH` header:
 ```bash
 X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN
 ```
+
+---
 
 ## Upload Media
 
@@ -36,10 +40,10 @@ POST /media-library/{instance_id}/upload
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `instance_id` | UUID | Yes | Your WhatsApp instance ID |
-| `file` | File | Yes | Media file to upload |
-| `description` | String | No | Optional description (max 500 chars) |
-| `tags` | String | No | Comma-separated tags (max 200 chars) |
+| `instance_id` | UUID | Yes | Your WhatsApp instance ID (path) |
+| `file` | File | Yes | Media file to upload (multipart/form-data) |
+| `description` | String | No | Optional description (max 500 chars, query param) |
+| `tags` | String | No | Comma-separated tags (max 200 chars, query param) |
 
 ### Supported File Types
 
@@ -66,21 +70,22 @@ Admins are exempt from rate limiting for testing purposes.
 <CodeGroup>
 
 ```bash cURL
-curl -X POST "https://api.megasend.co.il/media-library/550e8400-e29b-41d4-a716-446655440000/upload" \
+curl -X POST "https://api.megasend.co.il/media-library/550e8400-e29b-41d4-a716-446655440000/upload?description=Product%20catalog%20cover%20image&tags=product%2Ccatalog%2C2024" \
   -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN" \
-  -F "file=@/path/to/image.jpg" \
-  -F "description=Product catalog cover image" \
-  -F "tags=product,catalog,2024"
+  -F "file=@/path/to/image.jpg"
 ```
 
 ```javascript JavaScript
 const formData = new FormData();
 formData.append('file', fileInput.files[0]);
-formData.append('description', 'Product catalog cover image');
-formData.append('tags', 'product,catalog,2024');
+
+const params = new URLSearchParams({
+  description: 'Product catalog cover image',
+  tags: 'product,catalog,2024'
+});
 
 const response = await fetch(
-  'https://api.megasend.co.il/media-library/550e8400-e29b-41d4-a716-446655440000/upload',
+  `https://api.megasend.co.il/media-library/550e8400-e29b-41d4-a716-446655440000/upload?${params}`,
   {
     method: 'POST',
     headers: {
@@ -100,16 +105,14 @@ files = {
     'file': open('/path/to/image.jpg', 'rb')
 }
 
-data = {
-    'description': 'Product catalog cover image',
-    'tags': 'product,catalog,2024'
-}
-
 response = requests.post(
     'https://api.megasend.co.il/media-library/550e8400-e29b-41d4-a716-446655440000/upload',
     headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'},
     files=files,
-    data=data
+    params={
+        'description': 'Product catalog cover image',
+        'tags': 'product,catalog,2024'
+    }
 )
 
 result = response.json()
@@ -124,16 +127,20 @@ result = response.json()
   "id": "7f8c9d2a-4b3e-4f1a-9c8d-2e3f4a5b6c7d",
   "meta_media_id": "1234567890123456",
   "filename": "image.jpg",
-  "mime_type": "image/jpeg",
   "file_type": "image",
+  "mime_type": "image/jpeg",
   "file_size_bytes": 245632,
   "upload_date": "2024-01-15T10:30:00Z",
   "expiry_date": "2024-02-14T10:30:00Z",
   "status": "active",
+  "waba_id": "123456789",
+  "instance_id": "550e8400-e29b-41d4-a716-446655440000",
+  "user_id": "11223344-aabb-ccdd-eeff-001122334455",
   "description": "Product catalog cover image",
   "tags": ["product", "catalog", "2024"],
-  "usage_count": 0,
-  "instance_id": "550e8400-e29b-41d4-a716-446655440000"
+  "created_at": "2024-01-15T10:30:00Z",
+  "days_until_expiry": 30,
+  "is_expiring_soon": false
 }
 ```
 
@@ -163,13 +170,13 @@ GET /media-library/{instance_id}/list
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
 | `file_type` | String | None | Filter by type: `image`, `video`, `audio`, `document`, `sticker` |
-| `status` | String | None | Filter by status: `active`, `expiring_soon`, `expired` |
+| `status` | String | None | Filter by status: `active`, `expiring_soon`, `expired`, `deleted` |
 | `include_deleted` | Boolean | false | Include soft-deleted media |
 | `search` | String | None | Search by filename (max 100 chars) |
 | `tags` | String | None | Filter by tags (comma-separated) |
 | `sort_by` | String | `created_at` | Sort field: `created_at`, `upload_date`, `expiry_date`, `filename`, `usage_count`, `file_size_bytes` |
 | `order` | String | `desc` | Sort order: `asc` or `desc` |
-| `limit` | Integer | 50 | Items per page (1-100) |
+| `limit` | Integer | 50 | Items per page (1–100) |
 | `offset` | Integer | 0 | Pagination offset |
 
 ### Request Examples
@@ -202,6 +209,8 @@ const result = await response.json();
 ```
 
 ```python Python
+import requests
+
 params = {
     'file_type': 'image',
     'limit': 20,
@@ -229,15 +238,27 @@ result = response.json()
       "id": "7f8c9d2a-4b3e-4f1a-9c8d-2e3f4a5b6c7d",
       "meta_media_id": "1234567890123456",
       "filename": "product-image.jpg",
-      "mime_type": "image/jpeg",
+      "original_filename": "product-image.jpg",
       "file_type": "image",
+      "mime_type": "image/jpeg",
       "file_size_bytes": 245632,
       "upload_date": "2024-01-15T10:30:00Z",
       "expiry_date": "2024-02-14T10:30:00Z",
       "status": "active",
+      "waba_id": "123456789",
+      "instance_id": "550e8400-e29b-41d4-a716-446655440000",
+      "user_id": "11223344-aabb-ccdd-eeff-001122334455",
+      "usage_count": 5,
+      "last_used_at": null,
       "description": "Product catalog image",
       "tags": ["product", "catalog"],
-      "usage_count": 5
+      "is_deleted": false,
+      "deleted_at": null,
+      "created_at": "2024-01-15T10:30:00Z",
+      "updated_at": "2024-01-15T10:30:00Z",
+      "is_expired": false,
+      "days_until_expiry": 30,
+      "is_expiring_soon": false
     }
   ],
   "total": 48,
@@ -282,6 +303,8 @@ const media = await response.json();
 ```
 
 ```python Python
+import requests
+
 response = requests.get(
     'https://api.megasend.co.il/media-library/item/7f8c9d2a-4b3e-4f1a-9c8d-2e3f4a5b6c7d',
     headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'}
@@ -299,17 +322,27 @@ media = response.json()
   "id": "7f8c9d2a-4b3e-4f1a-9c8d-2e3f4a5b6c7d",
   "meta_media_id": "1234567890123456",
   "filename": "product-catalog.pdf",
-  "mime_type": "application/pdf",
+  "original_filename": "product-catalog.pdf",
   "file_type": "document",
+  "mime_type": "application/pdf",
   "file_size_bytes": 1245632,
   "upload_date": "2024-01-15T10:30:00Z",
   "expiry_date": "2024-02-14T10:30:00Z",
   "status": "active",
+  "waba_id": "123456789",
+  "instance_id": "550e8400-e29b-41d4-a716-446655440000",
+  "user_id": "11223344-aabb-ccdd-eeff-001122334455",
+  "usage_count": 42,
+  "last_used_at": "2024-01-20T08:00:00Z",
   "description": "Q1 2024 Product Catalog",
   "tags": ["catalog", "products", "q1-2024"],
-  "usage_count": 42,
-  "instance_id": "550e8400-e29b-41d4-a716-446655440000",
-  "created_at": "2024-01-15T10:30:00Z"
+  "is_deleted": false,
+  "deleted_at": null,
+  "created_at": "2024-01-15T10:30:00Z",
+  "updated_at": "2024-01-15T10:30:00Z",
+  "is_expired": false,
+  "days_until_expiry": 30,
+  "is_expiring_soon": false
 }
 ```
 
@@ -317,7 +350,7 @@ media = response.json()
 
 ## Get Media Download URL
 
-Get a temporary download URL for a media file (valid for 5 minutes).
+Get a temporary download URL for a media file (valid for approximately 5 minutes).
 
 ### Endpoint
 
@@ -326,7 +359,7 @@ GET /media-library/item/{media_id}/url
 ```
 
 <Warning>
-The returned URL requires authentication headers to download. For direct downloads without authentication, use the `/download` endpoint instead.
+The returned URL still requires Meta authentication headers to access directly. For client-side downloads without managing auth headers, use the `/download` endpoint instead.
 </Warning>
 
 ### Request Examples
@@ -352,6 +385,8 @@ const urlData = await response.json();
 ```
 
 ```python Python
+import requests
+
 response = requests.get(
     'https://api.megasend.co.il/media-library/item/7f8c9d2a-4b3e-4f1a-9c8d-2e3f4a5b6c7d/url',
     headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'}
@@ -366,9 +401,10 @@ url_data = response.json()
 
 ```json
 {
+  "media_id": "1234567890123456",
   "url": "https://lookaside.fbsbx.com/whatsapp_business/attachments/?mid=1234567890&ext=1234567890&hash=...",
   "mime_type": "image/jpeg",
-  "file_size_bytes": 245632,
+  "file_size": 245632,
   "expires_at": "2024-01-15T10:35:00Z"
 }
 ```
@@ -377,7 +413,7 @@ url_data = response.json()
 
 ## Download Media File
 
-Download a media file directly through the MegaSend proxy (no authentication required on the download URL).
+Download a media file directly through the MegaSend proxy. The backend handles Meta's authentication requirements automatically.
 
 ### Endpoint
 
@@ -385,9 +421,9 @@ Download a media file directly through the MegaSend proxy (no authentication req
 GET /media-library/item/{media_id}/download
 ```
 
-<Info>
-This endpoint proxies the download through MegaSend servers, handling Meta's authentication requirements automatically. Perfect for direct download links in your application.
-</Info>
+<Note>
+This endpoint proxies the download through MegaSend servers, streaming the binary back to the caller with the correct `Content-Disposition` filename. Ideal for direct download links in your application.
+</Note>
 
 ### Request Examples
 
@@ -400,7 +436,6 @@ curl "https://api.megasend.co.il/media-library/item/7f8c9d2a-4b3e-4f1a-9c8d-2e3f
 ```
 
 ```javascript JavaScript
-// Download and create blob URL
 const response = await fetch(
   'https://api.megasend.co.il/media-library/item/7f8c9d2a-4b3e-4f1a-9c8d-2e3f4a5b6c7d/download',
   {
@@ -413,7 +448,6 @@ const response = await fetch(
 const blob = await response.blob();
 const url = URL.createObjectURL(blob);
 
-// Use for download link
 const a = document.createElement('a');
 a.href = url;
 a.download = 'media-file.jpg';
@@ -421,6 +455,8 @@ a.click();
 ```
 
 ```python Python
+import requests
+
 response = requests.get(
     'https://api.megasend.co.il/media-library/item/7f8c9d2a-4b3e-4f1a-9c8d-2e3f4a5b6c7d/download',
     headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'},
@@ -436,12 +472,13 @@ with open('downloaded-file.jpg', 'wb') as f:
 
 ### Response
 
-Binary file content with appropriate headers:
+Binary file content streamed with appropriate headers:
 
 ```
 Content-Type: image/jpeg
 Content-Disposition: attachment; filename="product-image.jpg"
 Content-Length: 245632
+Cache-Control: no-cache
 ```
 
 ---
@@ -457,15 +494,17 @@ PATCH /media-library/item/{media_id}
 ```
 
 <Note>
-You can only update metadata (description and tags). The media file itself cannot be changed - upload a new file instead.
+Only metadata (description and tags) can be updated. To change the file itself, upload a new file and delete the old one.
 </Note>
 
 ### Request Body
 
+The `tags` field accepts a JSON array of strings (not a comma-separated string).
+
 ```json
 {
   "description": "Updated description text",
-  "tags": "new,tags,here"
+  "tags": ["new", "tags", "here"]
 }
 ```
 
@@ -479,7 +518,7 @@ curl -X PATCH "https://api.megasend.co.il/media-library/item/7f8c9d2a-4b3e-4f1a-
   -H "Content-Type: application/json" \
   -d '{
     "description": "Updated Q1 2024 Product Catalog",
-    "tags": "catalog,products,q1-2024,updated"
+    "tags": ["catalog", "products", "q1-2024", "updated"]
   }'
 ```
 
@@ -494,7 +533,7 @@ const response = await fetch(
     },
     body: JSON.stringify({
       description: 'Updated Q1 2024 Product Catalog',
-      tags: 'catalog,products,q1-2024,updated'
+      tags: ['catalog', 'products', 'q1-2024', 'updated']
     })
   }
 );
@@ -503,6 +542,8 @@ const updated = await response.json();
 ```
 
 ```python Python
+import requests
+
 response = requests.patch(
     'https://api.megasend.co.il/media-library/item/7f8c9d2a-4b3e-4f1a-9c8d-2e3f4a5b6c7d',
     headers={
@@ -511,7 +552,7 @@ response = requests.patch(
     },
     json={
         'description': 'Updated Q1 2024 Product Catalog',
-        'tags': 'catalog,products,q1-2024,updated'
+        'tags': ['catalog', 'products', 'q1-2024', 'updated']
     }
 )
 
@@ -522,7 +563,7 @@ updated = response.json()
 
 ### Response
 
-Returns the updated media object with new metadata.
+Returns the full updated `MediaResponse` object (same shape as Get Media Details).
 
 ---
 
@@ -551,7 +592,6 @@ Once deleted from Meta's servers, the media cannot be used in messages. Set `del
 <CodeGroup>
 
 ```bash cURL
-# Delete from both library and Meta
 curl -X DELETE "https://api.megasend.co.il/media-library/item/7f8c9d2a-4b3e-4f1a-9c8d-2e3f4a5b6c7d?delete_from_meta=true" \
   -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
 ```
@@ -571,6 +611,8 @@ const result = await response.json();
 ```
 
 ```python Python
+import requests
+
 response = requests.delete(
     'https://api.megasend.co.il/media-library/item/7f8c9d2a-4b3e-4f1a-9c8d-2e3f4a5b6c7d',
     headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'},
@@ -655,6 +697,8 @@ const result = await response.json();
 ```
 
 ```python Python
+import requests
+
 response = requests.post(
     'https://api.megasend.co.il/media-library/bulk-delete',
     headers={
@@ -681,20 +725,20 @@ result = response.json()
 {
   "deleted_count": 2,
   "failed_count": 0,
-  "deleted_ids": [
-    "7f8c9d2a-4b3e-4f1a-9c8d-2e3f4a5b6c7d",
-    "8a9b0c1d-2e3f-4a5b-6c7d-8e9f0a1b2c3d"
-  ],
   "failed_ids": [],
   "errors": []
 }
 ```
 
+<Note>
+The response does not include a `deleted_ids` field. Successful IDs are those in your request that are not listed in `failed_ids`.
+</Note>
+
 ---
 
 ## Get Media Statistics
 
-Retrieve aggregated statistics about your media library.
+Retrieve aggregated statistics about your media library for a specific instance.
 
 ### Endpoint
 
@@ -725,6 +769,8 @@ const stats = await response.json();
 ```
 
 ```python Python
+import requests
+
 response = requests.get(
     'https://api.megasend.co.il/media-library/550e8400-e29b-41d4-a716-446655440000/stats',
     headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'}
@@ -757,9 +803,29 @@ stats = response.json()
   "most_used": [
     {
       "id": "7f8c9d2a-4b3e-4f1a-9c8d-2e3f4a5b6c7d",
+      "meta_media_id": "1234567890123456",
       "filename": "logo.png",
+      "original_filename": "logo.png",
+      "file_type": "image",
+      "mime_type": "image/png",
+      "file_size_bytes": 12345,
+      "upload_date": "2024-01-15T10:30:00Z",
+      "expiry_date": "2024-02-14T10:30:00Z",
+      "status": "active",
+      "waba_id": "123456789",
+      "instance_id": "550e8400-e29b-41d4-a716-446655440000",
+      "user_id": "11223344-aabb-ccdd-eeff-001122334455",
       "usage_count": 342,
-      "file_type": "image"
+      "last_used_at": "2024-01-20T08:00:00Z",
+      "description": null,
+      "tags": [],
+      "is_deleted": false,
+      "deleted_at": null,
+      "created_at": "2024-01-15T10:30:00Z",
+      "updated_at": "2024-01-15T10:30:00Z",
+      "is_expired": false,
+      "days_until_expiry": 30,
+      "is_expiring_soon": false
     }
   ]
 }
@@ -769,7 +835,7 @@ stats = response.json()
 
 ## Search by Meta Media ID
 
-Find a media file using Meta's media ID.
+Find a media library record using Meta's numeric media ID.
 
 ### Endpoint
 
@@ -781,7 +847,7 @@ GET /media-library/search/by-meta-id
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `meta_media_id` | String | Yes | Meta's media ID from webhooks or external sources |
+| `meta_media_id` | String | Yes | Meta's numeric media ID from webhooks or external sources |
 
 ### Request Examples
 
@@ -806,6 +872,8 @@ const media = await response.json();
 ```
 
 ```python Python
+import requests
+
 response = requests.get(
     'https://api.megasend.co.il/media-library/search/by-meta-id',
     headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'},
@@ -819,7 +887,434 @@ media = response.json()
 
 ### Response
 
-Returns the media object if found, or `null` if not found.
+Returns the full `MediaResponse` object if found, or `null` if not found.
+
+---
+
+## Download Meta-Hosted Media
+
+Download media using Meta's numeric media ID directly, without needing a media library record. Useful for template media uploaded directly to WhatsApp.
+
+### Endpoint
+
+```
+GET /media-library/meta-media/{meta_media_id}/download
+```
+
+<Note>
+The `meta_media_id` must be a numeric string (10–20 digits). If the media also exists in your library, the request is automatically routed to the standard library download endpoint.
+</Note>
+
+### Request Examples
+
+<CodeGroup>
+
+```bash cURL
+curl "https://api.megasend.co.il/media-library/meta-media/1256959372900595/download" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN" \
+  -o downloaded-media.jpg
+```
+
+```javascript JavaScript
+const response = await fetch(
+  'https://api.megasend.co.il/media-library/meta-media/1256959372900595/download',
+  {
+    headers: {
+      'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'
+    }
+  }
+);
+
+const blob = await response.blob();
+```
+
+```python Python
+import requests
+
+response = requests.get(
+    'https://api.megasend.co.il/media-library/meta-media/1256959372900595/download',
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'},
+    stream=True
+)
+
+with open('downloaded-media.jpg', 'wb') as f:
+    for chunk in response.iter_content(chunk_size=8192):
+        f.write(chunk)
+```
+
+</CodeGroup>
+
+### Response
+
+Binary file content with headers:
+
+```
+Content-Type: image/jpeg
+Content-Disposition: attachment; filename="meta_media_1256959372900595.jpeg"
+Content-Length: 245632
+Cache-Control: no-cache
+```
+
+---
+
+## Inbound Media Retrieval
+
+The following endpoints retrieve media that arrived in **incoming** WhatsApp or Instagram DM messages. They live under `/media` and `/messages` prefixes.
+
+---
+
+### Stream Inbound Media (by Meta media ID)
+
+Stream the binary content of an inbound WhatsApp media attachment, identified by Meta's media ID from the webhook event.
+
+```
+GET /media/{media_id}?instance_id={instance_id}
+```
+
+### Query Parameters
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `instance_id` | UUID | Yes | WhatsApp instance UUID that received the media |
+
+<Note>
+The backend validates that you own the specified instance before proxying the content from Meta.
+</Note>
+
+### Request Examples
+
+<CodeGroup>
+
+```bash cURL
+curl "https://api.megasend.co.il/media/1234567890123456?instance_id=550e8400-e29b-41d4-a716-446655440000" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN" \
+  -o inbound-image.jpg
+```
+
+```javascript JavaScript
+const mediaId = '1234567890123456';
+const instanceId = '550e8400-e29b-41d4-a716-446655440000';
+
+const response = await fetch(
+  `https://api.megasend.co.il/media/${mediaId}?instance_id=${instanceId}`,
+  {
+    headers: {
+      'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'
+    }
+  }
+);
+
+const blob = await response.blob();
+```
+
+```python Python
+import requests
+
+response = requests.get(
+    f'https://api.megasend.co.il/media/1234567890123456',
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'},
+    params={'instance_id': '550e8400-e29b-41d4-a716-446655440000'},
+    stream=True
+)
+
+with open('inbound-image.jpg', 'wb') as f:
+    for chunk in response.iter_content(chunk_size=8192):
+        f.write(chunk)
+```
+
+</CodeGroup>
+
+### Response
+
+Streaming binary response with `Content-Type` set to the media's MIME type.
+
+---
+
+### Get Inbound Media Info (by Meta media ID)
+
+Retrieve metadata for an inbound media attachment without downloading the binary.
+
+```
+GET /media/{media_id}/info?instance_id={instance_id}
+```
+
+### Query Parameters
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `instance_id` | UUID | Yes | WhatsApp instance UUID |
+
+### Response
+
+```json
+{
+  "media_id": "1234567890123456",
+  "available": true,
+  "mime_type": "image/jpeg",
+  "file_size": 245632,
+  "expires_at": "2024-01-15T15:30:00Z",
+  "cached": true
+}
+```
+
+If the media has not been fetched yet, `cached` will be `false` and some fields may be absent:
+
+```json
+{
+  "media_id": "1234567890123456",
+  "available": true,
+  "cached": false,
+  "note": "Media info will be available after first access"
+}
+```
+
+---
+
+### Preload Inbound Media
+
+Pre-warm the cache for multiple inbound media items before they are displayed in the chat UI.
+
+```
+POST /media/preload?instance_id={instance_id}
+```
+
+### Query Parameters
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `instance_id` | UUID | Yes | WhatsApp instance UUID |
+
+### Request Body
+
+JSON array of Meta media ID strings (max 50):
+
+```json
+["1234567890123456", "9876543210987654", "1122334455667788"]
+```
+
+### Request Examples
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST "https://api.megasend.co.il/media/preload?instance_id=550e8400-e29b-41d4-a716-446655440000" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '["1234567890123456", "9876543210987654"]'
+```
+
+```javascript JavaScript
+const response = await fetch(
+  'https://api.megasend.co.il/media/preload?instance_id=550e8400-e29b-41d4-a716-446655440000',
+  {
+    method: 'POST',
+    headers: {
+      'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN',
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(['1234567890123456', '9876543210987654'])
+  }
+);
+
+const result = await response.json();
+```
+
+```python Python
+import requests
+
+response = requests.post(
+    'https://api.megasend.co.il/media/preload',
+    headers={
+        'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN',
+        'Content-Type': 'application/json'
+    },
+    params={'instance_id': '550e8400-e29b-41d4-a716-446655440000'},
+    json=['1234567890123456', '9876543210987654']
+)
+
+result = response.json()
+```
+
+</CodeGroup>
+
+### Response
+
+```json
+{
+  "success": true,
+  "preloaded": 2,
+  "total": 2,
+  "results": {
+    "1234567890123456": true,
+    "9876543210987654": false
+  }
+}
+```
+
+---
+
+### Get Message Media URL
+
+Extract the media URL from a specific outgoing or incoming message record. Returns a structured response describing where the media lives and how to fetch it.
+
+```
+GET /messages/{message_id}/media-url
+```
+
+### Response Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `media_type` | String | `image`, `video`, `audio`, or `document` |
+| `media_source` | String | `external_url`, `media_library`, `meta_media`, or `stored` |
+| `url` | String | URL or path to fetch the media |
+| `media_id` | String | Media Library or Meta media ID (when applicable) |
+| `extraction_source` | String | Where the URL was found (for debugging) |
+| `metadata` | Object | Additional info — for `stored` source includes `mime_type`, `size_bytes`, `sha256` |
+
+**`media_source` values:**
+
+| Value | Meaning |
+|-------|---------|
+| `external_url` | A public HTTPS URL embedded in the template or payload |
+| `media_library` | An internal Media Library UUID; `url` points to `/media-library/item/{id}/download` |
+| `meta_media` | A numeric Meta media ID; `url` points to `/media/{id}?instance_id=...` |
+| `stored` | Durable copy in MinIO (Instagram DM media); `url` points to `/messages/{id}/media-stream` |
+
+### Request Examples
+
+<CodeGroup>
+
+```bash cURL
+curl "https://api.megasend.co.il/messages/aabbccdd-1234-5678-90ab-cdef01234567/media-url" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
+```
+
+```javascript JavaScript
+const response = await fetch(
+  'https://api.megasend.co.il/messages/aabbccdd-1234-5678-90ab-cdef01234567/media-url',
+  {
+    headers: {
+      'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'
+    }
+  }
+);
+
+const mediaInfo = await response.json();
+```
+
+```python Python
+import requests
+
+response = requests.get(
+    'https://api.megasend.co.il/messages/aabbccdd-1234-5678-90ab-cdef01234567/media-url',
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'}
+)
+
+media_info = response.json()
+```
+
+</CodeGroup>
+
+### Response Examples
+
+Template with external image:
+
+```json
+{
+  "media_type": "image",
+  "media_source": "external_url",
+  "url": "https://cdn.example.com/product-banner.jpg",
+  "media_id": null,
+  "extraction_source": "template_structure_rendered",
+  "metadata": null
+}
+```
+
+Instagram DM with durable stored media:
+
+```json
+{
+  "media_type": "image",
+  "media_source": "stored",
+  "url": "/messages/aabbccdd-1234-5678-90ab-cdef01234567/media-stream",
+  "media_id": null,
+  "extraction_source": "durable_storage",
+  "metadata": {
+    "mime_type": "image/jpeg",
+    "size_bytes": 245632,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  }
+}
+```
+
+---
+
+### Stream Stored Message Media
+
+Stream the durable binary copy of a message's media attachment (Instagram DM media persisted to MinIO by the background worker).
+
+```
+GET /messages/{message_id}/media-stream
+```
+
+<Note>
+Returns `404 media not yet available` if the background download task has not yet completed. In that case, use `GET /messages/{message_id}/media-url` to obtain the transient source URL as a fallback.
+</Note>
+
+### Response
+
+Streaming binary response with:
+
+```
+Content-Type: image/jpeg
+Content-Length: 245632
+Cache-Control: private, max-age=3600
+ETag: W/"e3b0c44298fc1c149..."
+```
+
+### Request Examples
+
+<CodeGroup>
+
+```bash cURL
+curl "https://api.megasend.co.il/messages/aabbccdd-1234-5678-90ab-cdef01234567/media-stream" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN" \
+  -o stored-media.jpg
+```
+
+```javascript JavaScript
+const response = await fetch(
+  'https://api.megasend.co.il/messages/aabbccdd-1234-5678-90ab-cdef01234567/media-stream',
+  {
+    headers: {
+      'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'
+    }
+  }
+);
+
+if (response.ok) {
+  const blob = await response.blob();
+  const src = URL.createObjectURL(blob);
+  document.querySelector('img').src = src;
+}
+```
+
+```python Python
+import requests
+
+response = requests.get(
+    'https://api.megasend.co.il/messages/aabbccdd-1234-5678-90ab-cdef01234567/media-stream',
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'},
+    stream=True
+)
+
+with open('stored-media.jpg', 'wb') as f:
+    for chunk in response.iter_content(chunk_size=8192):
+        f.write(chunk)
+```
+
+</CodeGroup>
 
 ---
 
@@ -832,6 +1327,7 @@ Media files have different statuses based on their expiry timeline:
 | `active` | Ready to use in messages | More than 7 days until expiry |
 | `expiring_soon` | Will expire soon | Within 7 days of expiry |
 | `expired` | No longer usable | Past expiry date (30 days after upload) |
+| `deleted` | Soft-deleted from library | Excluded from lists unless `include_deleted=true` |
 
 <Warning>
 Meta automatically deletes media files 30 days after upload. Plan your media usage accordingly and re-upload files that need to be used long-term.
@@ -850,19 +1346,18 @@ All endpoints return standard HTTP status codes with detailed error messages:
 | 400 | Invalid request | Malformed parameters or invalid file type | Check request format and file type |
 | 401 | Unauthorized | Missing or invalid auth token | Verify your authentication token |
 | 403 | Forbidden | Insufficient permissions | Check instance ownership |
-| 404 | Not found | Media ID doesn't exist or deleted | Verify media ID is correct |
+| 404 | Not found | Media ID doesn't exist or is deleted | Verify media ID is correct |
 | 413 | Payload too large | File exceeds size limit | Reduce file size or use compression |
 | 429 | Rate limit exceeded | Too many requests | Implement exponential backoff |
 | 500 | Server error | Internal server error | Retry with exponential backoff |
 | 502 | Bad gateway | Error communicating with Meta | Retry after a short delay |
+| 503 | Storage not configured | MinIO/object storage unavailable | Contact support |
 
 ### Error Response Format
 
 ```json
 {
-  "detail": "File size exceeds maximum limit for image type (5 MB)",
-  "status_code": 400,
-  "error_type": "validation_error"
+  "detail": "File size exceeds maximum limit for image type (5 MB)"
 }
 ```
 
@@ -890,6 +1385,7 @@ All endpoints return standard HTTP status codes with detailed error messages:
 2. **Monitor expiry dates** - Re-upload important files before they expire
 3. **Clean up unused files** - Regularly delete old media to stay organized
 4. **Use bulk operations** - Delete multiple files at once when needed
+5. **Preload inbound media** - Call `POST /media/preload` when opening a chat to warm the cache before the user scrolls to media messages
 
 ### Rate Limiting Strategy
 

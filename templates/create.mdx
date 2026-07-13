@@ -17,6 +17,8 @@ WhatsApp templates consist of several components:
 
 ## Creating Templates
 
+All template endpoints are instance-scoped. Replace `{instance_id}` with your WhatsApp instance UUID.
+
 ### Basic Text Template
 
 Create a simple text-only template:
@@ -98,12 +100,12 @@ Create a more complex template with header and footer:
 <CodeGroup>
 
 ```bash cURL
-curl -X POST "https://api.megasend.co.il/templates/create" \
+curl -X POST "https://api.megasend.co.il/templates/{instance_id}/create" \
   -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
     "name": "order_confirmation",
-    "category": "TRANSACTIONAL",
+    "category": "UTILITY",
     "language": "en",
     "components": [
       {
@@ -126,7 +128,7 @@ curl -X POST "https://api.megasend.co.il/templates/create" \
 ```javascript JavaScript
 const orderTemplate = {
   name: 'order_confirmation',
-  category: 'TRANSACTIONAL',
+  category: 'UTILITY',
   language: 'en',
   components: [
     {
@@ -150,12 +152,12 @@ const orderTemplate = {
 
 ### Template with Media Header
 
-Create a template with an image, video, or document header:
+For image or video headers, you must first upload the media to get an asset handle, then reference that handle in the `header_handle` field of the component's `example`. See the [Upload Media for Templates](#upload-media-for-templates) section below.
 
 <CodeGroup>
 
 ```bash cURL
-curl -X POST "https://api.megasend.co.il/templates/create" \
+curl -X POST "https://api.megasend.co.il/templates/{instance_id}/create" \
   -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -167,12 +169,12 @@ curl -X POST "https://api.megasend.co.il/templates/create" \
         "type": "HEADER",
         "format": "IMAGE",
         "example": {
-          "header_handle": ["https://example.com/product-image.jpg"]
+          "header_handle": ["<ASSET_HANDLE_FROM_UPLOAD_MEDIA>"]
         }
       },
       {
         "type": "BODY",
-        "text": "🚀 Introducing {{1}}!\n\nOur latest innovation is here. {{2}}\n\nSpecial launch price: ${{3}}\nAvailable until: {{4}}"
+        "text": "Introducing {{1}}!\n\nOur latest product is here. {{2}}\n\nSpecial launch price: ${{3}}\nAvailable until: {{4}}"
       },
       {
         "type": "FOOTER",
@@ -192,12 +194,12 @@ const productTemplate = {
       type: 'HEADER',
       format: 'IMAGE',
       example: {
-        header_handle: ['https://example.com/product-image.jpg']
+        header_handle: ['<ASSET_HANDLE_FROM_UPLOAD_MEDIA>']
       }
     },
     {
       type: 'BODY',
-      text: '🚀 Introducing {{1}}!\n\nOur latest innovation is here. {{2}}\n\nSpecial launch price: ${{3}}\nAvailable until: {{4}}'
+      text: 'Introducing {{1}}!\n\nOur latest product is here. {{2}}\n\nSpecial launch price: ${{3}}\nAvailable until: {{4}}'
     },
     {
       type: 'FOOTER',
@@ -209,6 +211,10 @@ const productTemplate = {
 
 </CodeGroup>
 
+<Warning>
+Do not use a public image URL in `header_handle`. You must upload the file via `POST /templates/{instance_id}/upload-media?upload_type=template` and use the returned `handle` value. Using a regular `media_id` will cause Meta error 131009.
+</Warning>
+
 ### Template with Buttons
 
 Add interactive buttons to your templates:
@@ -216,7 +222,7 @@ Add interactive buttons to your templates:
 <CodeGroup>
 
 ```bash cURL
-curl -X POST "https://api.megasend.co.il/templates/create" \
+curl -X POST "https://api.megasend.co.il/templates/{instance_id}/create" \
   -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -236,7 +242,7 @@ curl -X POST "https://api.megasend.co.il/templates/create" \
             "text": "Confirm"
           },
           {
-            "type": "QUICK_REPLY", 
+            "type": "QUICK_REPLY",
             "text": "Reschedule"
           },
           {
@@ -268,7 +274,7 @@ const appointmentTemplate = {
           text: 'Confirm'
         },
         {
-          type: 'QUICK_REPLY', 
+          type: 'QUICK_REPLY',
           text: 'Reschedule'
         },
         {
@@ -286,14 +292,13 @@ const appointmentTemplate = {
 
 ## Template Categories
 
-WhatsApp requires templates to be categorized based on their purpose:
+WhatsApp requires templates to be categorized based on their purpose. Only the following three categories are accepted:
 
 ### MARKETING
 For promotional content, offers, and product announcements.
 
 **Requirements:**
 - Must comply with WhatsApp's marketing policies
-- Rate limited to 1,000 marketing conversations per day initially
 - Requires opt-in consent from recipients
 
 **Examples:**
@@ -307,7 +312,6 @@ For account updates, order status, and other service-related messages.
 
 **Requirements:**
 - Must provide clear utility to the customer
-- Higher rate limits than marketing messages
 - Should be relevant to the customer's relationship with your business
 
 **Examples:**
@@ -320,8 +324,9 @@ For account updates, order status, and other service-related messages.
 For verification codes and login confirmations.
 
 **Requirements:**
-- Must contain authentication codes or links
-- Very high rate limits
+- Cannot have a HEADER component
+- Body text is provided by Meta — do not supply custom body text
+- Must use OTP-type buttons
 - Automatically approved in most cases
 
 **Examples:**
@@ -335,18 +340,24 @@ For verification codes and login confirmations.
 Use `{{1}}`, `{{2}}`, `{{3}}`, etc. as placeholders for dynamic content:
 
 ### Body Variables
-- Maximum 10 variables per template body
 - Variables must be used in sequential order ({{1}}, {{2}}, {{3}})
 - Cannot be empty when sending messages
 
 ### Header Variables
 - Only one variable allowed in text headers: `{{1}}`
-- Media headers don't support variables (media is set per template)
+- Media headers don't support variables (media is set per template via asset handle)
 
 ### URL Variables
 - Dynamic URLs in buttons: `https://example.com/orders/{{1}}`
 - Must use HTTPS protocol
 - Variable can only be at the end of the URL
+
+## Template Name Rules
+
+Template names may contain **lowercase letters, numbers, and underscores only**. Spaces are automatically converted to underscores. Leading digits are allowed.
+
+**Valid examples:** `welcome_message`, `1st_order_promo`, `order_123_confirm`
+**Invalid examples:** `Welcome-Message`, `order.update`, `promo (summer)`
 
 ## Language Support
 
@@ -354,25 +365,25 @@ Templates must be created for each language you want to support:
 
 <CodeGroup>
 
-```bash cURL - Spanish Template
-curl -X POST "https://api.megasend.co.il/templates/create" \
+```bash cURL - Hebrew Template
+curl -X POST "https://api.megasend.co.il/templates/{instance_id}/create" \
   -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
     "name": "welcome_message",
     "category": "MARKETING",
-    "language": "es",
+    "language": "he",
     "components": [
       {
         "type": "BODY",
-        "text": "¡Bienvenido a {{1}}! Gracias por registrarte. Tu cuenta está activa y lista para usar."
+        "text": "ברוך הבא ל{{1}}! תודה שנרשמת. החשבון שלך פעיל ומוכן לשימוש."
       }
     ]
   }'
 ```
 
 ```javascript JavaScript - Multi-language
-const languages = ['en', 'es', 'fr', 'de'];
+const languages = ['en', 'he', 'ar', 'fr'];
 const templates = languages.map(lang => ({
   name: 'welcome_message',
   category: 'MARKETING',
@@ -396,6 +407,8 @@ for (const template of templates) {
 ### Supported Languages
 
 - **English** - `en`, `en_US`, `en_GB`
+- **Hebrew** - `he`
+- **Arabic** - `ar`
 - **Spanish** - `es`, `es_ES`, `es_MX`
 - **Portuguese** - `pt_BR`, `pt_PT`
 - **French** - `fr`
@@ -403,7 +416,6 @@ for (const template of templates) {
 - **Italian** - `it`
 - **Dutch** - `nl`
 - **Russian** - `ru`
-- **Arabic** - `ar`
 - **Hindi** - `hi`
 - **Chinese** - `zh_CN`, `zh_TW`
 - **Japanese** - `ja`
@@ -416,12 +428,12 @@ Provide examples for template variables to help with approval:
 <CodeGroup>
 
 ```bash cURL
-curl -X POST "https://api.megasend.co.il/templates/create" \
+curl -X POST "https://api.megasend.co.il/templates/{instance_id}/create" \
   -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
     "name": "shipping_notification",
-    "category": "UTILITY", 
+    "category": "UTILITY",
     "language": "en",
     "components": [
       {
@@ -464,19 +476,9 @@ Template creation returns the following response:
 
 ```json
 {
-  "id": "template_abc123def456",
+  "id": "1234567890123456",
   "status": "PENDING",
-  "name": "welcome_message",
-  "category": "MARKETING",
-  "language": "en",
-  "components": [
-    {
-      "type": "BODY",
-      "text": "Welcome to {{1}}! Thank you for signing up. Your account is now active and ready to use."
-    }
-  ],
-  "created_at": "2024-01-15T10:30:00Z",
-  "updated_at": "2024-01-15T10:30:00Z"
+  "category": "MARKETING"
 }
 ```
 
@@ -485,23 +487,102 @@ Template creation returns the following response:
 - **PENDING** - Submitted for WhatsApp review
 - **APPROVED** - Ready to use for sending messages
 - **REJECTED** - Not approved, requires modifications
-- **DISABLED** - Temporarily disabled due to policy violations
+- **PAUSED** - Temporarily paused due to low quality rating
+- **DISABLED** - Disabled due to policy violations
+
+## Upload Media for Templates
+
+Image and video header templates require a Meta asset handle obtained via the resumable upload API. Use `upload_type=template` (the default) to get a handle suitable for the `header_handle` field.
+
+<Note>
+This endpoint uses Meta's Resumable Upload API, which is different from the media upload used when sending messages. Always use `upload_type=template` when uploading media for template creation.
+</Note>
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST "https://api.megasend.co.il/templates/{instance_id}/upload-media?upload_type=template" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN" \
+  -F "file=@/path/to/header-image.jpg"
+```
+
+```javascript JavaScript
+const formData = new FormData();
+formData.append('file', document.getElementById('fileInput').files[0]);
+
+const response = await fetch(
+  'https://api.megasend.co.il/templates/{instance_id}/upload-media?upload_type=template',
+  {
+    method: 'POST',
+    headers: {
+      'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'
+    },
+    body: formData
+  }
+);
+
+const result = await response.json();
+// Use result.handle in your template's header_handle field
+```
+
+```python Python
+import requests
+
+with open('/path/to/header-image.jpg', 'rb') as f:
+    response = requests.post(
+        'https://api.megasend.co.il/templates/{instance_id}/upload-media',
+        params={'upload_type': 'template'},
+        headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'},
+        files={'file': f}
+    )
+
+result = response.json()
+asset_handle = result['handle']  # Use this in header_handle
+```
+
+</CodeGroup>
+
+### Upload Response
+
+```json
+{
+  "success": true,
+  "handle": "<ASSET_HANDLE>",
+  "id": "<UPLOAD_SESSION_ID>",
+  "upload_type": "template",
+  "media_type": "image",
+  "mime_type": "image/jpeg",
+  "filename": "header-image.jpg",
+  "size": 204800,
+  "message": "Use the 'handle' field in template creation's header_handle parameter"
+}
+```
+
+Use the `handle` value as the `header_handle` in the template component `example` when creating a template.
+
+### Supported File Types
+
+| Type | Formats | Max Size |
+|------|---------|----------|
+| Image | JPEG, PNG | 5 MB |
+| Video | MP4, 3GPP | 16 MB |
+| Document | PDF, DOC, DOCX, XLS, XLSX | 100 MB |
 
 ## Managing Templates
 
 ### List Templates
 
-Get all your templates:
+Get all templates for an instance:
 
 <CodeGroup>
 
 ```bash cURL
-curl -X GET "https://api.megasend.co.il/templates?status=APPROVED&limit=50" \
+curl -X GET "https://api.megasend.co.il/templates/{instance_id}/list?status=APPROVED&limit=50" \
   -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
 ```
 
 ```javascript JavaScript
-const response = await fetch('https://api.megasend.co.il/templates?status=APPROVED&limit=50', {
+const response = await fetch('https://api.megasend.co.il/templates/{instance_id}/list?status=APPROVED&limit=50', {
   headers: {
     'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'
   }
@@ -512,7 +593,8 @@ const templates = await response.json();
 
 ```python Python
 response = requests.get(
-    'https://api.megasend.co.il/templates?status=APPROVED&limit=50',
+    'https://api.megasend.co.il/templates/{instance_id}/list',
+    params={'status': 'APPROVED', 'limit': 50},
     headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'}
 )
 
@@ -523,17 +605,17 @@ templates = response.json()
 
 ### Get Template Details
 
-Retrieve a specific template:
+Retrieve a specific template by ID:
 
 <CodeGroup>
 
 ```bash cURL
-curl -X GET "https://api.megasend.co.il/templates/template_abc123def456" \
+curl -X GET "https://api.megasend.co.il/templates/{instance_id}/template/{template_id}" \
   -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
 ```
 
 ```javascript JavaScript
-const response = await fetch('https://api.megasend.co.il/templates/template_abc123def456', {
+const response = await fetch('https://api.megasend.co.il/templates/{instance_id}/template/{template_id}', {
   headers: {
     'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'
   }
@@ -546,12 +628,16 @@ const template = await response.json();
 
 ### Update Template
 
-Modify an existing template (creates a new version):
+Modify an existing template by ID. This is a POST request, not PUT.
+
+<Note>
+Meta enforces a 24-hour cooldown on editing approved templates. Use the `/templates/{instance_id}/template/{template_name}/edit-status` endpoint to check eligibility before attempting an update.
+</Note>
 
 <CodeGroup>
 
 ```bash cURL
-curl -X PUT "https://api.megasend.co.il/templates/template_abc123def456" \
+curl -X POST "https://api.megasend.co.il/templates/{instance_id}/update/{template_id}" \
   -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -574,36 +660,60 @@ const updatedTemplate = {
   ]
 };
 
-const response = await fetch('https://api.megasend.co.il/templates/template_abc123def456', {
-  method: 'PUT',
+const response = await fetch('https://api.megasend.co.il/templates/{instance_id}/update/{template_id}', {
+  method: 'POST',
   headers: {
     'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN',
     'Content-Type': 'application/json'
   },
   body: JSON.stringify(updatedTemplate)
 });
+
+const result = await response.json();
+// { "success": true }
 ```
 
 </CodeGroup>
 
 ### Delete Template
 
-Remove a template from your account:
+Remove a template from your account. Pass the template name and/or template ID as query parameters:
 
 <CodeGroup>
 
 ```bash cURL
-curl -X DELETE "https://api.megasend.co.il/templates/template_abc123def456" \
+curl -X DELETE "https://api.megasend.co.il/templates/{instance_id}/delete?template_name=welcome_message&template_id=1234567890123456" \
   -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
 ```
 
 ```javascript JavaScript
-const response = await fetch('https://api.megasend.co.il/templates/template_abc123def456', {
+const params = new URLSearchParams({
+  template_name: 'welcome_message',
+  template_id: '1234567890123456'
+});
+
+const response = await fetch(`https://api.megasend.co.il/templates/{instance_id}/delete?${params}`, {
   method: 'DELETE',
   headers: {
     'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'
   }
 });
+
+const result = await response.json();
+// { "success": true }
+```
+
+```python Python
+response = requests.delete(
+    'https://api.megasend.co.il/templates/{instance_id}/delete',
+    params={
+        'template_name': 'welcome_message',
+        'template_id': '1234567890123456'
+    },
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'}
+)
+
+result = response.json()
 ```
 
 </CodeGroup>
@@ -612,15 +722,15 @@ const response = await fetch('https://api.megasend.co.il/templates/template_abc1
 
 WhatsApp assigns quality ratings to templates based on user engagement:
 
-### High Quality ⭐⭐⭐
+### High Quality
 - **Benefits**: Higher rate limits, priority delivery
 - **Requirements**: Low block rate, high delivery rate, positive user engagement
 
-### Medium Quality ⭐⭐
+### Medium Quality
 - **Benefits**: Standard rate limits
 - **Requirements**: Average engagement metrics
 
-### Low Quality ⭐
+### Low Quality
 - **Limitations**: Reduced rate limits, limited delivery
 - **Causes**: High block rates, low engagement, user complaints
 
@@ -665,8 +775,8 @@ WhatsApp assigns quality ratings to templates based on user engagement:
 
 3. **Media Guidelines**
    - Use high-quality images
-   - Ensure HTTPS URLs
-   - Test media accessibility
+   - Upload via `upload-media` with `upload_type=template` to get a valid asset handle
+   - Images: JPEG or PNG, max 5 MB
 
 ## Approval Process
 
@@ -698,7 +808,7 @@ If a template is rejected:
 
 1. Review the rejection reason
 2. Make necessary corrections
-3. Resubmit as a new template
+3. Resubmit using the create endpoint with the same name (creates a new version)
 4. Wait for re-review
 
 ## Error Handling
@@ -707,7 +817,7 @@ Common template creation errors:
 
 ```javascript
 try {
-  const response = await fetch('https://api.megasend.co.il/templates/create', {
+  const response = await fetch('https://api.megasend.co.il/templates/{instance_id}/create', {
     method: 'POST',
     headers: {
       'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN',
@@ -718,7 +828,7 @@ try {
 
   if (!response.ok) {
     const error = await response.json();
-    
+
     switch (response.status) {
       case 400:
         console.error('Invalid template format:', error.detail);
@@ -736,8 +846,8 @@ try {
   }
 
   const result = await response.json();
-  console.log('Template created:', result.id);
-  
+  console.log('Template created, Meta ID:', result.id, 'Status:', result.status);
+
 } catch (error) {
   console.error('Network error:', error.message);
 }
@@ -748,14 +858,17 @@ try {
 | Code | Message | Solution |
 |------|---------|----------|
 | 400 | Invalid component format | Check component structure |
+| 400 | Invalid upload_type | Use 'template' or 'message' for upload-media |
 | 409 | Template name already exists | Use a different name |
-| 422 | Too many variables | Reduce variable count (max 10) |
+| 413 | File too large | Check size limits per media type |
+| 415 | Unsupported file type | Use JPEG/PNG for images, MP4/3GPP for video |
 | 422 | Invalid variable sequence | Use sequential numbering {{1}}, {{2}} |
 | 422 | Unsupported language | Use supported language codes |
+| 422 | Invalid category | Use MARKETING, UTILITY, or AUTHENTICATION only |
 
 ## Next Steps
 
 - [Send template messages](/messages/send#template-messages) to your customers
 - [Use templates in bulk messaging](/messages/bulk-send#bulk-template-messages) campaigns
 - [Set up webhooks](/webhooks/setup) to track template status changes
-- [Monitor template performance](/analytics/templates) with analytics 
+- [Monitor template performance](/analytics/templates) with analytics

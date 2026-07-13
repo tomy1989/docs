@@ -1,0 +1,1303 @@
+---
+title: 'Automation Flows'
+description: 'Create, manage, and monitor node-based automation flows that trigger on incoming messages, webhooks, or schedules'
+---
+
+# Automation Flows
+
+The MegaSend Flows API lets you build node-based automation workflows that respond to incoming messages, webhooks, postbacks, or timers. Each flow is a directed graph of nodes connected by edges. When a trigger fires, the engine walks the graph from the single `start` node, executing each node in sequence until it reaches a terminal node or the end of the graph.
+
+## Overview
+
+- **Trigger types** — `incoming_message`, `webhook`, `manual`, `scheduled`, `flow_response`, `postback_instagram`, `postback_messenger`
+- **Execution** — flows run asynchronously in the `flows` Celery queue with full execution tracking
+- **Multi-platform** — supported node types differ by platform (`whatsapp`, `instagram`, `telnyx`); query `/flows/supported-nodes` before building
+- **Conflict detection** — two active flows cannot share the same trigger on the same instance; use `/flows/check-trigger-conflicts` to validate before saving
+
+---
+
+## Node & Edge Structure
+
+A flow is made up of **nodes** and **edges**.
+
+### Node
+
+| Field | Type | Description |
+|---|---|---|
+| `id` | string | Unique node identifier within the flow (e.g. `dndnode_1`) |
+| `type` | string | Node type (see table below) |
+| `position` | `{x: float, y: float}` | Canvas position (for visual editor only) |
+| `data` | object | Node-type-specific configuration |
+
+### Supported node types
+
+| Type | Platforms | Description |
+|---|---|---|
+| `start` | all | Entry point — defines the trigger matching rule |
+| `action` | all | Send a plain text message |
+| `template_action` | WhatsApp | Send a WhatsApp template message |
+| `condition` | all | Branch on a value, contact custom field, or segment membership |
+| `delay` | all | Pause for a configured duration then continue. Primary data fields: `delayValue` (int) and `delayType` (`"seconds"` or `"days"`). Also accepts `duration` + `unit` (`"minutes"`, `"hours"`, `"days"`) as a fallback. Clamped to 1 second–7 days. |
+| `wait_for_reply` | all | Pause until the contact replies (or timeout) |
+| `interactive_buttons` | WhatsApp, Instagram | Send buttons (WhatsApp 1-3 buttons; mapped to Instagram quick replies on IG) |
+| `interactive_list` | WhatsApp only | Send an interactive list message |
+| `label_action` | all | Assign or unassign contact labels |
+| `contact_update` | all | Add a note/update to the contact record |
+| `block_action` | all | Block the contact from receiving further messages |
+| `cooldown` | all | Terminal node — prevents the contact from re-triggering this flow for a duration |
+| `wa_notify` | WhatsApp | Send a template message to a configured recipient (e.g. owner), not the flow contact |
+| `ai_response` | all | Generate and send an AI-driven reply |
+| `api_request` | all | Make an outbound HTTP request |
+| `jump` | all | Jump to another node in the flow |
+| `ig_generic_template` | Instagram | Instagram carousel (generic template) |
+| `ig_product_template` | Instagram | Instagram product card |
+| `ig_media_share` | Instagram | Share an Instagram media object |
+| `set_custom_field` | all | Set or clear a contact custom field (key/value pair stored in the contact's custom fields JSONB). Set `clear: true` to remove the key instead of setting it. |
+
+### Edge
+
+| Field | Type | Description |
+|---|---|---|
+| `id` | string | Unique edge identifier |
+| `source` | string | Source node ID |
+| `target` | string | Target node ID |
+| `sourceHandle` | string (optional) | Handle name on source (e.g. `"true"` / `"false"` for condition branches) |
+| `targetHandle` | string (optional) | Handle name on target |
+
+### Minimal flow example
+
+A simple "reply to any message with a welcome text" flow has two nodes and one edge:
+
+```json
+{
+  "nodes": [
+    {
+      "id": "start_1",
+      "type": "start",
+      "position": { "x": 100, "y": 100 },
+      "data": { "nodeType": "text_message_start", "type": "any" }
+    },
+    {
+      "id": "action_1",
+      "type": "action",
+      "position": { "x": 100, "y": 250 },
+      "data": { "message": "Welcome! How can we help you today?" }
+    }
+  ],
+  "edges": [
+    { "id": "e_start_action", "source": "start_1", "target": "action_1" }
+  ]
+}
+```
+
+---
+
+## Create Flow
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST "https://api.megasend.co.il/flows/" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "instance_id": "123e4567-e89b-12d3-a456-426614174000",
+    "name": "Welcome Flow",
+    "description": "Greet every new contact",
+    "trigger_type": "incoming_message",
+    "trigger_config": { "match_type": "any" },
+    "is_active": false,
+    "priority": 0,
+    "nodes": [
+      {
+        "id": "start_1",
+        "type": "start",
+        "position": { "x": 100, "y": 100 },
+        "data": { "nodeType": "text_message_start", "type": "any" }
+      },
+      {
+        "id": "action_1",
+        "type": "action",
+        "position": { "x": 100, "y": 250 },
+        "data": { "message": "Welcome! How can we help you today?" }
+      }
+    ],
+    "edges": [
+      { "id": "e1", "source": "start_1", "target": "action_1" }
+    ]
+  }'
+```
+
+```javascript JavaScript
+const response = await fetch('https://api.megasend.co.il/flows/', {
+  method: 'POST',
+  headers: {
+    'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    instance_id: '123e4567-e89b-12d3-a456-426614174000',
+    name: 'Welcome Flow',
+    trigger_type: 'incoming_message',
+    trigger_config: { match_type: 'any' },
+    is_active: false,
+    priority: 0,
+    nodes: [
+      {
+        id: 'start_1',
+        type: 'start',
+        position: { x: 100, y: 100 },
+        data: { nodeType: 'text_message_start', type: 'any' }
+      },
+      {
+        id: 'action_1',
+        type: 'action',
+        position: { x: 100, y: 250 },
+        data: { message: 'Welcome! How can we help you today?' }
+      }
+    ],
+    edges: [{ id: 'e1', source: 'start_1', target: 'action_1' }]
+  })
+});
+
+const flow = await response.json();
+console.log('Flow ID:', flow.id);
+```
+
+```python Python
+import requests
+
+response = requests.post(
+    'https://api.megasend.co.il/flows/',
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'},
+    json={
+        'instance_id': '123e4567-e89b-12d3-a456-426614174000',
+        'name': 'Welcome Flow',
+        'trigger_type': 'incoming_message',
+        'trigger_config': {'match_type': 'any'},
+        'is_active': False,
+        'priority': 0,
+        'nodes': [
+            {
+                'id': 'start_1',
+                'type': 'start',
+                'position': {'x': 100, 'y': 100},
+                'data': {'nodeType': 'text_message_start', 'type': 'any'}
+            },
+            {
+                'id': 'action_1',
+                'type': 'action',
+                'position': {'x': 100, 'y': 250},
+                'data': {'message': 'Welcome! How can we help you today?'}
+            }
+        ],
+        'edges': [{'id': 'e1', 'source': 'start_1', 'target': 'action_1'}]
+    }
+)
+
+flow = response.json()
+print('Flow ID:', flow['id'])
+```
+
+</CodeGroup>
+
+### Request body
+
+<ParamField body="instance_id" type="string (UUID)" required>
+  The WhatsApp/Instagram/Telnyx instance this flow belongs to.
+</ParamField>
+
+<ParamField body="name" type="string" required>
+  Flow name (1–255 characters).
+</ParamField>
+
+<ParamField body="description" type="string">
+  Optional description.
+</ParamField>
+
+<ParamField body="nodes" type="array" required>
+  Array of flow nodes. Must contain exactly one node with `type: "start"`.
+</ParamField>
+
+<ParamField body="edges" type="array">
+  Array of edge connections between nodes. Defaults to `[]`.
+</ParamField>
+
+<ParamField body="trigger_type" type="string">
+  One of `incoming_message`, `webhook`, `manual`, `scheduled`, `flow_response`, `postback_instagram`, `postback_messenger`. Defaults to `incoming_message`.
+</ParamField>
+
+<ParamField body="trigger_config" type="object">
+  Trigger-specific configuration. For `incoming_message`, use `match_type` (`any`, `contains`, `equals`, `starts_with`) and `match_value`.
+</ParamField>
+
+<ParamField body="is_active" type="boolean">
+  Whether the flow is active on creation. Defaults to `false`.
+</ParamField>
+
+<ParamField body="priority" type="integer">
+  Execution priority when multiple flows match the same trigger. Higher value runs first. Defaults to `0`.
+</ParamField>
+
+### Response
+
+<ResponseField name="id" type="string (UUID)">
+  Flow ID.
+</ResponseField>
+
+<ResponseField name="user_id" type="string (UUID)">
+  Owner user ID.
+</ResponseField>
+
+<ResponseField name="instance_id" type="string (UUID)">
+  Instance ID.
+</ResponseField>
+
+<ResponseField name="name" type="string">
+  Flow name.
+</ResponseField>
+
+<ResponseField name="description" type="string | null">
+  Flow description.
+</ResponseField>
+
+<ResponseField name="nodes" type="array">
+  Flow node definitions.
+</ResponseField>
+
+<ResponseField name="edges" type="array">
+  Flow edge definitions.
+</ResponseField>
+
+<ResponseField name="trigger_type" type="string">
+  Trigger type.
+</ResponseField>
+
+<ResponseField name="trigger_config" type="object | null">
+  Trigger configuration.
+</ResponseField>
+
+<ResponseField name="is_active" type="boolean">
+  Whether the flow is currently active.
+</ResponseField>
+
+<ResponseField name="priority" type="integer">
+  Execution priority.
+</ResponseField>
+
+<ResponseField name="execution_count" type="integer">
+  Total executions of this flow.
+</ResponseField>
+
+<ResponseField name="success_count" type="integer">
+  Successful executions.
+</ResponseField>
+
+<ResponseField name="error_count" type="integer">
+  Failed executions.
+</ResponseField>
+
+<ResponseField name="last_executed_at" type="string (ISO 8601) | null">
+  Timestamp of the most recent execution.
+</ResponseField>
+
+<ResponseField name="is_deleted" type="boolean">
+  Whether the flow has been soft-deleted.
+</ResponseField>
+
+<ResponseField name="node_count" type="integer">
+  Computed count of nodes in the flow.
+</ResponseField>
+
+<ResponseField name="created_at" type="string (ISO 8601)">
+  Creation timestamp.
+</ResponseField>
+
+<ResponseField name="updated_at" type="string (ISO 8601)">
+  Last update timestamp.
+</ResponseField>
+
+```json
+{
+  "id": "123e4567-e89b-12d3-a456-426614174000",
+  "user_id": "123e4567-e89b-12d3-a456-426614174001",
+  "instance_id": "123e4567-e89b-12d3-a456-426614174002",
+  "name": "Welcome Flow",
+  "description": "Greet every new contact",
+  "nodes": [...],
+  "edges": [...],
+  "trigger_type": "incoming_message",
+  "trigger_config": { "match_type": "any" },
+  "is_active": false,
+  "priority": 0,
+  "execution_count": 0,
+  "success_count": 0,
+  "error_count": 0,
+  "last_executed_at": null,
+  "is_deleted": false,
+  "node_count": 2,
+  "created_at": "2026-07-13T10:00:00Z",
+  "updated_at": "2026-07-13T10:00:00Z"
+}
+```
+
+---
+
+## List Flows
+
+<CodeGroup>
+
+```bash cURL
+curl -X GET "https://api.megasend.co.il/flows/?instance_id=123e4567-e89b-12d3-a456-426614174000&is_active=true&page=1&page_size=10" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
+```
+
+```javascript JavaScript
+const params = new URLSearchParams({
+  instance_id: '123e4567-e89b-12d3-a456-426614174000',
+  is_active: 'true',
+  page: '1',
+  page_size: '10'
+});
+
+const response = await fetch(`https://api.megasend.co.il/flows/?${params}`, {
+  headers: { 'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN' }
+});
+
+const data = await response.json();
+console.log(`${data.total} flows found`);
+```
+
+```python Python
+import requests
+
+response = requests.get(
+    'https://api.megasend.co.il/flows/',
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'},
+    params={
+        'instance_id': '123e4567-e89b-12d3-a456-426614174000',
+        'is_active': True,
+        'page': 1,
+        'page_size': 10
+    }
+)
+
+data = response.json()
+print(f"{data['total']} flows found")
+```
+
+</CodeGroup>
+
+### Query parameters
+
+<ParamField query="instance_id" type="string (UUID)">
+  Filter flows to a specific instance.
+</ParamField>
+
+<ParamField query="is_active" type="boolean">
+  Filter by activation status.
+</ParamField>
+
+<ParamField query="page" type="integer">
+  Page number (minimum 1). Defaults to `1`.
+</ParamField>
+
+<ParamField query="page_size" type="integer">
+  Items per page (1–100). Defaults to `10`.
+</ParamField>
+
+### Response
+
+```json
+{
+  "flows": [...],
+  "total": 25,
+  "page": 1,
+  "page_size": 10
+}
+```
+
+---
+
+## Get Flow
+
+```bash
+GET /flows/{flow_id}
+```
+
+<CodeGroup>
+
+```bash cURL
+curl -X GET "https://api.megasend.co.il/flows/123e4567-e89b-12d3-a456-426614174000" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
+```
+
+```javascript JavaScript
+const response = await fetch(
+  'https://api.megasend.co.il/flows/123e4567-e89b-12d3-a456-426614174000',
+  { headers: { 'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN' } }
+);
+const flow = await response.json();
+```
+
+```python Python
+import requests
+
+response = requests.get(
+    'https://api.megasend.co.il/flows/123e4567-e89b-12d3-a456-426614174000',
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'}
+)
+flow = response.json()
+```
+
+</CodeGroup>
+
+Returns a single `FlowResponse` object. Returns `404` if the flow does not exist or belongs to a different user.
+
+---
+
+## Update Flow
+
+```bash
+PUT /flows/{flow_id}
+```
+
+All fields are optional — only send what you want to change. If `nodes` or `edges` are included, the full graph is re-validated (exactly one start node, no orphaned nodes, no circular dependencies).
+
+<CodeGroup>
+
+```bash cURL
+curl -X PUT "https://api.megasend.co.il/flows/123e4567-e89b-12d3-a456-426614174000" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Updated Welcome Flow",
+    "priority": 5
+  }'
+```
+
+```javascript JavaScript
+const response = await fetch(
+  'https://api.megasend.co.il/flows/123e4567-e89b-12d3-a456-426614174000',
+  {
+    method: 'PUT',
+    headers: {
+      'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN',
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ name: 'Updated Welcome Flow', priority: 5 })
+  }
+);
+const flow = await response.json();
+```
+
+```python Python
+import requests
+
+response = requests.put(
+    'https://api.megasend.co.il/flows/123e4567-e89b-12d3-a456-426614174000',
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'},
+    json={'name': 'Updated Welcome Flow', 'priority': 5}
+)
+flow = response.json()
+```
+
+</CodeGroup>
+
+### Updatable fields
+
+<ParamField body="name" type="string">
+  New flow name.
+</ParamField>
+
+<ParamField body="description" type="string">
+  New description.
+</ParamField>
+
+<ParamField body="nodes" type="array">
+  Replacement node list (re-validated).
+</ParamField>
+
+<ParamField body="edges" type="array">
+  Replacement edge list (re-validated).
+</ParamField>
+
+<ParamField body="trigger_type" type="string">
+  New trigger type.
+</ParamField>
+
+<ParamField body="trigger_config" type="object">
+  New trigger configuration.
+</ParamField>
+
+<ParamField body="is_active" type="boolean">
+  Change activation status.
+</ParamField>
+
+<ParamField body="priority" type="integer">
+  New execution priority.
+</ParamField>
+
+Returns an updated `FlowResponse`.
+
+---
+
+## Delete Flow
+
+```bash
+DELETE /flows/{flow_id}
+```
+
+Soft-deletes the flow (`is_deleted = true`) and deactivates it. Execution history is preserved. The flow cannot be recovered via the API.
+
+<CodeGroup>
+
+```bash cURL
+curl -X DELETE "https://api.megasend.co.il/flows/123e4567-e89b-12d3-a456-426614174000" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
+```
+
+```javascript JavaScript
+await fetch(
+  'https://api.megasend.co.il/flows/123e4567-e89b-12d3-a456-426614174000',
+  { method: 'DELETE', headers: { 'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN' } }
+);
+```
+
+```python Python
+import requests
+
+requests.delete(
+    'https://api.megasend.co.il/flows/123e4567-e89b-12d3-a456-426614174000',
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'}
+)
+```
+
+</CodeGroup>
+
+---
+
+## Activate Flow
+
+```bash
+POST /flows/{flow_id}/activate
+```
+
+Sets `is_active = true`. The flow immediately begins matching incoming triggers. Returns a `409` if another active flow on the same instance has a conflicting trigger configuration — use [Check Trigger Conflicts](#check-trigger-conflicts) first.
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST "https://api.megasend.co.il/flows/123e4567-e89b-12d3-a456-426614174000/activate" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
+```
+
+```javascript JavaScript
+const response = await fetch(
+  'https://api.megasend.co.il/flows/123e4567-e89b-12d3-a456-426614174000/activate',
+  { method: 'POST', headers: { 'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN' } }
+);
+const flow = await response.json();
+console.log('Active:', flow.is_active); // true
+```
+
+```python Python
+import requests
+
+response = requests.post(
+    'https://api.megasend.co.il/flows/123e4567-e89b-12d3-a456-426614174000/activate',
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'}
+)
+flow = response.json()
+```
+
+</CodeGroup>
+
+Returns an updated `FlowResponse` with `is_active: true`.
+
+---
+
+## Deactivate Flow
+
+```bash
+POST /flows/{flow_id}/deactivate
+```
+
+Sets `is_active = false`. The flow stops matching new triggers immediately. Executions already in progress are not interrupted.
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST "https://api.megasend.co.il/flows/123e4567-e89b-12d3-a456-426614174000/deactivate" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
+```
+
+```javascript JavaScript
+const response = await fetch(
+  'https://api.megasend.co.il/flows/123e4567-e89b-12d3-a456-426614174000/deactivate',
+  { method: 'POST', headers: { 'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN' } }
+);
+const flow = await response.json();
+```
+
+```python Python
+import requests
+
+response = requests.post(
+    'https://api.megasend.co.il/flows/123e4567-e89b-12d3-a456-426614174000/deactivate',
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'}
+)
+```
+
+</CodeGroup>
+
+Returns an updated `FlowResponse` with `is_active: false`.
+
+---
+
+## Get Flow Executions
+
+```bash
+GET /flows/{flow_id}/executions
+```
+
+Returns the execution history for a flow, ordered newest first.
+
+<CodeGroup>
+
+```bash cURL
+curl -X GET "https://api.megasend.co.il/flows/123e4567-e89b-12d3-a456-426614174000/executions?page=1&page_size=20" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
+```
+
+```javascript JavaScript
+const response = await fetch(
+  'https://api.megasend.co.il/flows/123e4567-e89b-12d3-a456-426614174000/executions?page=1&page_size=20',
+  { headers: { 'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN' } }
+);
+const data = await response.json();
+```
+
+```python Python
+import requests
+
+response = requests.get(
+    'https://api.megasend.co.il/flows/123e4567-e89b-12d3-a456-426614174000/executions',
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'},
+    params={'page': 1, 'page_size': 20}
+)
+data = response.json()
+```
+
+</CodeGroup>
+
+### Query parameters
+
+<ParamField query="page" type="integer">
+  Page number (minimum 1). Defaults to `1`.
+</ParamField>
+
+<ParamField query="page_size" type="integer">
+  Items per page (1–100). Defaults to `20`.
+</ParamField>
+
+### Execution response fields
+
+<ResponseField name="id" type="string (UUID)">
+  Execution ID.
+</ResponseField>
+
+<ResponseField name="flow_id" type="string (UUID)">
+  Parent flow ID.
+</ResponseField>
+
+<ResponseField name="user_id" type="string (UUID)">
+  Owner user ID.
+</ResponseField>
+
+<ResponseField name="instance_id" type="string (UUID)">
+  Instance ID.
+</ResponseField>
+
+<ResponseField name="contact_phone" type="string | null">
+  Phone number of the contact that triggered the flow.
+</ResponseField>
+
+<ResponseField name="contact_bsuid" type="string | null">
+  Business-scoped user ID (Instagram / Messenger contacts).
+</ResponseField>
+
+<ResponseField name="contact_username" type="string | null">
+  Contact username (Instagram / TikTok contacts).
+</ResponseField>
+
+<ResponseField name="contact_id" type="string (UUID) | null">
+  Contact record ID.
+</ResponseField>
+
+<ResponseField name="trigger_message_id" type="string (UUID) | null">
+  ID of the message that triggered the flow.
+</ResponseField>
+
+<ResponseField name="trigger_message_content" type="string | null">
+  The message text that triggered the flow.
+</ResponseField>
+
+<ResponseField name="status" type="string">
+  `running`, `completed`, or `failed`.
+</ResponseField>
+
+<ResponseField name="current_node_id" type="string | null">
+  ID of the node currently being executed (set while status is `running`).
+</ResponseField>
+
+<ResponseField name="execution_context" type="object">
+  Internal execution state dictionary (variables, reply payloads, etc.).
+</ResponseField>
+
+<ResponseField name="visited_nodes" type="array of strings">
+  Ordered list of node IDs visited during execution.
+</ResponseField>
+
+<ResponseField name="nodes_executed" type="integer">
+  Total nodes executed.
+</ResponseField>
+
+<ResponseField name="actions_executed" type="integer">
+  Total action nodes executed.
+</ResponseField>
+
+<ResponseField name="messages_sent" type="integer">
+  Messages sent during this execution.
+</ResponseField>
+
+<ResponseField name="started_at" type="string (ISO 8601)">
+  Execution start time.
+</ResponseField>
+
+<ResponseField name="completed_at" type="string (ISO 8601) | null">
+  Completion time.
+</ResponseField>
+
+<ResponseField name="execution_time_ms" type="integer | null">
+  Total execution duration in milliseconds.
+</ResponseField>
+
+<ResponseField name="error_message" type="string | null">
+  Error detail if the execution failed.
+</ResponseField>
+
+<ResponseField name="error_node_id" type="string | null">
+  ID of the node where the failure occurred.
+</ResponseField>
+
+<ResponseField name="created_at" type="string (ISO 8601)">
+  Record creation timestamp.
+</ResponseField>
+
+<ResponseField name="updated_at" type="string (ISO 8601)">
+  Record last-updated timestamp.
+</ResponseField>
+
+---
+
+## Get Flow Stats
+
+```bash
+GET /flows/{flow_id}/stats
+```
+
+Returns aggregate performance metrics for a flow.
+
+<CodeGroup>
+
+```bash cURL
+curl -X GET "https://api.megasend.co.il/flows/123e4567-e89b-12d3-a456-426614174000/stats" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
+```
+
+```javascript JavaScript
+const response = await fetch(
+  'https://api.megasend.co.il/flows/123e4567-e89b-12d3-a456-426614174000/stats',
+  { headers: { 'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN' } }
+);
+const stats = await response.json();
+console.log('Success rate:', stats.successful_executions / stats.total_executions);
+```
+
+```python Python
+import requests
+
+response = requests.get(
+    'https://api.megasend.co.il/flows/123e4567-e89b-12d3-a456-426614174000/stats',
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'}
+)
+stats = response.json()
+```
+
+</CodeGroup>
+
+### Response
+
+<ResponseField name="flow_id" type="string (UUID)">
+  Flow ID.
+</ResponseField>
+
+<ResponseField name="total_executions" type="integer">
+  Total number of executions.
+</ResponseField>
+
+<ResponseField name="successful_executions" type="integer">
+  Number of completed executions.
+</ResponseField>
+
+<ResponseField name="failed_executions" type="integer">
+  Number of failed executions.
+</ResponseField>
+
+<ResponseField name="average_execution_time_ms" type="float | null">
+  Average execution time in milliseconds across completed executions. `null` when there are no completed executions yet.
+</ResponseField>
+
+<ResponseField name="last_executed_at" type="string (ISO 8601) | null">
+  Timestamp of the most recent execution.
+</ResponseField>
+
+```json
+{
+  "flow_id": "123e4567-e89b-12d3-a456-426614174000",
+  "total_executions": 150,
+  "successful_executions": 145,
+  "failed_executions": 5,
+  "average_execution_time_ms": 1250.5,
+  "last_executed_at": "2026-07-13T10:30:00Z"
+}
+```
+
+---
+
+## Get Execution Details
+
+```bash
+GET /flows/executions/{execution_id}
+```
+
+Returns the full record for a single execution including its context and visited nodes.
+
+<CodeGroup>
+
+```bash cURL
+curl -X GET "https://api.megasend.co.il/flows/executions/abc12345-e89b-12d3-a456-426614174000" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
+```
+
+```javascript JavaScript
+const response = await fetch(
+  'https://api.megasend.co.il/flows/executions/abc12345-e89b-12d3-a456-426614174000',
+  { headers: { 'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN' } }
+);
+const execution = await response.json();
+```
+
+```python Python
+import requests
+
+response = requests.get(
+    'https://api.megasend.co.il/flows/executions/abc12345-e89b-12d3-a456-426614174000',
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'}
+)
+execution = response.json()
+```
+
+</CodeGroup>
+
+Returns a single `FlowExecutionResponse` object. Returns `404` if not found or not owned by the authenticated user.
+
+---
+
+## Get Execution Logs
+
+```bash
+GET /flows/executions/{execution_id}/logs
+```
+
+Returns node-level debug logs for a specific execution in chronological order.
+
+<CodeGroup>
+
+```bash cURL
+curl -X GET "https://api.megasend.co.il/flows/executions/abc12345-e89b-12d3-a456-426614174000/logs" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
+```
+
+```javascript JavaScript
+const response = await fetch(
+  'https://api.megasend.co.il/flows/executions/abc12345-e89b-12d3-a456-426614174000/logs',
+  { headers: { 'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN' } }
+);
+const data = await response.json();
+data.logs.forEach(log => console.log(log));
+```
+
+```python Python
+import requests
+
+response = requests.get(
+    'https://api.megasend.co.il/flows/executions/abc12345-e89b-12d3-a456-426614174000/logs',
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'}
+)
+data = response.json()
+```
+
+</CodeGroup>
+
+### Response
+
+```json
+{
+  "execution_id": "abc12345-e89b-12d3-a456-426614174000",
+  "logs": [...],
+  "total_logs": 8
+}
+```
+
+---
+
+## Get Supported Nodes
+
+```bash
+GET /flows/supported-nodes?platform=whatsapp
+```
+
+Returns the list of node types available for a given platform. Call this when opening the flow builder to hide nodes that are not supported on the instance's platform.
+
+<CodeGroup>
+
+```bash cURL
+curl -X GET "https://api.megasend.co.il/flows/supported-nodes?platform=instagram" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
+```
+
+```javascript JavaScript
+const response = await fetch(
+  'https://api.megasend.co.il/flows/supported-nodes?platform=instagram',
+  { headers: { 'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN' } }
+);
+const data = await response.json();
+```
+
+```python Python
+import requests
+
+response = requests.get(
+    'https://api.megasend.co.il/flows/supported-nodes',
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'},
+    params={'platform': 'instagram'}
+)
+data = response.json()
+```
+
+</CodeGroup>
+
+### Query parameters
+
+<ParamField query="platform" type="string">
+  `whatsapp` (default), `instagram`, or `telnyx`.
+</ParamField>
+
+### Response (WhatsApp)
+
+The WhatsApp response includes all node types plus metadata about which are hidden or remapped on Instagram:
+
+```json
+{
+  "platform": "whatsapp",
+  "nodes": [
+    "start", "action", "template_action", "condition", "delay",
+    "block_action", "interactive_buttons", "interactive_list",
+    "label_action", "contact_update", "api_request", "jump",
+    "ai_response", "cooldown", "wa_notify", "wait_for_reply"
+  ],
+  "hidden_on_instagram": ["template_action", "interactive_list", "wa_notify"],
+  "mapped_on_instagram": { "interactive_buttons": "quick_replies (max 13)" }
+}
+```
+
+### Response (Telnyx)
+
+Telnyx (carrier SMS/MMS) supports plain text and AI response only. The response includes a `hidden_on_telnyx` list instead of the Instagram metadata fields:
+
+```json
+{
+  "platform": "telnyx",
+  "nodes": [
+    "start", "action", "condition", "delay", "block_action",
+    "label_action", "contact_update", "api_request", "jump",
+    "ai_response", "cooldown", "wait_for_reply"
+  ],
+  "hidden_on_telnyx": [
+    "template_action", "interactive_buttons", "interactive_list", "wa_notify",
+    "ig_generic_template", "ig_product_template", "ig_media_share"
+  ]
+}
+```
+
+---
+
+## Get Builder Labels
+
+```bash
+GET /flows/builder/labels?instance_id={instance_id}
+```
+
+Returns available contact labels for the `label_action` node selector in the flow builder.
+
+<CodeGroup>
+
+```bash cURL
+curl -X GET "https://api.megasend.co.il/flows/builder/labels?instance_id=123e4567-e89b-12d3-a456-426614174000" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
+```
+
+```javascript JavaScript
+const response = await fetch(
+  'https://api.megasend.co.il/flows/builder/labels?instance_id=123e4567-e89b-12d3-a456-426614174000',
+  { headers: { 'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN' } }
+);
+const data = await response.json();
+```
+
+```python Python
+import requests
+
+response = requests.get(
+    'https://api.megasend.co.il/flows/builder/labels',
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'},
+    params={'instance_id': '123e4567-e89b-12d3-a456-426614174000'}
+)
+data = response.json()
+```
+
+</CodeGroup>
+
+### Query parameters
+
+<ParamField query="instance_id" type="string (UUID)" required>
+  The instance whose labels should be returned.
+</ParamField>
+
+### Response
+
+```json
+{
+  "instance_id": "123e4567-e89b-12d3-a456-426614174000",
+  "labels": [
+    {
+      "id": "label-uuid",
+      "name": "VIP",
+      "color_hex": "#FFD700",
+      "description": "High-value customers",
+      "usage_count": 42
+    }
+  ],
+  "total": 1
+}
+```
+
+---
+
+## Check Trigger Conflicts
+
+```bash
+POST /flows/check-trigger-conflicts
+```
+
+Check whether a trigger configuration conflicts with an existing active flow before saving or activating. Call this proactively from the flow builder to surface conflicts before the user attempts to activate.
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST "https://api.megasend.co.il/flows/check-trigger-conflicts" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "instance_id": "123e4567-e89b-12d3-a456-426614174000",
+    "trigger_type": "incoming_message",
+    "trigger_config": { "match_type": "contains", "match_value": "hello", "case_sensitive": false }
+  }'
+```
+
+```javascript JavaScript
+const response = await fetch('https://api.megasend.co.il/flows/check-trigger-conflicts', {
+  method: 'POST',
+  headers: {
+    'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    instance_id: '123e4567-e89b-12d3-a456-426614174000',
+    trigger_type: 'incoming_message',
+    trigger_config: { match_type: 'contains', match_value: 'hello', case_sensitive: false }
+  })
+});
+
+const result = await response.json();
+if (result.has_conflict) {
+  console.warn('Conflict:', result.error_message);
+}
+```
+
+```python Python
+import requests
+
+response = requests.post(
+    'https://api.megasend.co.il/flows/check-trigger-conflicts',
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'},
+    json={
+        'instance_id': '123e4567-e89b-12d3-a456-426614174000',
+        'trigger_type': 'incoming_message',
+        'trigger_config': {'match_type': 'contains', 'match_value': 'hello', 'case_sensitive': False}
+    }
+)
+result = response.json()
+```
+
+</CodeGroup>
+
+### Request body
+
+<ParamField body="instance_id" type="string (UUID)" required>
+  Instance to check conflicts against.
+</ParamField>
+
+<ParamField body="trigger_type" type="string">
+  Trigger type to check. Defaults to `incoming_message`.
+</ParamField>
+
+<ParamField body="trigger_config" type="object" required>
+  Trigger configuration to validate (e.g. `{ "match_type": "contains", "match_value": "hello" }`).
+</ParamField>
+
+<ParamField body="exclude_flow_id" type="string (UUID)">
+  Flow ID to exclude from the check. Pass the current flow's ID when checking before an update so the flow does not conflict with itself.
+</ParamField>
+
+### Response
+
+<ResponseField name="has_conflict" type="boolean">
+  Whether a conflicting active flow exists.
+</ResponseField>
+
+<ResponseField name="error_message" type="string | null">
+  Human-readable conflict description.
+</ResponseField>
+
+<ResponseField name="error_code" type="string | null">
+  Machine-readable code: `FLOW_DUPLICATE_TRIGGER_CONFLICT` or `FLOW_DUPLICATE_ANY_TRIGGER`.
+</ResponseField>
+
+<ResponseField name="conflict_details" type="object | null">
+  Details about the conflicting flow (`conflicting_flow_id`, `conflicting_flow_name`, `conflict_reason`).
+</ResponseField>
+
+```json
+{
+  "has_conflict": true,
+  "error_message": "Cannot activate flow: Another active flow 'Welcome Flow' has the same trigger configuration",
+  "error_code": "FLOW_DUPLICATE_TRIGGER_CONFLICT",
+  "conflict_details": {
+    "conflicting_flow_id": "456e7890-e89b-12d3-a456-426614174000",
+    "conflicting_flow_name": "Welcome Flow",
+    "conflicting_match_type": "contains",
+    "conflicting_match_value": "hello",
+    "conflict_reason": "contains_duplicate"
+  }
+}
+```
+
+---
+
+## Complete Example: Create, Activate, and Monitor a Flow
+
+```python
+import requests
+import time
+
+BASE = 'https://api.megasend.co.il'
+HEADERS = {'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'}
+INSTANCE_ID = '123e4567-e89b-12d3-a456-426614174000'
+
+# 1. Check for trigger conflicts before creating
+conflict = requests.post(f'{BASE}/flows/check-trigger-conflicts', headers=HEADERS, json={
+    'instance_id': INSTANCE_ID,
+    'trigger_type': 'incoming_message',
+    'trigger_config': {'match_type': 'contains', 'match_value': 'order'}
+}).json()
+
+if conflict['has_conflict']:
+    print('Conflict:', conflict['error_message'])
+    raise SystemExit(1)
+
+# 2. Create the flow (inactive)
+flow = requests.post(f'{BASE}/flows/', headers=HEADERS, json={
+    'instance_id': INSTANCE_ID,
+    'name': 'Order Status Flow',
+    'trigger_type': 'incoming_message',
+    'trigger_config': {'match_type': 'contains', 'match_value': 'order'},
+    'is_active': False,
+    'priority': 0,
+    'nodes': [
+        {'id': 'start_1', 'type': 'start', 'position': {'x': 100, 'y': 100},
+         'data': {'nodeType': 'text_message_start', 'type': 'contains', 'value': 'order'}},
+        {'id': 'action_1', 'type': 'action', 'position': {'x': 100, 'y': 250},
+         'data': {'message': 'To check your order status, please visit https://example.com/orders'}},
+        {'id': 'cooldown_1', 'type': 'cooldown', 'position': {'x': 100, 'y': 400},
+         'data': {'duration': 24, 'unit': 'hours'}}
+    ],
+    'edges': [
+        {'id': 'e1', 'source': 'start_1', 'target': 'action_1'},
+        {'id': 'e2', 'source': 'action_1', 'target': 'cooldown_1'}
+    ]
+}).json()
+
+flow_id = flow['id']
+print('Created flow:', flow_id)
+
+# 3. Activate the flow
+activated = requests.post(f'{BASE}/flows/{flow_id}/activate', headers=HEADERS).json()
+print('Active:', activated['is_active'])  # True
+
+# 4. Check stats after some time
+stats = requests.get(f'{BASE}/flows/{flow_id}/stats', headers=HEADERS).json()
+print(f"Executions: {stats['total_executions']} total, {stats['successful_executions']} successful")
+
+# 5. Inspect execution logs for a failed run
+executions = requests.get(
+    f'{BASE}/flows/{flow_id}/executions',
+    headers=HEADERS,
+    params={'page': 1, 'page_size': 5}
+).json()
+
+for ex in executions['executions']:
+    if ex['status'] == 'failed':
+        logs = requests.get(
+            f"{BASE}/flows/executions/{ex['id']}/logs",
+            headers=HEADERS
+        ).json()
+        print(f"Failure at node {ex['error_node_id']}: {ex['error_message']}")
+        print(f"  {logs['total_logs']} log entries")
+```
+
+---
+
+## Validation Rules
+
+<Note>
+These rules are enforced by the API on both create and update. Violating them returns a `422 Unprocessable Entity`.
+</Note>
+
+- A flow must have **exactly one** `start` node.
+- All nodes must be reachable from the `start` node (no orphaned nodes).
+- The flow graph must be acyclic (no circular dependencies that would cause infinite loops).
+- `trigger_type` must be one of the allowed values listed in [Create Flow](#create-flow).
+- Two active flows on the same instance cannot share the same trigger configuration — use [Check Trigger Conflicts](#check-trigger-conflicts) to detect this before activating.

@@ -4,15 +4,16 @@ description: 'Learn how to authenticate with the MegaSend API using JWT tokens a
 icon: 'key'
 ---
 
-The MegaSend API supports multiple authentication methods to ensure secure access to your WhatsApp Business messaging capabilities:
+The MegaSend API supports two authentication methods:
 
-1. **JWT Token Authentication** - For user-based authentication with Keycloak
-2. **API Access Token Authentication** - For server-to-server integrations (recommended for client applications)
-3. **X-MEGASEND-AUTH Header** - Simplified authentication using custom header
+1. **JWT Token Authentication** - For user-based authentication with Keycloak (web/mobile apps where a user logs in directly).
+2. **API Access Token Authentication** - For server-to-server integrations, automation, and scripts. Recommended for client applications.
+
+All authenticated requests use the **`X-MEGASEND-AUTH`** header. Access tokens are all-or-nothing — there are no scopes.
 
 ## JWT Token Authentication
 
-JWT (JSON Web Token) authentication is used for user-based authentication. This method is ideal for web applications and mobile apps where users log in directly.
+JWT (JSON Web Token) authentication is used for user-based sessions. Obtain a token by logging in with credentials, then include it in the `X-MEGASEND-AUTH` header on subsequent requests.
 
 ### Login with Credentials
 
@@ -96,7 +97,7 @@ $refreshToken = $tokens['refresh_token'];
 
 ### Using JWT Tokens
 
-Include the JWT token in the `X-MEGASEND-AUTH` header:
+Include the JWT `access_token` value in the `X-MEGASEND-AUTH` header:
 
 ```bash
 X-MEGASEND-AUTH: eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJf...
@@ -104,7 +105,7 @@ X-MEGASEND-AUTH: eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJf...
 
 ### Refreshing JWT Tokens
 
-JWT tokens expire after 5 minutes. Use the refresh token to get a new access token:
+JWT tokens expire after 5 minutes. Use the refresh token to obtain a new access token:
 
 <CodeGroup>
 
@@ -134,11 +135,13 @@ const { access_token } = await response.json();
 
 ## API Access Token Authentication
 
-API Access Tokens are designed for server-to-server integrations, automation platforms, and long-running services. These tokens don't expire automatically and can be managed through the API.
+API Access Tokens are designed for server-to-server integrations, automation platforms, and long-running services. They do not expire automatically (unless you set an explicit `expires_at`), and they can be managed through the API.
+
+Access tokens are all-or-nothing — there are no scopes. A valid token grants full access to your account's resources.
 
 ### Creating an Access Token
 
-First, authenticate with JWT and then create an access token:
+Authenticate first with a JWT, then create an access token:
 
 <CodeGroup>
 
@@ -147,7 +150,8 @@ curl -X POST "https://api.megasend.co.il/access-tokens/me" \
   -H "X-MEGASEND-AUTH: YOUR_JWT_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
-    "description": "Production API Integration"
+    "description": "Production API Integration",
+    "expires_at": null
   }'
 ```
 
@@ -190,81 +194,35 @@ token_data = response.json()
 ```json
 {
   "id": "550e8400-e29b-41d4-a716-446655440000",
-  "token_value": "mega_token_abc123def456ghi789...",
+  "user_id": "6ba7b810-9dad-11d1-80b4-00c04fd430c8",
   "description": "Production API Integration",
-  "active": true,
+  "token_value": "aB3kR9mXzQ7wNpLdYvCsT2eUoFjHgIbK",
   "created_at": "2026-01-15T10:30:00Z",
-  "last_used": null,
-  "usage_count": 0
+  "updated_at": "2026-01-15T10:30:00Z",
+  "expires_at": null,
+  "active": true
 }
 ```
 
 <Warning>
-  **Store your token securely!** The `token_value` is only shown once when created. Save it in a secure location as it cannot be retrieved again.
+  **Store your token securely.** Save the `token_value` in a secure location. While the token can be retrieved again via `GET /access-tokens/me/{token_id}`, treat it as a secret and avoid unnecessary exposure.
 </Warning>
+
+The `token_value` is a random URL-safe string (generated with `secrets.token_urlsafe(32)`). It has no prefix.
 
 ### Using Access Tokens
 
-You can use access tokens in two ways:
-
-**Option 1: Authorization Header (Standard)**
-```bash
-X-MEGASEND-AUTH: mega_token_abc123def456ghi789...
-```
-
-**Option 2: X-MEGASEND-AUTH Header (Recommended)**
-```bash
-X-MEGASEND-AUTH: mega_token_abc123def456ghi789...
-```
-
-### Managing Access Tokens
-
-#### List Your Tokens
+Send the token value in the `X-MEGASEND-AUTH` header:
 
 ```bash
-curl -X GET "https://api.megasend.co.il/access-tokens/me" \
-  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
+X-MEGASEND-AUTH: aB3kR9mXzQ7wNpLdYvCsT2eUoFjHgIbK
 ```
-
-#### Update Token Description
-
-```bash
-curl -X PUT "https://api.megasend.co.il/access-tokens/me/{token_id}" \
-  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "description": "Updated description",
-    "active": true
-  }'
-```
-
-#### Refresh Token Value
-
-```bash
-curl -X POST "https://api.megasend.co.il/access-tokens/me/{token_id}/refresh" \
-  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
-```
-
-#### Delete Token
-
-```bash
-curl -X DELETE "https://api.megasend.co.il/access-tokens/me/{token_id}" \
-  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
-```
-
-## X-MEGASEND-AUTH Header Authentication
-
-The `X-MEGASEND-AUTH` header provides a simplified authentication method that's perfect for API requests. This method is often more convenient than JWT authentication as it doesn't require managing token expiration and refresh cycles.
-
-### Using X-MEGASEND-AUTH Header
-
-You can authenticate using your access token with the custom `X-MEGASEND-AUTH` header:
 
 <CodeGroup>
 
 ```bash cURL
 curl -X POST "https://api.megasend.co.il/messages/send" \
-  -H "X-MEGASEND-AUTH: mega_token_abc123def456ghi789..." \
+  -H "X-MEGASEND-AUTH: aB3kR9mXzQ7wNpLdYvCsT2eUoFjHgIbK" \
   -H "Content-Type: application/json" \
   -d '{
     "to": "+1234567890",
@@ -279,7 +237,7 @@ curl -X POST "https://api.megasend.co.il/messages/send" \
 const response = await fetch('https://api.megasend.co.il/messages/send', {
   method: 'POST',
   headers: {
-    'X-MEGASEND-AUTH': 'mega_token_abc123def456ghi789...',
+    'X-MEGASEND-AUTH': 'aB3kR9mXzQ7wNpLdYvCsT2eUoFjHgIbK',
     'Content-Type': 'application/json',
   },
   body: JSON.stringify({
@@ -298,7 +256,7 @@ import requests
 response = requests.post(
     'https://api.megasend.co.il/messages/send',
     headers={
-        'X-MEGASEND-AUTH': 'mega_token_abc123def456ghi789...',
+        'X-MEGASEND-AUTH': 'aB3kR9mXzQ7wNpLdYvCsT2eUoFjHgIbK',
         'Content-Type': 'application/json'
     },
     json={
@@ -320,7 +278,7 @@ curl_setopt_array($ch, [
     CURLOPT_RETURNTRANSFER => true,
     CURLOPT_POST => true,
     CURLOPT_HTTPHEADER => [
-        'X-MEGASEND-AUTH: mega_token_abc123def456ghi789...',
+        'X-MEGASEND-AUTH: aB3kR9mXzQ7wNpLdYvCsT2eUoFjHgIbK',
         'Content-Type: application/json'
     ],
     CURLOPT_POSTFIELDS => json_encode([
@@ -339,109 +297,189 @@ curl_close($ch);
 
 </CodeGroup>
 
-### Benefits of X-MEGASEND-AUTH
+### Managing Access Tokens
 
-- **No Token Expiration Management**: Unlike JWT tokens, access tokens used with this header don't expire automatically
-- **Simpler Integration**: No need to implement token refresh logic
-- **Better for Automation**: Ideal for scripts, cron jobs, and server-to-server integrations
-- **Consistent Performance**: No authentication delays from token refresh cycles
+#### List Your Tokens
+
+```bash
+curl -X GET "https://api.megasend.co.il/access-tokens/me" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
+```
+
+#### Get a Single Token
+
+```bash
+curl -X GET "https://api.megasend.co.il/access-tokens/me/{token_id}" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
+```
+
+#### Update Token Description or Expiry
+
+```bash
+curl -X PUT "https://api.megasend.co.il/access-tokens/me/{token_id}" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "description": "Updated description",
+    "expires_at": "2027-01-01T00:00:00Z",
+    "active": true
+  }'
+```
+
+#### Regenerate Token Value
+
+Issues a new `token_value` for the token (the old value is immediately invalidated):
+
+```bash
+curl -X POST "https://api.megasend.co.il/access-tokens/me/{token_id}/refresh" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
+```
+
+#### Delete Token
+
+```bash
+curl -X DELETE "https://api.megasend.co.il/access-tokens/me/{token_id}" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
+```
+
+Returns `204 No Content` on success.
+
+#### View Token Usage Logs
+
+```bash
+curl -X GET "https://api.megasend.co.il/access-tokens/me/logs?page=1&page_size=10" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
+```
+
+Optional query parameters: `token_id` (filter to a specific token), `page`, `page_size` (max 100).
+
+### Benefits of API Access Tokens
+
+- **No expiration by default** — tokens stay valid until you delete or deactivate them (or until the optional `expires_at` you set)
+- **Simpler integration** — no token refresh logic required
+- **Ideal for automation** — scripts, cron jobs, and server-to-server integrations
+- **Auditable** — every use is logged and queryable via `/access-tokens/me/logs`
 
 ### When to Use Each Method
 
 | Method | Best For | Pros | Cons |
 |--------|----------|------|------|
-| **X-MEGASEND-AUTH** | API integrations, automation, scripts | Simple, no expiration handling, consistent | Requires secure token storage |
-| **JWT + Bearer** | Web applications, user sessions | Short-lived tokens, user context | Token refresh complexity |
-| **Access Token + Bearer** | Server applications, long-running services | Flexible expiration, manageable | Standard bearer format only |
+| **Access Token + X-MEGASEND-AUTH** | API integrations, automation, scripts | No expiration handling, simple, auditable | Requires secure token storage |
+| **JWT + X-MEGASEND-AUTH** | Web applications, user sessions | Short-lived, tied to user session | Must implement refresh cycle |
 
 <Tip>
-  **Recommended for most use cases**: Use `X-MEGASEND-AUTH` header with access tokens for API integrations as it provides the best balance of security and simplicity.
+  **Recommended for most use cases**: Create an API Access Token from the [MegaSend dashboard](https://app.megasend.co.il) and send it in the `X-MEGASEND-AUTH` header. No refresh logic needed.
 </Tip>
+
+## How Authentication Works
+
+The API checks the `X-MEGASEND-AUTH` header on every request:
+
+1. If `X-MEGASEND-AUTH` is present, it is validated as an API Access Token. If the value is invalid or the token is inactive/expired, the request is rejected with `401`.
+2. If `X-MEGASEND-AUTH` is absent, the server falls back to the `Authorization: Bearer` header and validates it as a Keycloak JWT. This path is used internally by the dashboard and is not intended for direct API integrations.
 
 ## Error Responses
 
-### Invalid Authentication
+### Invalid or Inactive Token
 
 ```json
 {
-  "detail": "Invalid authentication credentials",
-  "status_code": 401
+  "detail": "Access Token is invalid or inactive."
 }
 ```
+HTTP status: `401 Unauthorized`
 
-### Expired Token
+### Token Owner Not Found
 
 ```json
 {
-  "detail": "Token has expired",
-  "status_code": 401
+  "detail": "Owner of the Access Token not found."
 }
 ```
+HTTP status: `401 Unauthorized`
+
+### Not Authenticated
+
+```json
+{
+  "detail": "Not authenticated"
+}
+```
+HTTP status: `401 Unauthorized` — returned when neither header provides valid credentials.
 
 ### Insufficient Permissions
 
 ```json
 {
-  "detail": "Insufficient permissions",
-  "status_code": 403
+  "detail": "Admin access required"
 }
 ```
+HTTP status: `403 Forbidden`
+
+## Rate Limiting
+
+Rate limits are targeted — there is no global per-token request cap. The limits that apply to authentication-related endpoints are:
+
+| Endpoint / Operation | Limit | Window |
+|---|---|---|
+| `POST /auth/login/credentials` (and `/auth/login`) | 15 attempts | per 15 minutes per IP |
+| `POST /auth/login/credentials` (burst) | 5 attempts | per 1 minute per IP |
+| `POST /media-library/.../upload` | 30 uploads | per 1 hour per user |
+| `POST /media-library/.../upload` (burst) | 10 uploads | per 1 minute per user |
+| OTP send (phone registration / forgot password) | 5 codes | per 1 hour per phone |
+
+When a rate limit is exceeded, the API returns `429 Too Many Requests` with a JSON body:
+
+```json
+{
+  "detail": {
+    "error": "Login rate limit exceeded",
+    "error_code": "LOGIN_RATE_LIMITED",
+    "message": "Too many login attempts. Please try again after 14:30:00 UTC",
+    "type": "login_rate_limit",
+    "retry_after_seconds": 540,
+    "reset_time": "2026-01-15T14:30:00+00:00"
+  }
+}
+```
+
+<Note>
+  There are no `X-RateLimit-*` response headers. Use the `detail.retry_after_seconds` field in the 429 body to determine when to retry.
+</Note>
+
+## Testing Authentication
+
+Use the `/auth/me` endpoint to verify your token is valid and see the associated user:
+
+```bash
+curl -X GET "https://api.megasend.co.il/auth/me" \
+  -H "X-MEGASEND-AUTH: YOUR_JWT_TOKEN"
+```
+
+<Note>
+  `/auth/me` requires a Keycloak JWT token, not an API Access Token. To verify an access token is working, make any authenticated API call (such as `GET /access-tokens/me`) and check for a `200` response.
+</Note>
 
 ## Best Practices
 
 ### Security
 
-1. **Never expose tokens in client-side code** - Always store tokens securely on the server side
-2. **Use HTTPS only** - All API requests must use HTTPS encryption
-3. **Rotate tokens regularly** - Refresh or recreate access tokens periodically
-4. **Monitor token usage** - Review access token logs for suspicious activity
+1. **Never expose tokens in client-side code** — store tokens securely on the server side
+2. **Use HTTPS only** — all API requests must use HTTPS
+3. **Rotate tokens regularly** — use the `/refresh` endpoint to regenerate the `token_value` periodically
+4. **Deactivate unused tokens** — disable or delete tokens that are no longer needed
 
 ### Token Management
 
-1. **Use descriptive names** - Give your access tokens meaningful descriptions
-2. **Set expiration dates** - Always set expiration dates for access tokens
-3. **Deactivate unused tokens** - Disable or delete tokens that are no longer needed
-4. **Monitor token logs** - Check the usage logs to track token activity
+1. **Use descriptive names** — give tokens meaningful descriptions so you can identify them later
+2. **Set expiration dates for temporary integrations** — use `expires_at` when a token should only be valid for a fixed period
+3. **Monitor usage logs** — check `/access-tokens/me/logs` to audit token activity
 
 ### Performance
 
-1. **Cache JWT tokens** - Store and reuse JWT tokens until they expire
-2. **Implement retry logic** - Handle token expiration gracefully with automatic refresh
-3. **Use appropriate timeouts** - Set reasonable request timeouts for authentication calls
-
-## Rate Limiting
-
-Authentication endpoints have their own rate limits:
-
-- **Login**: 10 requests per minute per IP
-- **Refresh**: 20 requests per minute per user
-- **Token Management**: 100 requests per minute per user
-
-Rate limit headers:
-```
-X-RateLimit-Limit: 10
-X-RateLimit-Remaining: 9
-X-RateLimit-Reset: 1640995200
-```
-
-## Testing Authentication
-
-Use our test endpoint to verify your authentication:
-
-```bash
-curl -X GET "https://api.megasend.co.il/auth/me" \
-  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
-```
-
-Successful response:
-```json
-{
-  "user_id": "550e8400-e29b-41d4-a716-446655440000",
-  "email": "user@example.com",
-  "roles": ["user"],
-  "subscription_status": "active"
-}
-```
+1. **Cache JWT tokens** — reuse them until they expire rather than logging in on every request
+2. **Implement refresh logic for JWT sessions** — handle the 5-minute expiry with automatic token refresh
+3. **Prefer access tokens for long-running services** — no refresh cycle means simpler retry logic
 
 ## Next Steps
 
@@ -449,4 +487,4 @@ Once you're authenticated, you can:
 
 - [Send your first message](/quickstart)
 - [Explore the API reference](/api-reference/introduction)
-- [Set up webhooks](/webhooks/setup) 
+- [Set up webhooks](/webhooks/setup)

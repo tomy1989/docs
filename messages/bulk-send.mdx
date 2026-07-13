@@ -1,14 +1,18 @@
 ---
 title: 'Bulk Messaging'
-description: 'Send WhatsApp messages to multiple recipients efficiently with bulk messaging API'
+description: 'Send WhatsApp messages to up to 10 recipients in a single synchronous API call'
 icon: 'users'
 ---
 
-The MegaSend bulk messaging API allows you to send the same message to multiple recipients efficiently. This is perfect for marketing campaigns, notifications, and announcements.
+The MegaSend bulk messaging API lets you send the same message to up to **10 recipients** in one call. The response is synchronous — you receive per-recipient results immediately, with no job polling required.
+
+<Note>
+Need to reach more than 10 contacts? Loop over batches in your code, or use [Scheduled Messages](/messages/schedule) to stagger sends over time.
+</Note>
 
 ## Basic Bulk Messaging
 
-Send the same message to multiple recipients:
+Send a text message to multiple recipients:
 
 <CodeGroup>
 
@@ -20,7 +24,7 @@ curl -X POST "https://api.megasend.co.il/messages/send-bulk" \
     "instance_id": "550e8400-e29b-41d4-a716-446655440000",
     "recipients": ["+1234567890", "+1987654321", "+1555000999"],
     "message_type": "text",
-    "text": "🎉 Big Sale Alert! Get 50% off all products today only. Use code SAVE50 at checkout. Shop now: https://example.com/sale"
+    "text": "Big Sale Alert! Get 50% off all products today only. Use code SAVE50 at checkout: https://example.com/sale"
   }'
 ```
 
@@ -29,7 +33,7 @@ const bulkMessage = {
   instance_id: '550e8400-e29b-41d4-a716-446655440000',
   recipients: ['+1234567890', '+1987654321', '+1555000999'],
   message_type: 'text',
-  text: '🎉 Big Sale Alert! Get 50% off all products today only. Use code SAVE50 at checkout. Shop now: https://example.com/sale'
+  text: 'Big Sale Alert! Get 50% off all products today only. Use code SAVE50 at checkout: https://example.com/sale'
 };
 
 const response = await fetch('https://api.megasend.co.il/messages/send-bulk', {
@@ -42,7 +46,7 @@ const response = await fetch('https://api.megasend.co.il/messages/send-bulk', {
 });
 
 const result = await response.json();
-console.log('Bulk message initiated:', result);
+console.log(`Sent: ${result.total_sent}, Failed: ${result.total_failed}`);
 ```
 
 ```python Python
@@ -52,7 +56,7 @@ bulk_message = {
     'instance_id': '550e8400-e29b-41d4-a716-446655440000',
     'recipients': ['+1234567890', '+1987654321', '+1555000999'],
     'message_type': 'text',
-    'text': '🎉 Big Sale Alert! Get 50% off all products today only. Use code SAVE50 at checkout. Shop now: https://example.com/sale'
+    'text': 'Big Sale Alert! Get 50% off all products today only. Use code SAVE50 at checkout: https://example.com/sale'
 }
 
 response = requests.post(
@@ -62,7 +66,7 @@ response = requests.post(
 )
 
 result = response.json()
-print('Bulk message initiated:', result)
+print(f"Sent: {result['total_sent']}, Failed: {result['total_failed']}")
 ```
 
 ```php PHP
@@ -71,7 +75,7 @@ $bulkMessage = [
     'instance_id' => '550e8400-e29b-41d4-a716-446655440000',
     'recipients' => ['+1234567890', '+1987654321', '+1555000999'],
     'message_type' => 'text',
-    'text' => '🎉 Big Sale Alert! Get 50% off all products today only. Use code SAVE50 at checkout. Shop now: https://example.com/sale'
+    'text' => 'Big Sale Alert! Get 50% off all products today only. Use code SAVE50 at checkout: https://example.com/sale'
 ];
 
 $response = file_get_contents('https://api.megasend.co.il/messages/send-bulk', false, stream_context_create([
@@ -93,7 +97,7 @@ $result = json_decode($response, true);
 
 ## Bulk Template Messages
 
-Send template messages to multiple recipients with personalized parameters:
+Send a pre-approved template to multiple recipients. All recipients receive the same template; per-recipient variable substitution is not supported in the bulk endpoint — use individual `/messages/send` calls if you need different variable values per contact.
 
 <CodeGroup>
 
@@ -103,26 +107,9 @@ curl -X POST "https://api.megasend.co.il/messages/send-bulk" \
   -H "Content-Type: application/json" \
   -d '{
     "instance_id": "550e8400-e29b-41d4-a716-446655440000",
-    "recipients": [
-      {
-        "phone": "+1234567890",
-        "variables": {
-          "customer_name": "John Doe",
-          "order_number": "ORD-12345",
-          "delivery_date": "Tomorrow"
-        }
-      },
-      {
-        "phone": "+1987654321", 
-        "variables": {
-          "customer_name": "Jane Smith",
-          "order_number": "ORD-12346",
-          "delivery_date": "Monday"
-        }
-      }
-    ],
+    "recipients": ["+1234567890", "+1987654321"],
     "message_type": "template",
-    "template": {
+    "template_data": {
       "name": "order_confirmation",
       "language": "en"
     }
@@ -132,26 +119,9 @@ curl -X POST "https://api.megasend.co.il/messages/send-bulk" \
 ```javascript JavaScript
 const bulkTemplateMessage = {
   instance_id: '550e8400-e29b-41d4-a716-446655440000',
-  recipients: [
-    {
-      phone: '+1234567890',
-      variables: {
-        customer_name: 'John Doe',
-        order_number: 'ORD-12345',
-        delivery_date: 'Tomorrow'
-      }
-    },
-    {
-      phone: '+1987654321',
-      variables: {
-        customer_name: 'Jane Smith',
-        order_number: 'ORD-12346',
-        delivery_date: 'Monday'
-      }
-    }
-  ],
+  recipients: ['+1234567890', '+1987654321'],
   message_type: 'template',
-  template: {
+  template_data: {
     name: 'order_confirmation',
     language: 'en'
   }
@@ -165,31 +135,18 @@ const response = await fetch('https://api.megasend.co.il/messages/send-bulk', {
   },
   body: JSON.stringify(bulkTemplateMessage)
 });
+
+const result = await response.json();
 ```
 
 ```python Python
+import requests
+
 bulk_template_message = {
     'instance_id': '550e8400-e29b-41d4-a716-446655440000',
-    'recipients': [
-        {
-            'phone': '+1234567890',
-            'variables': {
-                'customer_name': 'John Doe',
-                'order_number': 'ORD-12345',
-                'delivery_date': 'Tomorrow'
-            }
-        },
-        {
-            'phone': '+1987654321',
-            'variables': {
-                'customer_name': 'Jane Smith',
-                'order_number': 'ORD-12346',
-                'delivery_date': 'Monday'
-            }
-        }
-    ],
+    'recipients': ['+1234567890', '+1987654321'],
     'message_type': 'template',
-    'template': {
+    'template_data': {
         'name': 'order_confirmation',
         'language': 'en'
     }
@@ -200,6 +157,8 @@ response = requests.post(
     headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'},
     json=bulk_template_message
 )
+
+result = response.json()
 ```
 
 </CodeGroup>
@@ -218,10 +177,8 @@ curl -X POST "https://api.megasend.co.il/messages/send-bulk" \
     "instance_id": "550e8400-e29b-41d4-a716-446655440000",
     "recipients": ["+1234567890", "+1987654321", "+1555000999"],
     "message_type": "image",
-    "image": {
-      "url": "https://example.com/new-product.jpg",
-      "caption": "🚀 Introducing our latest product! Available now with free shipping."
-    }
+    "image_url": "https://example.com/new-product.jpg",
+    "image_caption": "Introducing our latest product! Available now with free shipping."
   }'
 ```
 
@@ -230,340 +187,193 @@ const bulkImageMessage = {
   instance_id: '550e8400-e29b-41d4-a716-446655440000',
   recipients: ['+1234567890', '+1987654321', '+1555000999'],
   message_type: 'image',
-  image: {
-    url: 'https://example.com/new-product.jpg',
-    caption: '🚀 Introducing our latest product! Available now with free shipping.'
-  }
+  image_url: 'https://example.com/new-product.jpg',
+  image_caption: 'Introducing our latest product! Available now with free shipping.'
 };
-```
 
-</CodeGroup>
-
-## Advanced Bulk Options
-
-### Scheduling Bulk Messages
-
-Schedule bulk messages to be sent at a specific time:
-
-<CodeGroup>
-
-```bash cURL
-curl -X POST "https://api.megasend.co.il/messages/send-bulk" \
-  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "instance_id": "550e8400-e29b-41d4-a716-446655440000",
-    "recipients": ["+1234567890", "+1987654321"],
-    "message_type": "text",
-    "text": "Good morning! Start your day with our fresh deals.",
-    "send_at": "2024-01-16T09:00:00Z"
-  }'
-```
-
-```javascript JavaScript
-const scheduledBulkMessage = {
-  instance_id: '550e8400-e29b-41d4-a716-446655440000',
-  recipients: ['+1234567890', '+1987654321'],
-  message_type: 'text',
-  text: 'Good morning! Start your day with our fresh deals.',
-  send_at: '2024-01-16T09:00:00Z'
-};
-```
-
-</CodeGroup>
-
-### Rate Limiting & Throttling
-
-Control the sending speed to respect WhatsApp rate limits:
-
-<CodeGroup>
-
-```bash cURL
-curl -X POST "https://api.megasend.co.il/messages/send-bulk" \
-  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "instance_id": "550e8400-e29b-41d4-a716-446655440000",
-    "recipients": ["+1234567890", "+1987654321", "+1555000999"],
-    "message_type": "text",
-    "text": "Thank you for being our valued customer!",
-    "throttle": {
-      "messages_per_minute": 60,
-      "delay_between_batches": 10
-    }
-  }'
-```
-
-```javascript JavaScript
-const throttledBulkMessage = {
-  instance_id: '550e8400-e29b-41d4-a716-446655440000',
-  recipients: ['+1234567890', '+1987654321', '+1555000999'],
-  message_type: 'text',
-  text: 'Thank you for being our valued customer!',
-  throttle: {
-    messages_per_minute: 60,
-    delay_between_batches: 10
-  }
-};
+const response = await fetch('https://api.megasend.co.il/messages/send-bulk', {
+  method: 'POST',
+  headers: {
+    'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify(bulkImageMessage)
+});
 ```
 
 </CodeGroup>
 
 ## Response Format
 
-Bulk messaging returns a job tracking response:
+The endpoint is **synchronous** — it returns a complete result as soon as all sends have been attempted. There is no job ID or polling step.
 
 ```json
 {
-  "job_id": "bulk_job_abc123def456",
-  "status": "queued",
-  "total_recipients": 1500,
-  "estimated_completion": "2024-01-15T11:00:00Z",
-  "created_at": "2024-01-15T10:30:00Z",
-  "progress": {
-    "sent": 0,
-    "delivered": 0,
-    "failed": 0,
-    "pending": 1500
-  }
+  "responses": [
+    {
+      "message_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+      "status": "sent",
+      "detail": "Message sent successfully",
+      "content": "Big Sale Alert! ...",
+      "message_type": "text",
+      "timestamp": "2024-01-15T10:30:05Z",
+      "direction": "outbound",
+      "wa_message_id": "wamid.HBgNOTExxx"
+    },
+    {
+      "message_id": "b2c3d4e5-f6a7-8901-bcde-f12345678901",
+      "status": "failed",
+      "detail": "Recipient not on WhatsApp",
+      "content": null,
+      "message_type": "text",
+      "timestamp": "2024-01-15T10:30:06Z",
+      "direction": "outbound",
+      "wa_message_id": null
+    }
+  ],
+  "total_sent": 1,
+  "total_failed": 1
 }
 ```
 
 ### Response Fields
 
-- **`job_id`** - Unique identifier for tracking the bulk job
-- **`status`** - Current job status (`queued`, `processing`, `completed`, `failed`)
-- **`total_recipients`** - Total number of recipients
-- **`estimated_completion`** - Estimated completion time
-- **`progress`** - Real-time progress counters
+**Top-level**
 
-## Tracking Bulk Jobs
+- **`responses`** — Array of per-recipient result objects (one entry per phone number in `recipients`)
+- **`total_sent`** — Count of entries whose `status` is `"sent"`
+- **`total_failed`** — Count of entries whose `status` is `"failed"`
 
-Check the status of your bulk messaging job:
+**Per-recipient entry (`responses[*]`)**
 
-<CodeGroup>
+- **`message_id`** — Internal UUID for this message record
+- **`status`** — `"sent"` or `"failed"`
+- **`detail`** — Human-readable description of the outcome
+- **`content`** — Rendered message text (useful for template previews)
+- **`message_type`** — Echo of the requested message type
+- **`timestamp`** — ISO-8601 send timestamp
+- **`direction`** — Always `"outbound"` for bulk sends
+- **`wa_message_id`** — WhatsApp Cloud API message ID (`null` when failed)
 
-```bash cURL
-curl -X GET "https://api.megasend.co.il/messages/bulk-jobs/bulk_job_abc123def456" \
-  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
-```
+## Request Reference
 
-```javascript JavaScript
-const response = await fetch('https://api.megasend.co.il/messages/bulk-jobs/bulk_job_abc123def456', {
-  headers: {
-    'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'
-  }
-});
+### Required Fields
 
-const jobStatus = await response.json();
-console.log('Job progress:', jobStatus.progress);
-```
+<ParamField body="instance_id" type="string (UUID)" required>
+  ID of the WhatsApp instance to send from.
+</ParamField>
 
-```python Python
-response = requests.get(
-    'https://api.megasend.co.il/messages/bulk-jobs/bulk_job_abc123def456',
-    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'}
-)
+<ParamField body="message_type" type="string" required>
+  Message type. Supported values: `text`, `image`, `video`, `audio`, `document`, `template`, `sticker`, `location`, `contact`.
+</ParamField>
 
-job_status = response.json()
-print(f"Progress: {job_status['progress']}")
-```
+<ParamField body="recipients" type="array of strings" required>
+  List of E.164 phone numbers to send to. **Maximum 10 recipients.** The API normalises numbers automatically (a leading digit without `+` is accepted).
+</ParamField>
 
-</CodeGroup>
+### Content Fields
 
-### Progress Tracking Response
+Supply the field that matches your `message_type`:
 
-```json
-{
-  "job_id": "bulk_job_abc123def456",
-  "status": "processing",
-  "total_recipients": 1500,
-  "created_at": "2024-01-15T10:30:00Z",
-  "started_at": "2024-01-15T10:31:00Z",
-  "estimated_completion": "2024-01-15T11:00:00Z",
-  "progress": {
-    "sent": 856,
-    "delivered": 742,
-    "failed": 12,
-    "pending": 644
-  },
-  "throughput": {
-    "messages_per_minute": 45,
-    "current_batch": 23
-  },
-  "errors": [
-    {
-      "recipient": "+1555000001",
-      "error": "Invalid phone number format",
-      "timestamp": "2024-01-15T10:35:00Z"
-    }
-  ]
-}
-```
+<ParamField body="text" type="string">
+  Plain text body. Required when `message_type` is `text`.
+</ParamField>
 
-## List Bulk Jobs
+<ParamField body="image_url" type="string">
+  Publicly accessible URL of the image to send. Required when `message_type` is `image`.
+</ParamField>
 
-Get a list of all your bulk messaging jobs:
+<ParamField body="image_caption" type="string">
+  Optional caption to display below the image (max 1,024 characters).
+</ParamField>
 
-<CodeGroup>
+<ParamField body="template_data" type="object">
+  Template descriptor. Required when `message_type` is `template`. Shape: `{ name, language?, header_params?, body_params?, button_params? }`.
+</ParamField>
 
-```bash cURL
-curl -X GET "https://api.megasend.co.il/messages/bulk-jobs?limit=20&status=completed" \
-  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
-```
+## Scheduling Bulk Messages
 
-```javascript JavaScript
-const response = await fetch('https://api.megasend.co.il/messages/bulk-jobs?limit=20&status=completed', {
-  headers: {
-    'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'
-  }
-});
-
-const jobs = await response.json();
-```
-
-</CodeGroup>
-
-## Cancel Bulk Jobs
-
-Cancel a bulk job that's still processing:
-
-<CodeGroup>
-
-```bash cURL
-curl -X POST "https://api.megasend.co.il/messages/bulk-jobs/bulk_job_abc123def456/cancel" \
-  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
-```
-
-```javascript JavaScript
-const response = await fetch('https://api.megasend.co.il/messages/bulk-jobs/bulk_job_abc123def456/cancel', {
-  method: 'POST',
-  headers: {
-    'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'
-  }
-});
-
-const result = await response.json();
-```
-
-</CodeGroup>
+The `/messages/send-bulk` endpoint does not support a `send_at` field. To schedule a message for a future time, use the [Scheduled Messages](/messages/schedule) endpoint, which accepts a `scheduled_at` parameter and queues the message via Celery.
 
 ## Bulk Messaging Limits
 
 ### Recipient Limits
 
-- **Maximum recipients per job**: 10,000
-- **Phone number format**: International format required (+1234567890)
-- **Duplicate handling**: Automatic deduplication within same job
-
-### Rate Limits
-
-- **Default rate**: 60 messages per minute
-- **Burst capacity**: Up to 100 messages in first minute
-- **Custom throttling**: Available for enterprise plans
+- **Maximum recipients per call**: 10
+- **Phone number format**: International E.164 format required (`+1234567890`). Leading digit without `+` is also accepted and normalised automatically.
+- **Duplicate handling**: Duplicate numbers in the same request are each sent individually.
 
 ### Content Restrictions
 
 - **Message types**: All standard message types supported
 - **Template messages**: Must be pre-approved by WhatsApp
 - **Media size**: Same limits as individual messages
-- **Personalization**: Up to 10 variables per template
 
 ## Use Cases
 
-### Marketing Campaigns
+### Notification Batch
 
-Send promotional messages to your customer base:
+Send a transactional alert to a small known list:
 
 ```javascript
-const marketingCampaign = {
+const notification = {
   instance_id: 'your-instance-id',
   recipients: ['+1234567890', '+1987654321', '+1555000999'],
   message_type: 'template',
-  template: {
-    name: 'summer_sale',
-    language: 'en'
-  },
-  throttle: {
-    messages_per_minute: 30,
-    delay_between_batches: 5
-  }
-};
-```
-
-### Order Notifications
-
-Notify multiple customers about order updates:
-
-```javascript
-const orderUpdates = {
-  instance_id: 'your-instance-id',
-  recipients: [
-    {
-      phone: '+1234567890',
-      variables: {
-        customer_name: 'John',
-        order_id: 'ORD-001',
-        status: 'Shipped'
-      }
-    },
-    {
-      phone: '+1987654321',
-      variables: {
-        customer_name: 'Jane',
-        order_id: 'ORD-002', 
-        status: 'Processing'
-      }
-    }
-  ],
-  message_type: 'template',
-  template: {
-    name: 'order_update',
+  template_data: {
+    name: 'order_ready',
     language: 'en'
   }
 };
 ```
 
-### Event Reminders
+### Looping Over Larger Lists
 
-Send reminders for upcoming events:
+Split audiences into batches of up to 10 and send sequentially:
 
 ```javascript
-const eventReminder = {
-  instance_id: 'your-instance-id',
-  recipients: ['+1234567890', '+1987654321'],
-  message_type: 'text',
-  text: '🎫 Reminder: Concert tonight at 7 PM. Gates open at 6 PM. See you there!',
-  send_at: '2024-01-15T17:00:00Z'
-};
+async function sendInBatches(instanceId, phones, messagePayload, batchSize = 10) {
+  const results = [];
+  for (let i = 0; i < phones.length; i += batchSize) {
+    const batch = phones.slice(i, i + batchSize);
+    const response = await fetch('https://api.megasend.co.il/messages/send-bulk', {
+      method: 'POST',
+      headers: {
+        'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ instance_id: instanceId, recipients: batch, ...messagePayload })
+    });
+    const batchResult = await response.json();
+    results.push(batchResult);
+  }
+  return results;
+}
 ```
 
 ## Best Practices
 
 ### Content Guidelines
 
-1. **Personalize messages** - Use recipient names and relevant information
-2. **Clear opt-out instructions** - Always provide unsubscribe options
-3. **Timing matters** - Send messages during appropriate hours
-4. **Value-driven content** - Ensure messages provide value to recipients
+1. **Clear opt-out instructions** — Always provide unsubscribe options
+2. **Timing matters** — Send messages during appropriate hours
+3. **Value-driven content** — Ensure messages provide value to recipients
 
 ### Technical Best Practices
 
-1. **Validate phone numbers** - Ensure all numbers are in international format
-2. **Handle failures gracefully** - Monitor job progress and retry failed messages
-3. **Respect rate limits** - Use throttling to avoid overwhelming recipients
-4. **Test before sending** - Send test messages to verify content and formatting
+1. **Validate phone numbers** — Ensure all numbers are in international format before submitting
+2. **Handle per-recipient failures** — Check each entry in `responses` for `status: "failed"`
+3. **Test before sending** — Send to a test number first to verify content and formatting
+4. **Batch large lists** — Loop in batches of 10; add a short delay between calls to avoid overloading your instance
 
 ### Compliance
 
-1. **Obtain consent** - Ensure you have permission to message all recipients
-2. **Follow local laws** - Comply with GDPR, TCPA, and other regulations
-3. **Respect opt-outs** - Honor unsubscribe requests immediately
-4. **WhatsApp policies** - Follow WhatsApp Business messaging policies
+1. **Obtain consent** — Ensure you have permission to message all recipients
+2. **Follow local laws** — Comply with GDPR, TCPA, and other regulations
+3. **Respect opt-outs** — Honor unsubscribe requests immediately
+4. **WhatsApp policies** — Follow WhatsApp Business messaging policies
 
 ## Error Handling
-
-Common bulk messaging errors and solutions:
 
 ```javascript
 try {
@@ -578,15 +388,15 @@ try {
 
   if (!response.ok) {
     const error = await response.json();
-    
+
     switch (response.status) {
       case 400:
         console.error('Invalid request:', error.detail);
-        // Check recipient format, message content
+        // Check phone number format or missing required fields
         break;
-      case 413:
-        console.error('Too many recipients:', error.detail);
-        // Split into smaller batches
+      case 422:
+        console.error('Validation error:', error.detail);
+        // More than 10 recipients, or invalid phone number in list
         break;
       case 429:
         console.error('Rate limit exceeded:', error.detail);
@@ -599,8 +409,15 @@ try {
   }
 
   const result = await response.json();
-  console.log('Bulk job started:', result.job_id);
-  
+  console.log(`Sent: ${result.total_sent}, Failed: ${result.total_failed}`);
+
+  // Inspect per-recipient outcomes
+  result.responses.forEach(r => {
+    if (r.status === 'failed') {
+      console.warn(`Failed for message ${r.message_id}: ${r.detail}`);
+    }
+  });
+
 } catch (error) {
   console.error('Network error:', error.message);
 }
@@ -610,23 +427,16 @@ try {
 
 | Code | Message | Solution |
 |------|---------|----------|
-| 400 | Invalid phone number in recipients | Verify international format |
-| 413 | Too many recipients | Split into smaller batches (max 10,000) |
+| 400 | Invalid phone number in recipients | Verify international format for each number |
+| 422 | Maximum 10 recipients allowed | Split your list into batches of 10 |
 | 422 | Template not found | Verify template name and approval status |
 | 429 | Rate limit exceeded | Implement exponential backoff |
-| 500 | Bulk job creation failed | Check instance status and retry |
-
-## Performance Tips
-
-1. **Batch sizing** - Optimal batch size is 1,000-5,000 recipients
-2. **Parallel jobs** - Run multiple smaller jobs instead of one large job
-3. **Monitor progress** - Track job status to identify issues early
-4. **Retry logic** - Implement retry for failed recipients
-5. **Cleanup** - Archive completed jobs to improve performance
+| 500 | Internal server error | Check instance status and retry |
 
 ## Next Steps
 
+- [Schedule messages](/messages/schedule) to send bulk notifications at a future time
 - [Set up webhooks](/webhooks/setup) to receive delivery notifications
 - [Create message templates](/templates/create) for consistent branding
 - [Track analytics](/analytics/overview) to measure campaign success
-- [Manage contacts](/contacts) to organize your recipient lists 
+- [Manage contacts](/contacts) to organize your recipient lists
