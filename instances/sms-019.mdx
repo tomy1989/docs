@@ -1,0 +1,354 @@
+---
+title: '019 Mobile SMS Channel'
+description: 'Connect an Israeli 019 Mobile SMS sender to MegaSend and send SMS through the standard messaging API'
+icon: 'message-sms'
+---
+
+019 Mobile is an Israeli SMS provider. Connecting a 019 sender to MegaSend creates an SMS instance that plugs into the same messaging pipeline as your other channels: contacts, campaigns, flows, and the standard send endpoints all work with it.
+
+You can also connect a 019 sender from the dashboard at [app.megasend.co.il](https://app.megasend.co.il) without writing any code.
+
+## How the 019 Channel Works
+
+Unlike WhatsApp instances, a 019 instance is not created through `POST /instances/me`. Instead, `POST /019mobile/connect` does everything in one call: it verifies your 019 credentials, creates the instance, and returns its `instance_id`.
+
+- **Connect** with your 019 account username, API token, and sender ID
+- **Send** SMS through the normal [message endpoints](/messages/send) using the returned `instance_id`
+- **Receive** replies and delivery reports automatically; no webhook configuration is needed in the 019 portal
+
+<Note>
+019 channel endpoints require an owner account. Agent accounts cannot connect or manage 019 senders.
+</Note>
+
+## Prerequisites
+
+Before connecting you need three things from 019 Mobile:
+
+1. **Account username**: the username you sign in to the 019 portal with
+2. **API token**: generate one in the 019 portal under Settings, API Token Management
+3. **Sender ID**: an approved sender on your 019 account (a phone number or an alphanumeric name)
+
+<Warning>
+If your 019 account restricts API access by IP address, whitelist MegaSend's outbound server IP in the 019 portal first. Otherwise the connection check will fail even with a valid token.
+</Warning>
+
+## Connect a 019 Sender
+
+Create the instance with `POST /019mobile/connect`:
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST "https://api.megasend.co.il/019mobile/connect" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "username": "your_019_username",
+    "api_token": "your_019_api_token",
+    "sender": "0521234567",
+    "nickname": "Store SMS"
+  }'
+```
+
+```javascript JavaScript
+const response = await fetch('https://api.megasend.co.il/019mobile/connect', {
+  method: 'POST',
+  headers: {
+    'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    username: 'your_019_username',
+    api_token: 'your_019_api_token',
+    sender: '0521234567',
+    nickname: 'Store SMS'
+  })
+});
+
+const { instance_id, sender } = await response.json();
+console.log('019 instance:', instance_id, 'sender:', sender);
+```
+
+```python Python
+import requests
+
+response = requests.post(
+    'https://api.megasend.co.il/019mobile/connect',
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'},
+    json={
+        'username': 'your_019_username',
+        'api_token': 'your_019_api_token',
+        'sender': '0521234567',
+        'nickname': 'Store SMS'
+    }
+)
+
+data = response.json()
+print(f"019 instance: {data['instance_id']} sender: {data['sender']}")
+```
+
+</CodeGroup>
+
+### Request Fields
+
+<ParamField body="username" type="string" required>
+  Your 019 Mobile account username.
+</ParamField>
+
+<ParamField body="api_token" type="string" required>
+  API token from the 019 portal (Settings, API Token Management). Stored encrypted and verified against 019 before the connection is saved.
+</ParamField>
+
+<ParamField body="sender" type="string" required>
+  Sender ID to send from. Up to 11 letters or digits, with no spaces or symbols. A leading `+` on numeric senders is removed automatically.
+</ParamField>
+
+<ParamField body="nickname" type="string">
+  Display name for the instance. Defaults to the sender ID.
+</ParamField>
+
+<ParamField body="instance_id" type="string">
+  Existing 019 instance to reconnect. Omit when connecting for the first time; see [Reconnecting](#reconnecting) below.
+</ParamField>
+
+### Response
+
+```json
+{
+  "instance_id": "550e8400-e29b-41d4-a716-446655440000",
+  "sender": "0521234567"
+}
+```
+
+Save the `instance_id`; it is what you pass to the messaging endpoints.
+
+### Connection Errors
+
+- `400` with error `mobile019_credentials_required`: one or more of `username`, `api_token`, `sender` is missing. The response lists the missing fields.
+- `400` with error `mobile019_invalid_token`: 019 rejected the API token. Copy a current token from the 019 portal and try again, and check the IP whitelist if your account uses one.
+- `403` with error `instance_limit_reached`: your plan has no free instance slot. Your first instance is free; each additional instance needs an active plan slot.
+
+## Reconnecting
+
+Disconnecting a 019 instance clears its credentials but keeps the instance and its automation settings. To reconnect, call `POST /019mobile/connect` again with the same `instance_id` and fresh credentials. The existing instance is reused, so no new instance slot is consumed and automation settings carry over.
+
+<Note>
+This is also the way to rotate an API token: call connect with the instance's `instance_id` and the new `api_token`.
+</Note>
+
+## Check Connection Status
+
+<CodeGroup>
+
+```bash cURL
+curl -X GET "https://api.megasend.co.il/019mobile/status?instance_id=550e8400-e29b-41d4-a716-446655440000" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
+```
+
+```javascript JavaScript
+const instanceId = '550e8400-e29b-41d4-a716-446655440000';
+
+const response = await fetch(
+  `https://api.megasend.co.il/019mobile/status?instance_id=${instanceId}`,
+  { headers: { 'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN' } }
+);
+
+const status = await response.json();
+console.log('Connected:', status.connected);
+```
+
+```python Python
+import requests
+
+response = requests.get(
+    'https://api.megasend.co.il/019mobile/status',
+    params={'instance_id': '550e8400-e29b-41d4-a716-446655440000'},
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'}
+)
+
+print(response.json())
+```
+
+</CodeGroup>
+
+**Response:**
+
+```json
+{
+  "connected": true,
+  "sender": "0521234567",
+  "username": "your_019_username",
+  "balance": null
+}
+```
+
+`connected` is `true` when the instance has both a sender and stored credentials. `balance` is the 019 account balance when available and may be `null`.
+
+## Disconnect
+
+Remove the stored 019 credentials from an instance:
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST "https://api.megasend.co.il/019mobile/disconnect?instance_id=550e8400-e29b-41d4-a716-446655440000" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
+```
+
+```javascript JavaScript
+const instanceId = '550e8400-e29b-41d4-a716-446655440000';
+
+await fetch(
+  `https://api.megasend.co.il/019mobile/disconnect?instance_id=${instanceId}`,
+  {
+    method: 'POST',
+    headers: { 'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN' }
+  }
+);
+```
+
+```python Python
+import requests
+
+requests.post(
+    'https://api.megasend.co.il/019mobile/disconnect',
+    params={'instance_id': '550e8400-e29b-41d4-a716-446655440000'},
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'}
+)
+```
+
+</CodeGroup>
+
+Returns `{"status": "disconnected"}`. The instance itself is kept so you can [reconnect](#reconnecting) later; use the standard [instance deletion endpoint](/instances/manage#instance-deletion) if you want to remove it entirely.
+
+## Automation Settings
+
+019 instances support inbound-reply automations: a welcome message for first contact, an away message outside business hours, and keyword-based FAQ replies.
+
+### Get Automation Settings
+
+```bash cURL
+curl -X GET "https://api.megasend.co.il/019mobile/550e8400-e29b-41d4-a716-446655440000/automation-settings" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
+```
+
+Returns `{"settings": {...}}` with the currently stored sections.
+
+### Update Automation Settings
+
+`PUT /019mobile/{instance_id}/automation-settings` merges the top-level sections you send (`welcome`, `away`, `faq`) into the stored settings. Sections you omit are left untouched, so you can update one section at a time.
+
+<CodeGroup>
+
+```bash cURL
+curl -X PUT "https://api.megasend.co.il/019mobile/550e8400-e29b-41d4-a716-446655440000/automation-settings" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "welcome": {
+      "enabled": true,
+      "text": "Thanks for reaching out! We will reply shortly."
+    },
+    "faq": {
+      "PRICE": { "type": "reply", "reply_text": "Our plans start at 99 ILS/month." },
+      "SUPPORT": { "type": "flow", "flow_id": "your-flow-uuid" }
+    }
+  }'
+```
+
+```javascript JavaScript
+await fetch(
+  'https://api.megasend.co.il/019mobile/550e8400-e29b-41d4-a716-446655440000/automation-settings',
+  {
+    method: 'PUT',
+    headers: {
+      'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN',
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      away: {
+        enabled: true,
+        text: 'We are closed right now. We will get back to you in the morning.',
+        business_hours: {
+          timezone: 'Asia/Jerusalem',
+          days: {
+            sun: { enabled: true, start: '09:00', end: '18:00' },
+            mon: { enabled: true, start: '09:00', end: '18:00' },
+            sat: { enabled: false }
+          }
+        }
+      }
+    })
+  }
+);
+```
+
+```python Python
+import requests
+
+requests.put(
+    'https://api.megasend.co.il/019mobile/550e8400-e29b-41d4-a716-446655440000/automation-settings',
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'},
+    json={
+        'welcome': {
+            'enabled': True,
+            'text': 'Thanks for reaching out! We will reply shortly.'
+        }
+    }
+)
+```
+
+</CodeGroup>
+
+Returns `{"result": "success", "settings": {...}}` with the full merged settings.
+
+**Sections:**
+
+<ParamField body="welcome" type="object">
+  Auto-reply for new conversations. Fields: `enabled` (boolean, default `false`) and `text` (string, up to 1005 characters).
+</ParamField>
+
+<ParamField body="away" type="object">
+  Auto-reply outside business hours. Fields: `enabled` (boolean), `text` (string, up to 1005 characters), and `business_hours` (object).
+</ParamField>
+
+<ParamField body="away.business_hours" type="object">
+  Weekly schedule with `timezone` (IANA name such as `"Asia/Jerusalem"`, default `"UTC"`) and `days`, an object keyed by `"mon"` through `"sun"`. Each day has `enabled` (boolean), `start`, and `end` (24-hour `HH:MM` local time). A day with `enabled: false` counts as fully outside business hours, and a window whose `start` is at or after its `end` wraps past midnight (for example 22:00 to 02:00).
+</ParamField>
+
+<ParamField body="faq" type="object">
+  Keyword auto-replies: an object mapping each keyword to an action. Each action has `type` (`"reply"` or `"flow"`), plus `reply_text` (up to 1005 characters) for reply actions or `flow_id` for flow actions.
+</ParamField>
+
+<Note>
+A `flow_id` in an FAQ action must reference one of your own [flows](/flows/manage) on this same instance; otherwise the request fails with `404 Flow not found`.
+</Note>
+
+## Sending Messages
+
+Once connected, send SMS through the standard messaging endpoints by passing the 019 instance's `instance_id`. There is no separate 019 send API. See [Send Messages](/messages/send) for the request format, and use text content (SMS has no media or template support).
+
+## Endpoint Reference
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `POST` | `/019mobile/connect` | Verify 019 credentials and create (or reconnect) a 019 instance |
+| `POST` | `/019mobile/disconnect` | Clear stored 019 credentials (`instance_id` query parameter) |
+| `GET` | `/019mobile/status` | Connection status for an instance (`instance_id` query parameter) |
+| `GET` | `/019mobile/{instance_id}/automation-settings` | Get stored automation settings |
+| `PUT` | `/019mobile/{instance_id}/automation-settings` | Merge-update automation settings |
+
+## Best Practices
+
+1. **Keep your API token server-side**: treat the 019 token like a password and rotate it periodically by reconnecting with a fresh token
+2. **Check status before campaigns**: confirm `connected: true` before starting a bulk send from a 019 instance
+3. **Reuse the instance on reconnect**: always pass the existing `instance_id` when reconnecting so automation settings and history stay attached
+4. **Use an approved sender**: sender IDs must be registered with 019; an unregistered sender will cause delivery failures on the carrier side
+5. **Respect local regulations**: Israeli SMS marketing requires prior consent and an opt-out path; see [unsubscribe management](/unsubscribe/manage)
+
+## Next Steps
+
+- [Send your first message](/messages/send) from the connected 019 instance
+- [Handle incoming messages](/messages/incoming) to process SMS replies
+- [Send bulk messages](/messages/bulk-send) to reach many recipients at once
+- [Build flows](/flows/manage) and wire them to FAQ keywords

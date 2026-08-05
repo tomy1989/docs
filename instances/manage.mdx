@@ -4,7 +4,7 @@ description: 'Learn how to create, configure, and manage WhatsApp Business insta
 icon: 'mobile'
 ---
 
-WhatsApp Business instances are the foundation of your messaging setup. Each instance represents a connected channel (WhatsApp, Instagram, Messenger, Telegram, TikTok, or Telnyx SMS) that can send and receive messages. You can manage multiple instances for different use cases or business units.
+WhatsApp Business instances are the foundation of your messaging setup. Each instance represents a connected channel (WhatsApp, Instagram, Messenger, Telegram, TikTok, LINE, or an SMS provider such as Twilio, Telnyx, 019 Mobile, or InforU) that can send and receive messages. You can manage multiple instances for different use cases or business units.
 
 ## What is an Instance?
 
@@ -20,6 +20,10 @@ An instance is a connection between MegaSend and a messaging channel account. Ea
 ### Basic Instance Setup
 
 Create a new WhatsApp Business instance with `POST /instances/me`. The `platform` field defaults to `"whatsapp"`.
+
+<Note>
+This endpoint covers WhatsApp and Instagram instances. SMS and LINE channels are created through their own connect endpoints instead: see the [Twilio](/instances/twilio), [Telnyx](/instances/telnyx), [019 Mobile](/instances/sms-019), [InforU](/instances/sms-inforu), and [LINE](/instances/line) guides.
+</Note>
 
 <CodeGroup>
 

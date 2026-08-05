@@ -1,0 +1,378 @@
+---
+title: 'InforU SMS Channel'
+description: 'Connect your InforUMobile account, an Israeli SMS provider, to send and receive SMS through MegaSend'
+icon: 'message-sms'
+---
+
+InforUMobile (InforU) is an Israeli SMS provider. The InforU channel lets you bring your own InforUMobile account and use it as a MegaSend instance: you connect once with your InforU credentials and registered Sender ID, then send SMS through the same messaging endpoints you use for every other channel. Delivery receipts and inbound replies flow back into MegaSend automatically.
+
+You can complete the entire setup from the [MegaSend dashboard](https://app.megasend.co.il) without writing code; this page documents the underlying API.
+
+## How It Works
+
+- **Bring your own account.** You supply your InforUMobile API username and token. MegaSend stores them securely and uses them to send on your behalf.
+- **Sender ID identity.** An InforU instance is identified by your registered alphanumeric Sender ID (1 to 11 letters or digits), not by a phone number.
+- **One instance, normal messaging.** Connecting creates a regular MegaSend instance. Use its `instance_id` with the standard [send endpoints](/messages/send); there is no separate SMS send API.
+
+<Note>
+The InforU channel must be enabled for your account. If these endpoints return `404` with "InforUMobile is not enabled for your account", contact support. All endpoints below also require an owner account (agent tokens are not accepted).
+</Note>
+
+## Verify Credentials (Optional)
+
+Before connecting, you can test a username and token pair with `POST /inforumobile/verify`. This makes a single validation call to InforU and does not create an instance or store the credentials.
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST "https://api.megasend.co.il/inforumobile/verify" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "username": "your_inforu_username",
+    "token": "your_inforu_api_token"
+  }'
+```
+
+```javascript JavaScript
+const response = await fetch('https://api.megasend.co.il/inforumobile/verify', {
+  method: 'POST',
+  headers: {
+    'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    username: 'your_inforu_username',
+    token: 'your_inforu_api_token'
+  })
+});
+
+const result = await response.json();
+console.log('Valid:', result.valid, 'Balance:', result.balance);
+```
+
+```python Python
+import requests
+
+response = requests.post(
+    'https://api.megasend.co.il/inforumobile/verify',
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'},
+    json={
+        'username': 'your_inforu_username',
+        'token': 'your_inforu_api_token'
+    }
+)
+
+result = response.json()
+print(result['valid'], result.get('balance'))
+```
+
+</CodeGroup>
+
+<ParamField body="username" type="string" required>
+  Your InforUMobile API username.
+</ParamField>
+
+<ParamField body="token" type="string" required>
+  Your InforUMobile API token.
+</ParamField>
+
+**Response:**
+
+```json
+{
+  "valid": true,
+  "balance": 152.5
+}
+```
+
+`balance` is your InforU account balance when the provider reports one, otherwise `null`. Invalid credentials return `400` with error code `inforu_invalid_credentials`; if InforU cannot be reached, you get `400` with `inforu_unreachable`.
+
+## Connect Your InforU Account
+
+`POST /inforumobile/connect` validates your credentials against InforU, stores them, and returns a ready-to-use MegaSend instance.
+
+The endpoint creates a **new instance** by default. If you pass the `instance_id` of an InforU instance you already own, or if you have a previously disconnected InforU instance, that existing instance is **reconnected (rebound)** instead of creating a new one. Reconnecting preserves your automation settings and chat history and does not consume an additional plan instance slot.
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST "https://api.megasend.co.il/inforumobile/connect" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "username": "your_inforu_username",
+    "token": "your_inforu_api_token",
+    "sender": "MyBrand",
+    "nickname": "InforU SMS"
+  }'
+```
+
+```javascript JavaScript
+const response = await fetch('https://api.megasend.co.il/inforumobile/connect', {
+  method: 'POST',
+  headers: {
+    'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    username: 'your_inforu_username',
+    token: 'your_inforu_api_token',
+    sender: 'MyBrand',
+    nickname: 'InforU SMS'
+  })
+});
+
+const { instance_id, sender } = await response.json();
+console.log('Connected instance:', instance_id, 'as', sender);
+```
+
+```python Python
+import requests
+
+response = requests.post(
+    'https://api.megasend.co.il/inforumobile/connect',
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'},
+    json={
+        'username': 'your_inforu_username',
+        'token': 'your_inforu_api_token',
+        'sender': 'MyBrand',
+        'nickname': 'InforU SMS'
+    }
+)
+
+data = response.json()
+print(f"Connected instance: {data['instance_id']} as {data['sender']}")
+```
+
+</CodeGroup>
+
+### Request Fields
+
+<ParamField body="username" type="string" required>
+  Your InforUMobile API username. Stored encrypted.
+</ParamField>
+
+<ParamField body="token" type="string" required>
+  Your InforUMobile API token. Stored encrypted.
+</ParamField>
+
+<ParamField body="sender" type="string" required>
+  Your registered InforU Sender ID: 1 to 11 letters or digits (for example `MyBrand`). Anything else is rejected with "Sender ID must be 1 to 11 letters or digits".
+</ParamField>
+
+<ParamField body="nickname" type="string">
+  Display name for the instance. Defaults to the Sender ID.
+</ParamField>
+
+<ParamField body="instance_id" type="string">
+  Optional. The UUID of an InforU instance you own, to reconnect that specific instance instead of creating a new one.
+</ParamField>
+
+### Response
+
+```json
+{
+  "instance_id": "550e8400-e29b-41d4-a716-446655440000",
+  "sender": "MyBrand"
+}
+```
+
+**Error responses:**
+
+| Status | Error code | Meaning |
+|--------|-----------|---------|
+| `400` | `inforu_credentials_required` | `username`, `token`, or `sender` was missing (the response names the missing fields) |
+| `400` | `inforu_invalid_credentials` | InforU rejected the username/token pair |
+| `400` | `inforu_unreachable` | InforU could not be reached to validate the credentials |
+| `403` | `instance_limit_reached` | Your plan has no free instance slot for another channel |
+
+<Note>
+Your first instance is free. Each additional new instance requires an available slot on an active plan. Reconnecting a disconnected InforU instance never consumes a slot.
+</Note>
+
+## Check Connection Status
+
+`GET /inforumobile/status?instance_id={instance_id}` reports whether the instance is currently connected.
+
+<CodeGroup>
+
+```bash cURL
+curl -X GET "https://api.megasend.co.il/inforumobile/status?instance_id=550e8400-e29b-41d4-a716-446655440000" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
+```
+
+```javascript JavaScript
+const instanceId = '550e8400-e29b-41d4-a716-446655440000';
+
+const response = await fetch(
+  `https://api.megasend.co.il/inforumobile/status?instance_id=${instanceId}`,
+  { headers: { 'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN' } }
+);
+
+const status = await response.json();
+```
+
+</CodeGroup>
+
+**Response:**
+
+```json
+{
+  "connected": true,
+  "sender": "MyBrand",
+  "webhook_configured": true
+}
+```
+
+`webhook_configured` indicates whether the instance has a callback token for delivery receipts and inbound messages (it is generated automatically at connect time).
+
+## Disconnect
+
+`POST /inforumobile/disconnect?instance_id={instance_id}` removes the stored credentials, Sender ID, and callback token from the instance.
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST "https://api.megasend.co.il/inforumobile/disconnect?instance_id=550e8400-e29b-41d4-a716-446655440000" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
+```
+
+```python Python
+import requests
+
+requests.post(
+    'https://api.megasend.co.il/inforumobile/disconnect',
+    params={'instance_id': '550e8400-e29b-41d4-a716-446655440000'},
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'}
+)
+```
+
+</CodeGroup>
+
+Returns `{"status": "disconnected"}`. The instance itself is kept (along with its automation settings and conversation history) so you can reconnect it later with `POST /inforumobile/connect`.
+
+## SMS Automations
+
+Each InforU instance has an automation configuration with three sections: a welcome message, an away message with business hours, and keyword-triggered FAQ replies.
+
+### Get Automation Settings
+
+`GET /inforumobile/{instance_id}/automation-settings` returns the current configuration:
+
+```json
+{
+  "settings": {
+    "welcome": { "enabled": true, "text": "Thanks for reaching out!" },
+    "away": {
+      "enabled": true,
+      "text": "We are closed right now. We will reply in the morning.",
+      "business_hours": {
+        "timezone": "Asia/Jerusalem",
+        "days": {
+          "mon": { "enabled": true, "start": "09:00", "end": "18:00" },
+          "sat": { "enabled": false, "start": "09:00", "end": "18:00" }
+        }
+      }
+    },
+    "faq": {
+      "pricing": { "type": "reply", "reply_text": "Plans start at 99 ILS/month." },
+      "support": { "type": "flow", "flow_id": "6f1c9d2e-1234-4a5b-8c7d-9e0f1a2b3c4d" }
+    }
+  }
+}
+```
+
+### Update Automation Settings
+
+`PUT /inforumobile/{instance_id}/automation-settings` **merges** the top-level keys you send into the stored settings. Sections you omit are left untouched, so you can update just `welcome` without resending `away` or `faq`.
+
+<CodeGroup>
+
+```bash cURL
+curl -X PUT "https://api.megasend.co.il/inforumobile/550e8400-e29b-41d4-a716-446655440000/automation-settings" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "welcome": { "enabled": true, "text": "Thanks for reaching out!" }
+  }'
+```
+
+```javascript JavaScript
+const response = await fetch(
+  'https://api.megasend.co.il/inforumobile/550e8400-e29b-41d4-a716-446655440000/automation-settings',
+  {
+    method: 'PUT',
+    headers: {
+      'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN',
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      welcome: { enabled: true, text: 'Thanks for reaching out!' }
+    })
+  }
+);
+
+const { settings } = await response.json();
+```
+
+</CodeGroup>
+
+**Sections:**
+
+<ParamField body="welcome" type="object">
+  Auto-reply sent to a contact's first inbound SMS. Fields: `enabled` (boolean, default `false`) and `text` (string, max 1600 characters).
+</ParamField>
+
+<ParamField body="away" type="object">
+  Auto-reply sent when an SMS arrives outside business hours. Fields: `enabled` (boolean), `text` (string, max 1600 characters), and `business_hours` with an IANA `timezone` (e.g. `Asia/Jerusalem`) and a `days` map keyed `mon` through `sun`. Each day has `enabled` (default `true`), `start`, and `end` in `HH:MM` 24h local time. A day with `start >= end` wraps past midnight; a disabled day counts entirely as outside business hours.
+</ParamField>
+
+<ParamField body="faq" type="object">
+  Map of trigger keyword to action. A keyword matches when it appears anywhere in the inbound message text (case-insensitive). Each action has `type` (`"reply"` or `"flow"`), plus `reply_text` (max 1600 characters) for replies or `flow_id` for flow triggers. A referenced flow must be one of your own flows on this instance, otherwise the request fails with `404`.
+</ParamField>
+
+Returns `{"result": "success", "settings": {...}}` with the fully merged configuration.
+
+## Delivery Receipts and Inbound Messages
+
+Two callback endpoints exist for InforU to call. They are **not** part of the customer-facing API; you never call them yourself, and they are authenticated by a secret `webhook_token` that MegaSend generates for the instance at connect time.
+
+| Path | Called by InforU for |
+|------|----------------------|
+| `POST /inforumobile-webhook/{instance_id}/{webhook_token}/dlr` | Delivery receipts (message status updates) |
+| `POST /inforumobile-webhook/{instance_id}/{webhook_token}/mo` | Inbound SMS replies from your contacts |
+
+The delivery-receipt URL is attached automatically to every message MegaSend sends, so status updates work with no extra setup. For inbound replies, configure SMS forwarding in your InforUMobile account to point at your instance's `/mo` callback URL. Inbound replies then appear in your MegaSend inbox and trigger the automations above; see [Incoming Messages](/messages/incoming) for how inbound traffic is delivered to you.
+
+## Sending SMS
+
+Once connected, send SMS exactly like any other channel: pass the InforU `instance_id` to the standard messaging endpoints. Text is sent as SMS from your Sender ID. See [Send Messages](/messages/send) for the full request format.
+
+## Endpoint Reference
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `POST` | `/inforumobile/verify` | Test InforU credentials without creating an instance |
+| `POST` | `/inforumobile/connect` | Connect an InforU account (creates or reconnects an instance) |
+| `GET` | `/inforumobile/status` | Check connection status (`instance_id` query parameter) |
+| `POST` | `/inforumobile/disconnect` | Remove credentials from an instance (`instance_id` query parameter) |
+| `GET` | `/inforumobile/{instance_id}/automation-settings` | Get welcome/away/FAQ automation settings |
+| `PUT` | `/inforumobile/{instance_id}/automation-settings` | Merge-update automation settings |
+| `POST` | `/inforumobile-webhook/{instance_id}/{webhook_token}/dlr` | Callback for InforU delivery receipts (provider-facing) |
+| `POST` | `/inforumobile-webhook/{instance_id}/{webhook_token}/mo` | Callback for inbound SMS (provider-facing) |
+
+## Best Practices
+
+1. **Verify before connecting.** Use `/inforumobile/verify` to test credentials (and see your balance) before saving them with `/inforumobile/connect`.
+2. **Reconnect instead of recreating.** To rotate credentials or restore a disconnected channel, call `/inforumobile/connect` with the existing `instance_id`. You keep your automation settings and history and avoid using another plan slot.
+3. **Register your Sender ID with InforU first.** The `sender` you pass must be an alphanumeric Sender ID already registered on your InforUMobile account.
+4. **Update automations one section at a time.** The merge behavior of the automation-settings endpoint means partial updates are safe; never resend sections you did not change.
+5. **Keep credentials server-side.** Your InforU username and token grant full sending access on your account; never expose them in client-side code.
+
+## Next Steps
+
+- [Send your first message](/messages/send) using your InforU instance
+- [Handle incoming messages](/messages/incoming) from SMS replies
+- [Manage your instances](/instances/manage) alongside your other channels
+- [Send bulk campaigns](/messages/bulk-send) over SMS

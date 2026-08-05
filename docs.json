@@ -59,6 +59,25 @@
         ]
       },
       {
+        "group": "Channels",
+        "pages": [
+          "instances/twilio",
+          "instances/telnyx",
+          "instances/sms-019",
+          "instances/sms-inforu",
+          "instances/line"
+        ]
+      },
+      {
+        "group": "Integrations",
+        "pages": [
+          "integrations/shopify",
+          "calendar/calendly",
+          "calendar/google-calendar",
+          "calendar/ai-booking"
+        ]
+      },
+      {
         "group": "API Reference",
         "pages": [
           "api-reference/introduction",

@@ -1,0 +1,277 @@
+---
+title: 'AI Appointment Booking'
+description: 'Let the AI assistant offer available times and book meetings during chat conversations'
+icon: 'robot'
+---
+
+The MegaSend AI assistant can schedule meetings for you. When a customer asks to book a call, demo, or appointment in a WhatsApp conversation, the assistant presents your available meeting types and sends a personal scheduling link where the customer picks a time slot. Every booking lands in your MegaSend appointments calendar automatically.
+
+Booking is an opt-in toggle on your instance's AI settings and requires a connected Calendly account.
+
+## How It Works
+
+1. A customer messages your business and asks to schedule something ("Can I book a demo?").
+2. The assistant looks up the meeting types configured on your connected Calendly account: name, duration, and description.
+3. If more than one meeting type could fit, the assistant lists the options and asks the customer to choose. With a single meeting type, it skips straight ahead.
+4. The assistant generates a fresh, single-use scheduling link for the chosen meeting type and sends it in the chat.
+5. The customer opens the link, picks an available time slot, and confirms. Calendly sends its standard booking confirmation to the customer.
+6. The booking syncs back into MegaSend and appears in your appointments calendar in the dashboard. Cancellations and reschedules made on Calendly sync back too.
+
+A typical conversation looks like this:
+
+```text Example conversation
+Customer:  Hi, I'd like to talk to someone about pricing.
+Assistant: Happy to help! We offer a 15-minute intro call and a
+           30-minute product demo. Which works better for you?
+Customer:  The demo please.
+Assistant: Great choice. Pick a time that suits you here:
+           https://calendly.com/d/abc-123/product-demo
+Customer:  Booked for Tuesday at 14:00!
+Assistant: Perfect, you're all set. You'll receive a confirmation
+           with the meeting details shortly.
+```
+
+<Note>
+Each scheduling link is single-use: it is minted per customer and valid for one booking only. The assistant never reuses a link from earlier in the conversation.
+</Note>
+
+## Prerequisites
+
+- **An active AI chatbot** on the instance (`ai_enabled: true` with a valid AI subscription).
+- **A connected Calendly account** with at least one event type. See [Connect Calendly](/calendar/calendly).
+- The Calendly connection is account-level: one connected account serves all of your instances. The booking toggle, however, is per instance, so you choose exactly which numbers offer booking.
+
+<Note>
+AI booking links are powered by Calendly. A [Google Calendar connection](/calendar/google-calendar) feeds your MegaSend appointments calendar and availability views, but it does not enable the AI booking toggle on its own.
+</Note>
+
+## Setting Up
+
+The usual way to configure this is the dashboard at [app.megasend.co.il](https://app.megasend.co.il): open your instance, go to the AI settings, and switch on appointment booking. The steps below show the equivalent API calls.
+
+<Steps>
+  <Step title="Connect your Calendly account">
+    Connect Calendly from the dashboard's calendar integration page, or follow the [Calendly guide](/calendar/calendly). The connection belongs to your account, so you only do this once for all instances.
+  </Step>
+  <Step title="Enable the AI chatbot on the instance">
+    Make sure the instance has AI settings with `ai_enabled: true` and an `ai_mode` of either `"manual"` or `"shopify"`. Booking works in both modes. If the instance has no AI settings yet, create them:
+
+    <CodeGroup>
+
+    ```bash cURL
+    curl -X POST "https://api.megasend.co.il/ai/settings" \
+      -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN" \
+      -H "Content-Type: application/json" \
+      -d '{
+        "instance_id": "550e8400-e29b-41d4-a716-446655440000",
+        "ai_enabled": true,
+        "ai_mode": "manual",
+        "manual_system_prompt": "You are a helpful assistant for Acme Consulting.",
+        "appointment_booking_enabled": true
+      }'
+    ```
+
+    ```javascript JavaScript
+    const response = await fetch('https://api.megasend.co.il/ai/settings', {
+      method: 'POST',
+      headers: {
+        'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        instance_id: '550e8400-e29b-41d4-a716-446655440000',
+        ai_enabled: true,
+        ai_mode: 'manual',
+        manual_system_prompt: 'You are a helpful assistant for Acme Consulting.',
+        appointment_booking_enabled: true
+      })
+    });
+
+    const settings = await response.json();
+    ```
+
+    ```python Python
+    import requests
+
+    response = requests.post(
+        'https://api.megasend.co.il/ai/settings',
+        headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'},
+        json={
+            'instance_id': '550e8400-e29b-41d4-a716-446655440000',
+            'ai_enabled': True,
+            'ai_mode': 'manual',
+            'manual_system_prompt': 'You are a helpful assistant for Acme Consulting.',
+            'appointment_booking_enabled': True
+        }
+    )
+
+    settings = response.json()
+    ```
+
+    </CodeGroup>
+  </Step>
+  <Step title="Turn on appointment booking">
+    For an instance that already has AI settings, flip the toggle with a partial update. Only include the fields you want to change:
+
+    <CodeGroup>
+
+    ```bash cURL
+    curl -X PUT "https://api.megasend.co.il/ai/settings/550e8400-e29b-41d4-a716-446655440000" \
+      -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN" \
+      -H "Content-Type: application/json" \
+      -d '{
+        "appointment_booking_enabled": true
+      }'
+    ```
+
+    ```javascript JavaScript
+    const instanceId = '550e8400-e29b-41d4-a716-446655440000';
+
+    const response = await fetch(
+      `https://api.megasend.co.il/ai/settings/${instanceId}`,
+      {
+        method: 'PUT',
+        headers: {
+          'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ appointment_booking_enabled: true })
+      }
+    );
+
+    const settings = await response.json();
+    ```
+
+    ```python Python
+    import requests
+
+    instance_id = '550e8400-e29b-41d4-a716-446655440000'
+
+    response = requests.put(
+        f'https://api.megasend.co.il/ai/settings/{instance_id}',
+        headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'},
+        json={'appointment_booking_enabled': True}
+    )
+
+    settings = response.json()
+    ```
+
+    </CodeGroup>
+
+    The `PUT` endpoint upserts: it creates default settings first if the instance has none yet.
+  </Step>
+  <Step title="Test it in a real chat">
+    Message your WhatsApp number from another phone and ask to book a meeting. The assistant should offer your Calendly meeting types and reply with a scheduling link. After you complete the booking, check the appointments calendar in the dashboard to see it arrive.
+  </Step>
+</Steps>
+
+<Warning>
+Enabling `appointment_booking_enabled` without a connected Calendly account has no effect: the assistant simply will not offer booking links until a Calendly connection exists. If the connection later expires or is revoked, the assistant degrades gracefully and offers a human follow-up instead of sharing broken links.
+</Warning>
+
+## Booking Settings
+
+These are the AI settings fields that control appointment booking. They live on the same AI settings object as the rest of your chatbot configuration.
+
+<ParamField body="appointment_booking_enabled" type="boolean" default="false">
+  Lets the AI offer Calendly booking links in conversation. Requires a connected Calendly account. Per instance, so you can enable booking on some numbers and not others.
+</ParamField>
+
+<ParamField body="ai_enabled" type="boolean" default="false">
+  Master switch for the AI chatbot on this instance. Booking only happens while the assistant is responding, so this must be `true`.
+</ParamField>
+
+<ParamField body="ai_mode" type="string" required>
+  Chatbot mode: `"manual"` (custom system prompt) or `"shopify"` (e-commerce assistant). Booking works in both modes; in Shopify mode the assistant handles product questions and scheduling in the same conversation. Required when creating settings with `POST /ai/settings`.
+</ParamField>
+
+Other AI settings such as `assistant_name`, `response_tone`, `custom_instructions`, and the `business_hours_*` fields shape the assistant's overall behavior and apply to booking conversations too. For example, with business hours enforcement on, the assistant (and therefore booking) only responds during your configured hours.
+
+## Checking Current Settings
+
+Read the current AI settings for an instance, including the booking toggle:
+
+<CodeGroup>
+
+```bash cURL
+curl -X GET "https://api.megasend.co.il/ai/settings/550e8400-e29b-41d4-a716-446655440000" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
+```
+
+```javascript JavaScript
+const instanceId = '550e8400-e29b-41d4-a716-446655440000';
+
+const response = await fetch(
+  `https://api.megasend.co.il/ai/settings/${instanceId}`,
+  {
+    headers: { 'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN' }
+  }
+);
+
+const settings = await response.json();
+console.log('Booking enabled:', settings.appointment_booking_enabled);
+```
+
+```python Python
+import requests
+
+instance_id = '550e8400-e29b-41d4-a716-446655440000'
+
+response = requests.get(
+    f'https://api.megasend.co.il/ai/settings/{instance_id}',
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'}
+)
+
+settings = response.json()
+print('Booking enabled:', settings['appointment_booking_enabled'])
+```
+
+</CodeGroup>
+
+**Response (booking-relevant fields shown):**
+
+```json
+{
+  "id": "7c9e6679-7425-40de-944b-e07fc1f90ae7",
+  "user_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "instance_id": "550e8400-e29b-41d4-a716-446655440000",
+  "ai_enabled": true,
+  "ai_mode": "manual",
+  "appointment_booking_enabled": true,
+  "assistant_name": "Alisa",
+  "response_tone": "professional",
+  "business_hours_enabled": false,
+  "created_at": "2026-08-01T10:30:00Z",
+  "updated_at": "2026-08-05T09:15:00Z"
+}
+```
+
+If the instance has no AI settings yet, `GET` returns defaults (with `appointment_booking_enabled: false`) instead of a 404.
+
+<Note>
+Agent accounts can view and update AI settings for an instance when they have the `can_send_messages` permission on that instance.
+</Note>
+
+## What the Assistant Will and Won't Do
+
+- It only shares scheduling links generated through your Calendly connection; it never invents booking URLs.
+- It presents the link plainly on its own line so it stays tappable in WhatsApp.
+- It mints a new single-use link per customer rather than reusing old ones.
+- When several meeting types exist and the request is ambiguous, it asks the customer to choose before sending a link.
+- If the scheduling system is temporarily unavailable, it apologizes and offers to have a teammate follow up. Technical error details are never exposed to the customer.
+
+## Endpoint Reference
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `POST` | `/ai/settings` | Create (or update) AI settings for an instance |
+| `GET` | `/ai/settings/{instance_id}` | Get AI settings; returns defaults if none exist |
+| `PUT` | `/ai/settings/{instance_id}` | Update AI settings (upserts; all fields optional) |
+| `DELETE` | `/ai/settings/{instance_id}` | Disable AI settings for an instance |
+
+## Next Steps
+
+- [Connect Calendly](/calendar/calendly) to power AI booking links
+- [Connect Google Calendar](/calendar/google-calendar) to bring availability and events into your appointments calendar
+- [Handle incoming messages](/messages/incoming) to understand how conversations reach the assistant
+- [Learn the 24-hour window](/guides/24-hour-window) rules that govern WhatsApp replies

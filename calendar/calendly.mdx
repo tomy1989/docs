@@ -1,0 +1,502 @@
+---
+title: 'Calendly Integration'
+description: 'Connect Calendly so the AI assistant can offer and book meeting slots in chat'
+icon: 'calendar'
+---
+
+Connect your Calendly account to MegaSend to bring scheduling into your conversations. Once connected, the AI assistant can offer available meeting times and book meetings directly in chat, and your Calendly bookings stay in sync with MegaSend automatically.
+
+<Note>
+Most users connect Calendly from the dashboard at [app.megasend.co.il](https://app.megasend.co.il), which handles the whole OAuth flow with a single click. The API endpoints below are for programmatic control, for example when building your own management surface.
+</Note>
+
+## How the Connection Works
+
+Calendly connections are account-level: they belong to your MegaSend account, not to a specific instance. Each team member with integration management access can connect their own Calendly account, so an account may hold more than one connection. Every connection gets a `connection_id` (UUID) that you pass to the other endpoints, and the `member_is_owner` field tells you whether the account owner or a team member connected it.
+
+Reconnecting the same Calendly account updates the existing connection instead of creating a duplicate.
+
+## Connecting Calendly
+
+Connecting is a standard OAuth flow in two steps: get an authorization URL, then exchange the code Calendly returns.
+
+### Step 1: Start the OAuth Flow
+
+Request an authorization URL and redirect your user to it:
+
+<CodeGroup>
+
+```bash cURL
+curl -X GET "https://api.megasend.co.il/calendly/auth/start" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
+```
+
+```javascript JavaScript
+const response = await fetch('https://api.megasend.co.il/calendly/auth/start', {
+  headers: { 'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN' }
+});
+
+const { auth_url } = await response.json();
+window.location.href = auth_url; // send the user to Calendly to approve
+```
+
+```python Python
+import requests
+
+response = requests.get(
+    'https://api.megasend.co.il/calendly/auth/start',
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'}
+)
+
+auth_url = response.json()['auth_url']
+print(f"Open this URL to approve: {auth_url}")
+```
+
+</CodeGroup>
+
+**Response:**
+
+```json
+{
+  "auth_url": "https://auth.calendly.com/oauth/authorize?client_id=...&response_type=code&redirect_uri=...&state=..."
+}
+```
+
+The user opens `auth_url`, signs in to Calendly, and approves access. Calendly then redirects back to MegaSend's configured redirect URI with `code` and `state` query parameters.
+
+### Step 2: Complete the Connection
+
+Pass the `code` and `state` from the redirect to the callback endpoint:
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST "https://api.megasend.co.il/calendly/auth/callback" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "code": "AUTHORIZATION_CODE_FROM_CALENDLY",
+    "state": "STATE_FROM_REDIRECT"
+  }'
+```
+
+```javascript JavaScript
+const response = await fetch('https://api.megasend.co.il/calendly/auth/callback', {
+  method: 'POST',
+  headers: {
+    'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    code: 'AUTHORIZATION_CODE_FROM_CALENDLY',
+    state: 'STATE_FROM_REDIRECT'
+  })
+});
+
+const connection = await response.json();
+console.log('Connected:', connection.connection_id);
+```
+
+```python Python
+import requests
+
+response = requests.post(
+    'https://api.megasend.co.il/calendly/auth/callback',
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'},
+    json={
+        'code': 'AUTHORIZATION_CODE_FROM_CALENDLY',
+        'state': 'STATE_FROM_REDIRECT'
+    }
+)
+
+connection = response.json()
+print(f"Connected: {connection['connection_id']}")
+```
+
+</CodeGroup>
+
+<ParamField body="code" type="string" required>
+  The authorization code Calendly appended to the redirect URL.
+</ParamField>
+
+<ParamField body="state" type="string" required>
+  The state value from the redirect. It is bound to the user who started the flow and expires; if it is invalid the API returns `400` and you should restart from Step 1.
+</ParamField>
+
+**Response:**
+
+```json
+{
+  "connection_id": "9f1c2d34-5678-4abc-9def-0123456789ab",
+  "provider": "calendly",
+  "member_user_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "member_is_owner": true,
+  "account_email": "you@yourbusiness.com",
+  "account_name": "Your Name",
+  "status": "connected",
+  "default_calendar_id": null,
+  "timezone": "Asia/Jerusalem",
+  "webhook_status": "active",
+  "last_synced_at": null,
+  "last_error": null,
+  "connected_at": "2026-08-05T10:30:00Z",
+  "appointment_count": null
+}
+```
+
+Right after connecting, MegaSend subscribes to Calendly webhooks so bookings made anywhere (including on Calendly itself) are mirrored into MegaSend. If your Calendly plan does not support webhooks (for example the free plan), the connection still succeeds and `webhook_status` is `"unavailable"`.
+
+## Checking Connection Status
+
+List every Calendly connection on your account, including how many appointments each has synced:
+
+<CodeGroup>
+
+```bash cURL
+curl -X GET "https://api.megasend.co.il/calendly/status" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
+```
+
+```javascript JavaScript
+const response = await fetch('https://api.megasend.co.il/calendly/status', {
+  headers: { 'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN' }
+});
+
+const { connections } = await response.json();
+console.log('Calendly connections:', connections.length);
+```
+
+```python Python
+import requests
+
+response = requests.get(
+    'https://api.megasend.co.il/calendly/status',
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'}
+)
+
+for conn in response.json()['connections']:
+    print(conn['connection_id'], conn['status'], conn['webhook_status'])
+```
+
+</CodeGroup>
+
+Returns a `connections` array of connection objects in the same shape as the callback response, with `appointment_count` populated. Useful fields to watch:
+
+- `status`: `"connected"` means the connection is usable; a disconnected connection must be reconnected via the OAuth flow before other endpoints will accept it.
+- `webhook_status`: `"active"` when booking sync is live, `"unavailable"` when the Calendly plan cannot receive webhooks.
+- `last_error`: the most recent sync or provider error, if any.
+
+## Listing Event Types
+
+Fetch the meeting types defined in the connected Calendly account. These are read live from Calendly:
+
+<CodeGroup>
+
+```bash cURL
+curl -X GET "https://api.megasend.co.il/calendly/event-types?connection_id=9f1c2d34-5678-4abc-9def-0123456789ab" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
+```
+
+```javascript JavaScript
+const connectionId = '9f1c2d34-5678-4abc-9def-0123456789ab';
+
+const response = await fetch(
+  `https://api.megasend.co.il/calendly/event-types?connection_id=${connectionId}`,
+  { headers: { 'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN' } }
+);
+
+const { event_types } = await response.json();
+event_types.forEach(et => console.log(et.name, `${et.duration} min`));
+```
+
+```python Python
+import requests
+
+response = requests.get(
+    'https://api.megasend.co.il/calendly/event-types',
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'},
+    params={'connection_id': '9f1c2d34-5678-4abc-9def-0123456789ab'}
+)
+
+for et in response.json()['event_types']:
+    print(et['name'], et['duration'], et['scheduling_url'])
+```
+
+</CodeGroup>
+
+**Response:**
+
+```json
+{
+  "connection_id": "9f1c2d34-5678-4abc-9def-0123456789ab",
+  "event_types": [
+    {
+      "uri": "https://api.calendly.com/event_types/AAAAAAAAAAAAAAAA",
+      "name": "Intro Call",
+      "duration": 30,
+      "scheduling_url": "https://calendly.com/your-name/intro-call",
+      "description": "A 30 minute introduction call.",
+      "kind": "solo"
+    }
+  ]
+}
+```
+
+`duration` is in minutes. Keep the `uri` of the event type you want to offer; it is the identifier used when creating scheduling links.
+
+## Creating Scheduling Links
+
+Generate a single-use Calendly booking link for a specific event type. Single-use links are ideal to send in chat: they can only be used to book once, so a forwarded link cannot be reused.
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST "https://api.megasend.co.il/calendly/scheduling-links" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "connection_id": "9f1c2d34-5678-4abc-9def-0123456789ab",
+    "event_type_uri": "https://api.calendly.com/event_types/AAAAAAAAAAAAAAAA"
+  }'
+```
+
+```javascript JavaScript
+const response = await fetch('https://api.megasend.co.il/calendly/scheduling-links', {
+  method: 'POST',
+  headers: {
+    'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    connection_id: '9f1c2d34-5678-4abc-9def-0123456789ab',
+    event_type_uri: 'https://api.calendly.com/event_types/AAAAAAAAAAAAAAAA'
+  })
+});
+
+const { booking_url } = await response.json();
+console.log('Send this link to your customer:', booking_url);
+```
+
+```python Python
+import requests
+
+response = requests.post(
+    'https://api.megasend.co.il/calendly/scheduling-links',
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'},
+    json={
+        'connection_id': '9f1c2d34-5678-4abc-9def-0123456789ab',
+        'event_type_uri': 'https://api.calendly.com/event_types/AAAAAAAAAAAAAAAA'
+    }
+)
+
+print(response.json()['booking_url'])
+```
+
+</CodeGroup>
+
+<ParamField body="connection_id" type="string" required>
+  UUID of the Calendly connection to create the link with.
+</ParamField>
+
+<ParamField body="event_type_uri" type="string" required>
+  The `uri` of an event type from the event types endpoint. It must belong to the connected Calendly account, otherwise the API returns `400`.
+</ParamField>
+
+**Response:**
+
+```json
+{
+  "booking_url": "https://calendly.com/d/abc-def-ghi",
+  "single_use": true
+}
+```
+
+## Keeping Bookings in Sync
+
+MegaSend relies on a Calendly webhook subscription to mirror bookings and cancellations as they happen. Inbound deliveries are signature-verified before they are processed. If `webhook_status` shows `"unavailable"` (for example after upgrading your Calendly plan), re-provision the subscription:
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST "https://api.megasend.co.il/calendly/webhook/refresh?connection_id=9f1c2d34-5678-4abc-9def-0123456789ab" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
+```
+
+```javascript JavaScript
+const connectionId = '9f1c2d34-5678-4abc-9def-0123456789ab';
+
+const response = await fetch(
+  `https://api.megasend.co.il/calendly/webhook/refresh?connection_id=${connectionId}`,
+  {
+    method: 'POST',
+    headers: { 'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN' }
+  }
+);
+
+const { webhook_status } = await response.json();
+console.log('Webhook status:', webhook_status);
+```
+
+```python Python
+import requests
+
+response = requests.post(
+    'https://api.megasend.co.il/calendly/webhook/refresh',
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'},
+    params={'connection_id': '9f1c2d34-5678-4abc-9def-0123456789ab'}
+)
+
+print(response.json()['webhook_status'])
+```
+
+</CodeGroup>
+
+**Response:**
+
+```json
+{
+  "webhook_status": "active"
+}
+```
+
+Returns `"active"` when the subscription was created successfully, or `"unavailable"` when the Calendly plan cannot receive webhooks.
+
+## Disconnecting
+
+There are two levels of removal: a soft disconnect that keeps the connection record, and a permanent delete.
+
+### Disconnect
+
+Revokes access and tears down the Calendly webhook subscription, but keeps the connection record and its synced appointments. Reconnecting the same Calendly account later rebinds to this record.
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST "https://api.megasend.co.il/calendly/disconnect?connection_id=9f1c2d34-5678-4abc-9def-0123456789ab" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
+```
+
+```javascript JavaScript
+const connectionId = '9f1c2d34-5678-4abc-9def-0123456789ab';
+
+await fetch(
+  `https://api.megasend.co.il/calendly/disconnect?connection_id=${connectionId}`,
+  {
+    method: 'POST',
+    headers: { 'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN' }
+  }
+);
+```
+
+```python Python
+import requests
+
+requests.post(
+    'https://api.megasend.co.il/calendly/disconnect',
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'},
+    params={'connection_id': '9f1c2d34-5678-4abc-9def-0123456789ab'}
+)
+```
+
+</CodeGroup>
+
+**Response:**
+
+```json
+{
+  "success": true
+}
+```
+
+### Remove a Connection Permanently
+
+Deletes the connection record and every booking that was mirrored onto it. If the connection is still active, it is disconnected first so the webhook subscription is cleanly removed on Calendly's side.
+
+<CodeGroup>
+
+```bash cURL
+curl -X DELETE "https://api.megasend.co.il/calendly/connection?connection_id=9f1c2d34-5678-4abc-9def-0123456789ab" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
+```
+
+```javascript JavaScript
+const connectionId = '9f1c2d34-5678-4abc-9def-0123456789ab';
+
+const response = await fetch(
+  `https://api.megasend.co.il/calendly/connection?connection_id=${connectionId}`,
+  {
+    method: 'DELETE',
+    headers: { 'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN' }
+  }
+);
+
+const { deleted_appointments } = await response.json();
+console.log('Appointments removed:', deleted_appointments);
+```
+
+```python Python
+import requests
+
+response = requests.delete(
+    'https://api.megasend.co.il/calendly/connection',
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'},
+    params={'connection_id': '9f1c2d34-5678-4abc-9def-0123456789ab'}
+)
+
+print(response.json())
+```
+
+</CodeGroup>
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "deleted_appointments": 12
+}
+```
+
+<Warning>
+Permanent removal cannot be undone. All appointments synced from this connection are deleted with it. Use disconnect instead if you may reconnect the same Calendly account later.
+</Warning>
+
+## AI Booking in Chat
+
+Once a connection is active, the AI assistant can use it during conversations: offering your available meeting slots, sharing booking links, and confirming meetings without a human agent stepping in. See [AI Booking](/calendar/ai-booking) for how to enable and configure this.
+
+## Error Handling
+
+| Status | Meaning |
+|--------|---------|
+| `400` | Invalid or expired OAuth `state`, a rejected authorization code, or an event type that does not belong to the connected account |
+| `404` | The `connection_id` does not exist on your account |
+| `409` | The connection is disconnected or Calendly revoked access. Reconnect via the OAuth flow |
+| `503` | Calendly is temporarily unavailable. Retry after a short delay |
+
+## Endpoint Reference
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/calendly/auth/start` | Get the Calendly OAuth authorization URL |
+| `POST` | `/calendly/auth/callback` | Exchange the OAuth code and create the connection |
+| `GET` | `/calendly/status` | List all Calendly connections on the account |
+| `GET` | `/calendly/event-types` | List event types from the connected Calendly account |
+| `POST` | `/calendly/scheduling-links` | Create a single-use booking link for an event type |
+| `POST` | `/calendly/webhook/refresh` | Re-provision the booking sync webhook subscription |
+| `POST` | `/calendly/disconnect` | Disconnect but keep the connection record and appointments |
+| `DELETE` | `/calendly/connection` | Permanently delete the connection and its synced appointments |
+
+## Best Practices
+
+1. **Check status before booking flows.** Confirm `status` is `"connected"` via `/calendly/status` before generating links; a `409` means the user needs to reconnect.
+2. **Use single-use links in chat.** A link from `/calendly/scheduling-links` books exactly one meeting, so forwarded messages cannot create surprise bookings.
+3. **Watch `webhook_status`.** If it reads `"unavailable"`, bookings made on Calendly will not sync into MegaSend. Upgrade the Calendly plan if needed, then call `/calendly/webhook/refresh`.
+4. **Cache event type URIs sensibly.** Event types change rarely, but re-fetch them after editing meeting types in Calendly so you never link to a removed event type.
+5. **Prefer disconnect over delete.** Disconnect preserves appointment history and makes reconnecting seamless; reserve the permanent delete for when the account is truly gone.
+
+## Next Steps
+
+- [Enable AI booking](/calendar/ai-booking) so the assistant can offer and book slots in chat
+- [Connect Google Calendar](/calendar/google-calendar) if you schedule from your own calendar instead
+- [Set up webhooks](/webhooks/setup) to receive real-time updates from MegaSend

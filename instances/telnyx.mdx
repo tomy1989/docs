@@ -1,0 +1,428 @@
+---
+title: 'Telnyx SMS Channel'
+description: 'Connect your own Telnyx phone number to send and receive SMS through MegaSend'
+icon: 'phone'
+---
+
+The Telnyx channel turns a phone number from your own Telnyx account into a MegaSend instance for two-way SMS. Once connected, the number behaves like any other channel: you send messages through the standard messaging endpoints, inbound texts arrive in your inbox, and you can layer welcome, away, and FAQ automations on top.
+
+You bring your own Telnyx account. MegaSend never buys or manages numbers for you; it verifies a number you already own, registers its webhook, and routes traffic.
+
+## How the Connection Works
+
+A single call to `POST /telnyx/connect` does everything:
+
+1. Validates the phone number (normalized to E.164 format).
+2. Verifies the number exists on your Telnyx account and is assigned to a messaging profile.
+3. Points that messaging profile's webhook at MegaSend so inbound SMS and delivery receipts flow in.
+4. Creates a new instance with `platform: "telnyx"`, or rebinds one of your previously disconnected Telnyx instances.
+
+You do not create the instance separately via `POST /instances/me`. The connect endpoint creates it for you and returns its `instance_id`, which you then use everywhere else: sending messages, checking status, and configuring automations.
+
+<Note>
+Telnyx endpoints require an owner access token. Agent accounts cannot connect or disconnect channels. You can also complete this whole flow visually in the dashboard at [app.megasend.co.il](https://app.megasend.co.il).
+</Note>
+
+### Prerequisites
+
+From your Telnyx portal you need:
+
+- An **SMS-capable phone number** assigned to a **messaging profile**
+- A **Telnyx API key** (Account Settings, then Keys & Credentials)
+- Your account's **Ed25519 public key** (same Keys & Credentials page). MegaSend uses it to verify that inbound webhooks really come from Telnyx.
+
+## List Your Telnyx Numbers
+
+Before connecting, you can verify an API key and list the SMS-capable numbers on the account. This is useful for building a pick-from-list experience instead of asking users to type a number.
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST "https://api.megasend.co.il/telnyx/phone-numbers" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "api_key": "YOUR_TELNYX_API_KEY"
+  }'
+```
+
+```javascript JavaScript
+const response = await fetch('https://api.megasend.co.il/telnyx/phone-numbers', {
+  method: 'POST',
+  headers: {
+    'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({ api_key: 'YOUR_TELNYX_API_KEY' })
+});
+
+const { numbers } = await response.json();
+console.log(numbers);
+```
+
+```python Python
+import requests
+
+response = requests.post(
+    'https://api.megasend.co.il/telnyx/phone-numbers',
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'},
+    json={'api_key': 'YOUR_TELNYX_API_KEY'}
+)
+
+numbers = response.json()['numbers']
+print(numbers)
+```
+
+</CodeGroup>
+
+<ParamField body="api_key" type="string" required>
+  Your Telnyx API key. It is used for a single lookup call to Telnyx and is never logged or stored by this endpoint.
+</ParamField>
+
+**Response:**
+
+```json
+{
+  "numbers": [
+    {
+      "phone_number": "+15550001111",
+      "messaging_profile_id": "40017a5e-1234-5678-9abc-def012345678",
+      "sms_enabled": true
+    }
+  ]
+}
+```
+
+If Telnyx rejects the key, the endpoint returns `400` with error code `telnyx_invalid_api_key`.
+
+## Connect a Number
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST "https://api.megasend.co.il/telnyx/connect" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "phone_number": "+15550001111",
+    "api_key": "YOUR_TELNYX_API_KEY",
+    "public_key": "YOUR_TELNYX_ED25519_PUBLIC_KEY",
+    "nickname": "Support SMS Line"
+  }'
+```
+
+```javascript JavaScript
+const response = await fetch('https://api.megasend.co.il/telnyx/connect', {
+  method: 'POST',
+  headers: {
+    'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    phone_number: '+15550001111',
+    api_key: 'YOUR_TELNYX_API_KEY',
+    public_key: 'YOUR_TELNYX_ED25519_PUBLIC_KEY',
+    nickname: 'Support SMS Line'
+  })
+});
+
+const { instance_id } = await response.json();
+console.log('Connected. Instance:', instance_id);
+```
+
+```python Python
+import requests
+
+response = requests.post(
+    'https://api.megasend.co.il/telnyx/connect',
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'},
+    json={
+        'phone_number': '+15550001111',
+        'api_key': 'YOUR_TELNYX_API_KEY',
+        'public_key': 'YOUR_TELNYX_ED25519_PUBLIC_KEY',
+        'nickname': 'Support SMS Line'
+    }
+)
+
+instance_id = response.json()['instance_id']
+print(f"Connected. Instance: {instance_id}")
+```
+
+</CodeGroup>
+
+### Request Fields
+
+<ParamField body="phone_number" type="string" required>
+  The Telnyx number to connect, in E.164 format (for example `+15550001111`). Other common formats are normalized automatically.
+</ParamField>
+
+<ParamField body="api_key" type="string" required>
+  Your Telnyx API key. Stored encrypted and used to send messages from this number. Omitting it returns `400` with error code `telnyx_credentials_required`.
+</ParamField>
+
+<ParamField body="public_key" type="string" required>
+  Your Telnyx account's Ed25519 public key. Used to verify the signature on every inbound webhook. Omitting it returns `400` with error code `telnyx_credentials_required`.
+</ParamField>
+
+<ParamField body="nickname" type="string">
+  Display name for the instance. Defaults to the phone number.
+</ParamField>
+
+<ParamField body="instance_id" type="string">
+  Optional. When reconnecting, pass the id of one of your disconnected Telnyx instances to rebind that exact instance, preserving its automation settings and chat history.
+</ParamField>
+
+### Response
+
+```json
+{
+  "instance_id": "550e8400-e29b-41d4-a716-446655440000",
+  "phone_number": "+15550001111",
+  "messaging_profile_id": "40017a5e-1234-5678-9abc-def012345678"
+}
+```
+
+### Errors
+
+| Status | Meaning |
+|--------|---------|
+| `400` | Invalid phone format, missing `api_key` or `public_key`, number not found on the Telnyx account, or the number has no messaging profile |
+| `403` | `instance_limit_reached`: your plan has no free instance slot for a new connection |
+| `409` | The number is already connected to another MegaSend account, or its messaging profile is already used by another connected number |
+
+<Warning>
+Telnyx webhooks are configured per messaging profile, and one profile can hold many numbers. Each connected number needs its own dedicated messaging profile. If you get a `409` about a shared profile, create a new messaging profile in the Telnyx portal, assign the number to it, and connect again.
+</Warning>
+
+<Note>
+Your first instance is free. Connecting additional instances (across all channels) requires an active subscription with a free slot under your plan's instance limit. Reconnecting a number to one of your existing Telnyx instances never consumes an extra slot.
+</Note>
+
+## Check Connection Status
+
+<CodeGroup>
+
+```bash cURL
+curl -X GET "https://api.megasend.co.il/telnyx/status?instance_id=550e8400-e29b-41d4-a716-446655440000" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
+```
+
+```javascript JavaScript
+const instanceId = '550e8400-e29b-41d4-a716-446655440000';
+
+const response = await fetch(
+  `https://api.megasend.co.il/telnyx/status?instance_id=${instanceId}`,
+  { headers: { 'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN' } }
+);
+
+const status = await response.json();
+console.log(status);
+```
+
+</CodeGroup>
+
+**Response:**
+
+```json
+{
+  "connected": true,
+  "phone_number": "+15550001111",
+  "messaging_profile_id": "40017a5e-1234-5678-9abc-def012345678",
+  "webhook_ok": true
+}
+```
+
+`webhook_ok` is `true` when the number's messaging profile webhook is registered with MegaSend, meaning inbound SMS will arrive.
+
+## Disconnect a Number
+
+Disconnecting clears the Telnyx webhook registration and removes the stored credentials. The instance itself is kept so its automation settings and conversation history survive; reconnect the same or a different number to it later.
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST "https://api.megasend.co.il/telnyx/disconnect?instance_id=550e8400-e29b-41d4-a716-446655440000" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
+```
+
+```javascript JavaScript
+const instanceId = '550e8400-e29b-41d4-a716-446655440000';
+
+await fetch(
+  `https://api.megasend.co.il/telnyx/disconnect?instance_id=${instanceId}`,
+  {
+    method: 'POST',
+    headers: { 'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN' }
+  }
+);
+```
+
+</CodeGroup>
+
+Returns `{"status": "disconnected"}` on success.
+
+## Automation Settings
+
+Each Telnyx instance supports three built-in SMS automations, evaluated in priority order for every inbound message: **welcome** (fires on the first-ever message from a contact), **FAQ** (keyword-triggered replies or flows), and **away** (outside business hours, at most once per contact per 12 hours). When one fires, it answers the message on its own.
+
+### Get Settings
+
+<CodeGroup>
+
+```bash cURL
+curl -X GET "https://api.megasend.co.il/telnyx/550e8400-e29b-41d4-a716-446655440000/automation-settings" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
+```
+
+```javascript JavaScript
+const response = await fetch(
+  'https://api.megasend.co.il/telnyx/550e8400-e29b-41d4-a716-446655440000/automation-settings',
+  { headers: { 'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN' } }
+);
+
+const { settings } = await response.json();
+console.log(settings);
+```
+
+</CodeGroup>
+
+### Update Settings
+
+Updates are a **top-level merge**: only the sections you send (`welcome`, `away`, `faq`) are overwritten, other sections are left untouched. This lets you save the welcome message without resending your FAQ rules.
+
+<CodeGroup>
+
+```bash cURL
+curl -X PUT "https://api.megasend.co.il/telnyx/550e8400-e29b-41d4-a716-446655440000/automation-settings" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "welcome": { "enabled": true, "text": "Thanks for texting us! How can we help?" },
+    "away": {
+      "enabled": true,
+      "text": "We are currently closed. We will reply during business hours.",
+      "business_hours": {
+        "timezone": "Asia/Jerusalem",
+        "days": {
+          "mon": { "enabled": true, "start": "09:00", "end": "18:00" },
+          "sun": { "enabled": false }
+        }
+      }
+    },
+    "faq": {
+      "pricing": { "type": "reply", "reply_text": "Our plans start at $19/month. See megasend.co.il/pricing" },
+      "order": { "type": "flow", "flow_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890" }
+    }
+  }'
+```
+
+```javascript JavaScript
+const settings = {
+  welcome: { enabled: true, text: 'Thanks for texting us! How can we help?' },
+  faq: {
+    pricing: { type: 'reply', reply_text: 'Our plans start at $19/month.' }
+  }
+};
+
+const response = await fetch(
+  'https://api.megasend.co.il/telnyx/550e8400-e29b-41d4-a716-446655440000/automation-settings',
+  {
+    method: 'PUT',
+    headers: {
+      'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN',
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(settings)
+  }
+);
+
+console.log(await response.json());
+```
+
+```python Python
+import requests
+
+settings = {
+    'welcome': {'enabled': True, 'text': 'Thanks for texting us! How can we help?'},
+    'faq': {
+        'pricing': {'type': 'reply', 'reply_text': 'Our plans start at $19/month.'}
+    }
+}
+
+response = requests.put(
+    'https://api.megasend.co.il/telnyx/550e8400-e29b-41d4-a716-446655440000/automation-settings',
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'},
+    json=settings
+)
+
+print(response.json())
+```
+
+</CodeGroup>
+
+### Fields
+
+<ParamField body="welcome" type="object">
+  First-message auto-reply. `enabled` (boolean, default `false`) and `text` (string, up to 1600 characters). Sent once, on the first-ever inbound message from a contact.
+</ParamField>
+
+<ParamField body="away" type="object">
+  Out-of-hours auto-reply. `enabled` (boolean, default `false`), `text` (string, up to 1600 characters), and `business_hours` (see below). Sent when a message arrives outside business hours, at most once per contact every 12 hours.
+</ParamField>
+
+<ParamField body="away.business_hours" type="object">
+  Weekly schedule. `timezone` is an IANA name (for example `Asia/Jerusalem`, default `UTC`). `days` maps `mon` through `sun` to `{ enabled, start, end }`, with times in 24-hour `HH:MM` local time. Set `enabled: false` to mark a whole day as closed. A window where `start` is at or after `end` wraps past midnight (for example `22:00` to `02:00`).
+</ParamField>
+
+<ParamField body="faq" type="object">
+  Map of keyword to action. Keywords are matched case-insensitively as substrings of the inbound text; the first match wins. Each action has `type` set to `"reply"` (with `reply_text`, up to 1600 characters) or `"flow"` (with `flow_id`). A `flow_id` must reference one of your own active flows on this same instance, otherwise the request fails with `404`.
+</ParamField>
+
+The response echoes the merged settings: `{"result": "success", "settings": { ... }}`.
+
+## Inbound Webhook Callback
+
+Telnyx delivers inbound SMS and delivery receipts to a per-instance callback URL:
+
+```
+https://api.megasend.co.il/telnyx-webhook/{instance_id}/callback
+```
+
+This endpoint is called **by Telnyx**, not by you. The connect flow registers it on your messaging profile automatically, so no manual setup is needed. If you ever edit the messaging profile in the Telnyx portal, make sure its webhook URL still points at this exact address for your instance.
+
+Every delivery is authenticated with Telnyx's Ed25519 signature headers (`telnyx-signature-ed25519` and `telnyx-timestamp`), verified against the public key you provided at connect time. Unsigned or invalid requests are rejected, so keep the `public_key` you connect with in sync with your Telnyx account.
+
+To receive these events in your own systems, configure a [MegaSend webhook](/webhooks/setup) as with any other channel.
+
+## Sending Messages
+
+Once connected, send SMS through the standard messaging endpoints using the `instance_id` returned by connect. There are no Telnyx-specific send endpoints.
+
+See [Send Messages](/messages/send) for the full request format. Text content applies as-is; SMS has no templates, buttons, or media like WhatsApp, so use plain text messages.
+
+## Endpoint Reference
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `POST` | `/telnyx/phone-numbers` | Verify a Telnyx API key and list its SMS-capable numbers |
+| `POST` | `/telnyx/connect` | Connect a number (creates or rebinds the instance) |
+| `GET` | `/telnyx/status?instance_id=` | Connection and webhook status |
+| `POST` | `/telnyx/disconnect?instance_id=` | Disconnect the number, keep the instance |
+| `GET` | `/telnyx/{instance_id}/automation-settings` | Get welcome/away/FAQ automation settings |
+| `PUT` | `/telnyx/{instance_id}/automation-settings` | Merge-update automation settings |
+| `POST` | `/telnyx-webhook/{instance_id}/callback` | Called by Telnyx (inbound SMS and receipts), not by you |
+
+## Best Practices
+
+1. **One messaging profile per number**: Telnyx webhooks live on the profile, so give every number you connect its own dedicated messaging profile.
+2. **Verify before you send**: After connecting, call `GET /telnyx/status` and confirm both `connected` and `webhook_ok` are `true`.
+3. **Rotate keys deliberately**: If you rotate your Telnyx API key or Ed25519 key pair, reconnect the number with the new credentials so sending and webhook verification keep working.
+4. **Mind SMS length**: Automation texts allow up to 1600 characters, but carriers split long SMS into segments and bill per segment. Keep replies short.
+5. **Use `instance_id` on reconnect**: When re-enabling a previously disconnected number, pass its `instance_id` to keep its automation settings and history.
+
+## Next Steps
+
+- [Send your first message](/messages/send) through the connected instance
+- [Set up webhooks](/webhooks/setup) to receive inbound SMS in your own systems
+- [Build flows](/flows/manage) and trigger them from FAQ keywords
+- [Manage instances](/instances/manage) alongside your other channels
