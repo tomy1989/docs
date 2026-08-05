@@ -14,7 +14,7 @@ https://api.megasend.co.il
 This means a request looks like:
 
 ```bash
-curl -X GET "https://api.megasend.co.il/instances" \
+curl -X GET "https://api.megasend.co.il/instances/me" \
   -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
 ```
 
@@ -63,7 +63,7 @@ During the deprecation period, the deprecated item continues to behave exactly a
 All authenticated API calls use the `X-MEGASEND-AUTH` header with your account access token (a raw URL-safe token with no prefix):
 
 ```bash
-curl -X GET "https://api.megasend.co.il/instances" \
+curl -X GET "https://api.megasend.co.il/instances/me" \
   -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
 ```
 
