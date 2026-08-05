@@ -1,0 +1,509 @@
+---
+title: 'Google Calendar Integration'
+description: 'Connect Google Calendar to MegaSend for real-time availability and AI-booked meetings'
+icon: 'calendar-days'
+---
+
+Connect a Google account to MegaSend and your calendar becomes part of your messaging workflow. Once connected, the AI assistant can check your real availability during WhatsApp conversations and book meetings directly onto your calendar, with no back-and-forth about time slots. See [AI Booking](/calendar/ai-booking) for how bookings work in chat, or [Calendly](/calendar/calendly) if you prefer to connect a Calendly account instead.
+
+Google Calendar connections are **account-level**, not per-instance. A connection belongs to your MegaSend account and is shared across all of your instances. Team members with integration management permission can each connect their own Google account, so an account can hold multiple connections at once.
+
+<Note>
+Most users connect Google Calendar from the dashboard at [app.megasend.co.il](https://app.megasend.co.il), which handles the whole OAuth flow with a single click. The API endpoints below are for programmatic control: building your own connection UI, monitoring connection health, or querying availability from your own systems.
+</Note>
+
+## Connecting a Google Account
+
+Connecting uses Google's standard OAuth consent flow in three steps:
+
+1. Call `GET /google-calendar/auth/start` to get a Google consent URL.
+2. Open that URL in a browser. The user signs in and approves calendar access, then Google redirects back to MegaSend with a `code` and `state`.
+3. Submit the `code` and `state` to `POST /google-calendar/auth/callback` to complete the connection.
+
+### Step 1: Start the OAuth Flow
+
+<CodeGroup>
+
+```bash cURL
+curl -X GET "https://api.megasend.co.il/google-calendar/auth/start" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
+```
+
+```javascript JavaScript
+const response = await fetch(
+  'https://api.megasend.co.il/google-calendar/auth/start',
+  {
+    headers: { 'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN' }
+  }
+);
+
+const { auth_url } = await response.json();
+// Redirect the user to auth_url to approve access
+window.location.href = auth_url;
+```
+
+```python Python
+import requests
+
+response = requests.get(
+    'https://api.megasend.co.il/google-calendar/auth/start',
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'}
+)
+
+auth_url = response.json()['auth_url']
+print(f"Open this URL to connect: {auth_url}")
+```
+
+</CodeGroup>
+
+**Response:**
+
+```json
+{
+  "auth_url": "https://accounts.google.com/o/oauth2/v2/auth?client_id=..."
+}
+```
+
+### Step 2: Complete the Connection
+
+After the user approves access, Google redirects back with a `code` and `state` in the URL query string. Pass both to the callback endpoint exactly as received:
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST "https://api.megasend.co.il/google-calendar/auth/callback" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "code": "4/0AeaYSHB...",
+    "state": "gcal:eyJhbGciOi..."
+  }'
+```
+
+```javascript JavaScript
+const params = new URLSearchParams(window.location.search);
+
+const response = await fetch(
+  'https://api.megasend.co.il/google-calendar/auth/callback',
+  {
+    method: 'POST',
+    headers: {
+      'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN',
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      code: params.get('code'),
+      state: params.get('state')
+    })
+  }
+);
+
+const connection = await response.json();
+console.log('Connected:', connection.account_email);
+```
+
+```python Python
+import requests
+
+response = requests.post(
+    'https://api.megasend.co.il/google-calendar/auth/callback',
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'},
+    json={
+        'code': '4/0AeaYSHB...',
+        'state': 'gcal:eyJhbGciOi...'
+    }
+)
+
+connection = response.json()
+print(f"Connected: {connection['account_email']}")
+```
+
+</CodeGroup>
+
+<ParamField body="code" type="string" required>
+  The authorization code Google appended to the redirect URL.
+</ParamField>
+
+<ParamField body="state" type="string" required>
+  The state token from the redirect URL. It proves the flow was started by the same MegaSend user and expires after a short time. If it has expired you get a `400`; start again from `/auth/start`.
+</ParamField>
+
+**Response:** the new connection object.
+
+```json
+{
+  "connection_id": "7f3c2a10-9b1e-4c5d-8a2f-1e6b7c8d9e0f",
+  "provider": "google_calendar",
+  "member_user_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "member_is_owner": true,
+  "account_email": "you@yourbusiness.com",
+  "account_name": "Your Name",
+  "status": "connected",
+  "default_calendar_id": "primary",
+  "timezone": "Asia/Jerusalem",
+  "webhook_status": null,
+  "last_synced_at": null,
+  "last_error": null,
+  "connected_at": "2026-08-05T10:30:00Z",
+  "appointment_count": null
+}
+```
+
+## Checking Connection Status
+
+List every calendar connection on the account, including how many MegaSend bookings each one holds:
+
+<CodeGroup>
+
+```bash cURL
+curl -X GET "https://api.megasend.co.il/google-calendar/status" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
+```
+
+```javascript JavaScript
+const response = await fetch(
+  'https://api.megasend.co.il/google-calendar/status',
+  {
+    headers: { 'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN' }
+  }
+);
+
+const { connections } = await response.json();
+```
+
+</CodeGroup>
+
+Returns a `connections` array of connection objects (same shape as the callback response). Check `status` to see whether each connection is still usable, `member_user_id` and `member_is_owner` to see whose Google account it is, `appointment_count` for the number of MegaSend bookings attached, and `last_error` for the most recent sync error, if any.
+
+## Listing Calendars
+
+List the calendars available on a connection. Only calendars the Google account can write to are returned, since these are the valid booking targets. Read-only shared calendars are filtered out.
+
+<CodeGroup>
+
+```bash cURL
+curl -X GET "https://api.megasend.co.il/google-calendar/calendars?connection_id=7f3c2a10-9b1e-4c5d-8a2f-1e6b7c8d9e0f" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
+```
+
+```python Python
+import requests
+
+response = requests.get(
+    'https://api.megasend.co.il/google-calendar/calendars',
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'},
+    params={'connection_id': '7f3c2a10-9b1e-4c5d-8a2f-1e6b7c8d9e0f'}
+)
+
+calendars = response.json()
+```
+
+</CodeGroup>
+
+**Response:**
+
+```json
+[
+  {
+    "id": "primary",
+    "summary": "you@yourbusiness.com",
+    "primary": true,
+    "access_role": "owner",
+    "time_zone": "Asia/Jerusalem"
+  },
+  {
+    "id": "c_1a2b3c@group.calendar.google.com",
+    "summary": "Sales Meetings",
+    "primary": false,
+    "access_role": "writer",
+    "time_zone": "Asia/Jerusalem"
+  }
+]
+```
+
+## Updating Connection Settings
+
+Choose which calendar new bookings are created on and which timezone the connection uses. Only include the fields you want to change.
+
+<CodeGroup>
+
+```bash cURL
+curl -X PUT "https://api.megasend.co.il/google-calendar/settings" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "connection_id": "7f3c2a10-9b1e-4c5d-8a2f-1e6b7c8d9e0f",
+    "default_calendar_id": "c_1a2b3c@group.calendar.google.com",
+    "timezone": "Asia/Jerusalem"
+  }'
+```
+
+```python Python
+import requests
+
+response = requests.put(
+    'https://api.megasend.co.il/google-calendar/settings',
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'},
+    json={
+        'connection_id': '7f3c2a10-9b1e-4c5d-8a2f-1e6b7c8d9e0f',
+        'default_calendar_id': 'c_1a2b3c@group.calendar.google.com',
+        'timezone': 'Asia/Jerusalem'
+    }
+)
+
+updated = response.json()
+```
+
+</CodeGroup>
+
+<ParamField body="connection_id" type="string" required>
+  UUID of the connection to update.
+</ParamField>
+
+<ParamField body="default_calendar_id" type="string">
+  Calendar ID that new bookings are created on. Must be a calendar the connected Google account can write to (pick one from `/google-calendar/calendars`), otherwise the request fails with a `400`.
+</ParamField>
+
+<ParamField body="timezone" type="string">
+  IANA timezone name for this connection, for example `Asia/Jerusalem` or `Europe/London`. Maximum 64 characters.
+</ParamField>
+
+Returns the updated connection object.
+
+## Checking Availability
+
+Fetch busy intervals for one or more calendars over a time window. This is the same free/busy data the AI assistant uses to offer meeting slots.
+
+<CodeGroup>
+
+```bash cURL
+curl -X GET "https://api.megasend.co.il/google-calendar/availability?connection_id=7f3c2a10-9b1e-4c5d-8a2f-1e6b7c8d9e0f&time_min=2026-08-10T00:00:00Z&time_max=2026-08-17T00:00:00Z" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
+```
+
+```python Python
+import requests
+
+response = requests.get(
+    'https://api.megasend.co.il/google-calendar/availability',
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'},
+    params={
+        'connection_id': '7f3c2a10-9b1e-4c5d-8a2f-1e6b7c8d9e0f',
+        'time_min': '2026-08-10T00:00:00Z',
+        'time_max': '2026-08-17T00:00:00Z'
+    }
+)
+
+busy = response.json()['busy']
+```
+
+</CodeGroup>
+
+<ParamField query="connection_id" type="string" required>
+  UUID of the connection to query.
+</ParamField>
+
+<ParamField query="time_min" type="string" required>
+  Start of the window as an ISO 8601 datetime.
+</ParamField>
+
+<ParamField query="time_max" type="string" required>
+  End of the window as an ISO 8601 datetime. The window may span at most 62 days; wider windows fail with a `400`.
+</ParamField>
+
+<ParamField query="calendar_ids" type="string">
+  Comma-separated calendar IDs to check. Defaults to the connection's default calendar (or the account's primary calendar if none is set).
+</ParamField>
+
+**Response:** busy intervals keyed by calendar ID. Any time inside the window that is not listed is free.
+
+```json
+{
+  "connection_id": "7f3c2a10-9b1e-4c5d-8a2f-1e6b7c8d9e0f",
+  "time_min": "2026-08-10T00:00:00Z",
+  "time_max": "2026-08-17T00:00:00Z",
+  "busy": {
+    "primary": [
+      { "start": "2026-08-10T09:00:00Z", "end": "2026-08-10T10:30:00Z" },
+      { "start": "2026-08-11T14:00:00Z", "end": "2026-08-11T15:00:00Z" }
+    ]
+  }
+}
+```
+
+## Listing Calendar Events
+
+Fetch the events already on a calendar within a window, so you can render the user's real schedule and not just the bookings MegaSend created. This endpoint is read-only.
+
+<CodeGroup>
+
+```bash cURL
+curl -X GET "https://api.megasend.co.il/google-calendar/events?connection_id=7f3c2a10-9b1e-4c5d-8a2f-1e6b7c8d9e0f&time_min=2026-08-10T00:00:00Z&time_max=2026-08-17T00:00:00Z" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
+```
+
+```python Python
+import requests
+
+response = requests.get(
+    'https://api.megasend.co.il/google-calendar/events',
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'},
+    params={
+        'connection_id': '7f3c2a10-9b1e-4c5d-8a2f-1e6b7c8d9e0f',
+        'time_min': '2026-08-10T00:00:00Z',
+        'time_max': '2026-08-17T00:00:00Z'
+    }
+)
+
+events = response.json()['events']
+```
+
+</CodeGroup>
+
+<ParamField query="connection_id" type="string" required>
+  UUID of the connection to query.
+</ParamField>
+
+<ParamField query="time_min" type="string" required>
+  Start of the window as an ISO 8601 datetime.
+</ParamField>
+
+<ParamField query="time_max" type="string" required>
+  End of the window as an ISO 8601 datetime. The window may span at most 62 days.
+</ParamField>
+
+<ParamField query="calendar_id" type="string">
+  Calendar to read from. Defaults to the connection's default calendar (or the account's primary calendar if none is set).
+</ParamField>
+
+**Response:**
+
+```json
+{
+  "connection_id": "7f3c2a10-9b1e-4c5d-8a2f-1e6b7c8d9e0f",
+  "calendar_id": "primary",
+  "time_min": "2026-08-10T00:00:00Z",
+  "time_max": "2026-08-17T00:00:00Z",
+  "events": [
+    {
+      "id": "abc123def456",
+      "summary": "Intro call with Dana",
+      "start": "2026-08-10T09:00:00Z",
+      "end": "2026-08-10T09:30:00Z",
+      "all_day": false,
+      "status": "confirmed",
+      "html_link": "https://www.google.com/calendar/event?eid=...",
+      "calendar_id": "primary",
+      "is_megasend_appointment": true
+    }
+  ]
+}
+```
+
+Events that MegaSend booked are returned with `is_megasend_appointment: true` rather than filtered out, so your client can decide whether to hide them and avoid drawing them twice. Event details are intentionally minimal (enough to draw a block and link out to Google); attendees, conferencing details, and descriptions stay in Google Calendar.
+
+## Disconnecting
+
+There are two ways to remove a connection, with different consequences:
+
+### Disconnect (Reversible)
+
+Revokes MegaSend's access to the Google account but keeps the connection record and its bookings, so reconnecting the same account later rebinds everything:
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST "https://api.megasend.co.il/google-calendar/disconnect?connection_id=7f3c2a10-9b1e-4c5d-8a2f-1e6b7c8d9e0f" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
+```
+
+```python Python
+import requests
+
+requests.post(
+    'https://api.megasend.co.il/google-calendar/disconnect',
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'},
+    params={'connection_id': '7f3c2a10-9b1e-4c5d-8a2f-1e6b7c8d9e0f'}
+)
+```
+
+</CodeGroup>
+
+**Response:**
+
+```json
+{ "success": true }
+```
+
+### Remove Connection (Permanent)
+
+Hard-deletes the connection and every MegaSend booking attached to it. If the connection is still active, access is revoked first so nothing is left dangling on Google's side.
+
+<CodeGroup>
+
+```bash cURL
+curl -X DELETE "https://api.megasend.co.il/google-calendar/connection?connection_id=7f3c2a10-9b1e-4c5d-8a2f-1e6b7c8d9e0f" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
+```
+
+```python Python
+import requests
+
+response = requests.delete(
+    'https://api.megasend.co.il/google-calendar/connection',
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'},
+    params={'connection_id': '7f3c2a10-9b1e-4c5d-8a2f-1e6b7c8d9e0f'}
+)
+
+print(response.json())
+```
+
+</CodeGroup>
+
+**Response:**
+
+```json
+{ "success": true, "deleted_appointments": 3 }
+```
+
+<Warning>
+Removing a connection cannot be undone. All MegaSend booking records attached to the connection are deleted. Use `/google-calendar/disconnect` instead if you may reconnect the same Google account later.
+</Warning>
+
+## Error Responses
+
+| Status | Meaning |
+|--------|---------|
+| `400` | Invalid request: expired OAuth `state`, a window wider than 62 days, or a `default_calendar_id` the connected account cannot write to |
+| `403` | The caller lacks integration management permission (agent accounts without the integrations capability) |
+| `404` | The connection does not exist on this account, or the Google Calendar integration is not available |
+| `409` | The connection exists but its Google grant was revoked or expired. Run the OAuth flow again to reconnect |
+| `503` | Google Calendar sign-in is temporarily unavailable |
+
+## Endpoint Reference
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/google-calendar/auth/start` | Get the Google consent URL to begin connecting |
+| `POST` | `/google-calendar/auth/callback` | Exchange the OAuth `code` and `state` to complete the connection |
+| `GET` | `/google-calendar/status` | List all calendar connections on the account |
+| `GET` | `/google-calendar/calendars` | List writable calendars on a connection |
+| `PUT` | `/google-calendar/settings` | Set the default booking calendar and timezone |
+| `GET` | `/google-calendar/availability` | Get busy intervals for a time window (max 62 days) |
+| `GET` | `/google-calendar/events` | List events on a calendar within a window (read-only) |
+| `POST` | `/google-calendar/disconnect` | Revoke access but keep the connection and its bookings |
+| `DELETE` | `/google-calendar/connection` | Permanently delete the connection and its bookings |
+
+## Best Practices
+
+1. **Prefer the dashboard for one-off connections.** The [dashboard](https://app.megasend.co.il) runs the full OAuth flow for you; use the API when you need automation or your own UI.
+2. **Set a default calendar early.** Until you set `default_calendar_id`, availability checks and AI bookings fall back to the account's primary calendar, which may include personal events.
+3. **Watch for `409` responses.** They mean the Google grant was revoked or expired. Send the user through `/auth/start` again; the existing connection is rebound on reconnect.
+4. **Use `/status` for health checks.** One call returns every connection's `status`, `last_error`, and booking count.
+5. **Keep availability windows tight.** Both `/availability` and `/events` cap the window at 62 days; query only the range you are about to display.
+
+## Next Steps
+
+- [AI Booking](/calendar/ai-booking): let the AI assistant offer slots and book meetings in WhatsApp conversations
+- [Calendly](/calendar/calendly): connect Calendly instead of (or alongside) Google Calendar
+- [Authentication](/authentication): how to get and use your `X-MEGASEND-AUTH` access token

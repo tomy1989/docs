@@ -11,6 +11,31 @@ The current stable API version is **2.0.0**. All endpoints are served at `https:
 
 ---
 
+## 2026-08-02 — Calendar integrations & AI appointment booking
+
+### Added
+
+- **Calendly integration** — connect a Calendly account via OAuth (`GET /calendly/auth/start`), then list event types and scheduling links, check connection status, refresh webhooks, and disconnect. See the [Calendly guide](/calendar/calendly).
+- **Google Calendar integration** — connect Google Calendar via OAuth, list calendars, and query availability. See the [Google Calendar guide](/calendar/google-calendar).
+- **AI appointment booking** — once a Calendly account is connected, the AI assistant can offer event types and send single-use scheduling links directly inside chat conversations. Configured through AI settings (`appointment_booking_enabled`). See the [AI booking guide](/calendar/ai-booking).
+
+---
+
+## 2026-07-29 — New messaging channels
+
+### Added
+
+- **Twilio SMS/MMS channel** — connect a Twilio account and send SMS/MMS through the same messaging API. See the [Twilio guide](/instances/twilio).
+- **019 Mobile SMS channel** — Israeli SMS provider support. See the [019 Mobile guide](/instances/sms-019).
+- **InforU SMS channel** — Israeli SMS provider (InforUMobile) support with delivery receipts and inbound messages. See the [InforU guide](/instances/sms-inforu).
+- **LINE channel** — connect a LINE Official Account for two-way messaging. See the [LINE guide](/instances/line).
+
+### Changed
+
+- Added a dedicated setup guide for the existing **Telnyx SMS channel**. See the [Telnyx guide](/instances/telnyx).
+
+---
+
 ## 2026-07-13 — v2.0.0
 
 **Current stable release.**
