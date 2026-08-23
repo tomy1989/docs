@@ -1,0 +1,184 @@
+---
+title: 'AI Assistant (MCP)'
+description: 'Connect Claude, Cursor, ChatGPT or any MCP client to your MegaSend account'
+icon: 'robot'
+---
+
+MegaSend speaks the Model Context Protocol, so an AI assistant can work inside
+your account: read the inbox, draft and send a reply, look someone up, check
+which templates are approved, build a campaign, pull last month's numbers.
+
+You connect it once, with a URL. There is no key to copy and no file to edit.
+
+<Note>
+MCP access is enabled per account. If the connection page in your dashboard says
+it is not available yet, ask your account manager to turn it on.
+</Note>
+
+## The connection URL
+
+```
+https://mcp.megasend.io/mcp
+```
+
+The first time a client uses it, a MegaSend sign-in page opens in your browser.
+Sign in as you normally would and the client is connected. Your assistant then
+acts as you: it sees exactly the accounts, conversations and permissions your own
+login has, and nothing else. A team agent connecting gets their own permissions,
+not the owner's.
+
+## Setting it up
+
+<Tabs>
+  <Tab title="Claude">
+    1. Open **Settings**, then **Connectors**.
+    2. Choose **Add custom connector**.
+    3. Name it `MegaSend` and paste the connection URL above.
+    4. Click **Connect** and sign in to MegaSend in the window that opens.
+
+    Claude Code users can do the same from the terminal:
+
+    ```bash
+    claude mcp add --transport http megasend https://mcp.megasend.io/mcp
+    ```
+
+    Then run `/mcp` inside Claude Code and pick **Authenticate**.
+  </Tab>
+
+  <Tab title="Cursor">
+    1. Open **Settings**, then **MCP**, then **Add new MCP server**.
+    2. Add MegaSend to `mcp.json`:
+
+    ```json
+    {
+      "mcpServers": {
+        "megasend": {
+          "url": "https://mcp.megasend.io/mcp"
+        }
+      }
+    }
+    ```
+
+    3. Cursor shows the server as needing authentication. Click **Login** and
+       sign in to MegaSend.
+  </Tab>
+
+  <Tab title="ChatGPT">
+    1. Open **Settings**, then **Connectors**, then **Create**.
+    2. Paste the connection URL above and choose **OAuth** for authentication.
+    3. Save, then click **Connect** and sign in to MegaSend.
+
+    Connectors are available on ChatGPT plans that support them. If you do not
+    see the Connectors section, your plan does not include it yet.
+  </Tab>
+
+  <Tab title="Anything else">
+    Any client that supports remote MCP servers over streamable HTTP with OAuth
+    will work. Give it the connection URL and let it run its own sign-in. The
+    server publishes standard discovery documents, so a client that follows the
+    specification needs no other configuration:
+
+    - `https://mcp.megasend.io/.well-known/oauth-protected-resource`
+    - `https://mcp.megasend.io/.well-known/oauth-authorization-server`
+
+    Clients register themselves automatically, so there is no client id or secret
+    to request from us.
+  </Tab>
+</Tabs>
+
+## What your assistant can do
+
+<CardGroup cols={2}>
+  <Card title="Inbox" icon="comments">
+    List conversations, read a thread, check whether the messaging window is
+    still open, send a reply or a template, clear the unread badge.
+  </Card>
+  <Card title="Contacts" icon="address-book">
+    Search by name, phone or label. Add and edit contacts, apply and remove
+    labels, block a contact who asked to opt out.
+  </Card>
+  <Card title="Templates" icon="file-lines">
+    See which templates are approved, pending or rejected, and submit new
+    wording to Meta for review.
+  </Card>
+  <Card title="Campaigns" icon="paper-plane">
+    Build a campaign from a saved segment or a Google Sheet, follow its progress,
+    pause, resume or cancel it.
+  </Card>
+  <Card title="Reports" icon="chart-line">
+    Message volume, delivery and read rates, failures, and per-template
+    performance over the last day, week, month or quarter.
+  </Card>
+  <Card title="Multiple accounts" icon="layer-group">
+    Every tool works across your connected channel accounts. With more than one
+    connected, name the account you mean and the assistant will use it.
+  </Card>
+</CardGroup>
+
+## What it will not do
+
+**It cannot start a campaign.** Your assistant can build one, name the audience,
+pick the template and schedule it, and it will hand you a link to review it. The
+launch itself stays a click you make in MegaSend, because a campaign reaches
+thousands of real people and spends real credits. Pausing and cancelling a
+running campaign are available, so you can always stop a send that is going
+wrong.
+
+**It asks before it messages anyone.** Sending is marked as an action that needs
+confirmation, so a well-behaved client shows you the recipient and the wording
+and waits for your approval.
+
+**It cannot exceed your own access.** Every call is made with your credentials
+and checked the same way the dashboard is. Nothing is visible to your assistant
+that is not already visible to you, and every action is recorded against your
+account.
+
+## Things worth telling your assistant
+
+- **Which account, when you have several.** "Use the support number" is enough;
+  it will match on the nickname.
+- **That the window may be closed.** Ask it to check before drafting a reply and
+  it will tell you whether a template is needed instead of composing something
+  that cannot be sent.
+- **Which template to use.** Asking it to list approved templates first saves a
+  round trip and avoids a send failing on a template that is still pending.
+
+## Managing your connections
+
+Your dashboard's **Settings, AI Assistant** page lists every client currently
+connected to your account and when it was connected. Revoking one there ends its
+session immediately: the client has to sign in again before it can do anything.
+
+Signing out of MegaSend everywhere also ends every MCP connection.
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="The client says the server is not available">
+    MCP is enabled per account. Check the **Settings, AI Assistant** page in your
+    dashboard: if it says MCP is not enabled, ask your account manager to switch
+    it on.
+  </Accordion>
+
+  <Accordion title="Sign-in opens but the client never connects">
+    The sign-in link is single use and expires after ten minutes. Start the
+    connection again from the client rather than reloading the browser window.
+  </Accordion>
+
+  <Accordion title="A tool says instance_id is required">
+    You have more than one connected channel account and the assistant does not
+    know which you meant. The error lists them. Name the one you want and repeat
+    the request.
+  </Accordion>
+
+  <Accordion title="A send fails saying a template is required">
+    The customer has not written to you in the last 24 hours, so the channel no
+    longer allows a free-form reply. Ask the assistant to list approved templates
+    and send one of those instead.
+  </Accordion>
+
+  <Accordion title="The assistant refuses to start a campaign">
+    That is deliberate, not a fault. Open the review link it gave you and start
+    the campaign in MegaSend.
+  </Accordion>
+</AccordionGroup>

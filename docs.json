@@ -71,6 +71,7 @@
       {
         "group": "Integrations",
         "pages": [
+          "integrations/mcp",
           "integrations/shopify",
           "calendar/calendly",
           "calendar/google-calendar",
