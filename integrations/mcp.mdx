@@ -21,11 +21,14 @@ it is not available yet, ask your account manager to turn it on.
 https://mcp.megasend.io/mcp
 ```
 
-The first time a client uses it, a MegaSend sign-in page opens in your browser.
-Sign in as you normally would and the client is connected. Your assistant then
-acts as you: it sees exactly the accounts, conversations and permissions your own
-login has, and nothing else. A team agent connecting gets their own permissions,
-not the owner's.
+The first time a client uses it, MegaSend opens in your browser and asks you to
+approve the connection. If you are already signed in, that is the only step: read
+what the client is asking for and press Connect. If you are not, you get the
+normal MegaSend sign-in first and come straight back to the same approval.
+
+Your assistant then acts as you: it sees exactly the accounts, conversations and
+permissions your own login has, and nothing else. A team agent connecting gets
+their own permissions, not the owner's.
 
 ## Setting it up
 
@@ -160,9 +163,10 @@ Signing out of MegaSend everywhere also ends every MCP connection.
     it on.
   </Accordion>
 
-  <Accordion title="Sign-in opens but the client never connects">
-    The sign-in link is single use and expires after ten minutes. Start the
-    connection again from the client rather than reloading the browser window.
+  <Accordion title="The approval page says the request expired">
+    An approval request is single use and expires after ten minutes. Start the
+    connection again from your AI client rather than reloading the page: the
+    request id lives in the link, so a reload of a spent one cannot work.
   </Accordion>
 
   <Accordion title="A tool says instance_id is required">
