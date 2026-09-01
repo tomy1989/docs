@@ -10,6 +10,17 @@ Webhooks allow your application to receive real-time notifications when events o
 
 When a WhatsApp event occurs (a message arrives, a delivery status changes, etc.), MegaSend receives the raw event from Meta, stores it, and immediately forwards a flat summary payload to your registered `callback_url`. The outbound request always carries the static `X-Webhook-Verify-Token` header so you can confirm it came from MegaSend.
 
+```mermaid
+flowchart LR
+    A[Customer sends<br/>or reads a message] --> B[Meta Cloud API]
+    B -->|raw event| C[MegaSend]
+    C --> D[(Event stored)]
+    C -->|flat summary payload<br/>+ X-Webhook-Verify-Token| E[Your callback_url]
+    E -->|2xx| F[Done]
+    E -->|non-2xx or timeout| G[Delivery dropped:<br/>read it from stored events]
+    D --> G
+```
+
 <Note>
 HMAC request signing (`X-MegaSend-Signature`) is planned for a future release and is not active yet — for now, verify the static `X-Webhook-Verify-Token` header.
 </Note>

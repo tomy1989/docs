@@ -289,10 +289,20 @@ There is no `wa_message_id` query filter on this endpoint. To look up a message 
 
 ### Message Status Flow
 
-1. **`sent`** - Message sent to WhatsApp
-2. **`delivered`** - Message delivered to recipient's device
-3. **`read`** - Recipient has read the message (if read receipts enabled)
-4. **`failed`** - Message delivery failed
+```mermaid
+flowchart LR
+    P[pending] --> S[sent]
+    S --> D[delivered]
+    D --> R[read]
+    S --> F[failed]
+    P --> F
+```
+
+1. **`pending`** - Queued by MegaSend, not yet accepted by WhatsApp
+2. **`sent`** - Message sent to WhatsApp
+3. **`delivered`** - Message delivered to recipient's device
+4. **`read`** - Recipient has read the message (if read receipts enabled)
+5. **`failed`** - Message delivery failed. See [Retry Failed Messages](/messages/retries).
 
 ## What's Next?
 

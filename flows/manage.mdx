@@ -1,9 +1,8 @@
 ---
 title: 'Automation Flows'
 description: 'Create, manage, and monitor node-based automation flows that trigger on incoming messages, webhooks, or schedules'
+icon: 'diagram-project'
 ---
-
-# Automation Flows
 
 The MegaSend Flows API lets you build node-based automation workflows that respond to incoming messages, webhooks, postbacks, or timers. Each flow is a directed graph of nodes connected by edges. When a trigger fires, the engine walks the graph from the single `start` node, executing each node in sequence until it reaches a terminal node or the end of the graph.
 
@@ -13,6 +12,17 @@ The MegaSend Flows API lets you build node-based automation workflows that respo
 - **Execution** — flows run asynchronously in the `flows` Celery queue with full execution tracking
 - **Multi-platform** — supported node types differ by platform (`whatsapp`, `instagram`, `telnyx`); query `/flows/supported-nodes` before building
 - **Conflict detection** — two active flows cannot share the same trigger on the same instance; use `/flows/check-trigger-conflicts` to validate before saving
+
+```mermaid
+flowchart LR
+    T{{Trigger fires<br/>incoming_message, webhook,<br/>manual, scheduled}} --> A[Flow is active?]
+    A -->|no| X[Nothing happens]
+    A -->|yes| Q[Queued on the flows worker]
+    Q --> N[Walk nodes along edges]
+    N --> S[Send, wait, branch,<br/>call your API]
+    S --> L[(Execution + logs)]
+    L --> M[GET /flows/:id/executions<br/>GET /flows/:id/stats]
+```
 
 ---
 

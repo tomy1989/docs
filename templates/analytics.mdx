@@ -1,0 +1,176 @@
+---
+title: 'Template Analytics'
+description: 'Measure how your approved templates perform: sent, delivered, read and clicked, per template and per day'
+icon: 'chart-simple'
+---
+
+Template analytics comes from Meta's Template Insights, not from MegaSend's own message log. It tells you how each approved template performed once it left the platform: how many were delivered, how many were read, and how many recipients tapped a button.
+
+<Info>
+Use [Analytics Overview](/analytics/overview) for what MegaSend itself recorded (every send, every status change, every channel). Use this page for Meta's view of your **template** messages specifically, including button clicks, which only Meta can report.
+</Info>
+
+## Account-wide analytics
+
+<CodeGroup>
+
+```bash cURL
+curl -X GET "https://api.megasend.co.il/templates/analytics?instance_id=550e8400-e29b-41d4-a716-446655440000&days=30" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
+```
+
+```javascript JavaScript
+const params = new URLSearchParams({
+  instance_id: '550e8400-e29b-41d4-a716-446655440000',
+  days: '30'
+});
+
+const response = await fetch(`https://api.megasend.co.il/templates/analytics?${params}`, {
+  headers: { 'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN' }
+});
+
+const analytics = await response.json();
+
+if (!analytics.insights_enabled) {
+  console.log('Meta has not enabled Template Insights for this WABA yet');
+}
+```
+
+```python Python
+import requests
+
+response = requests.get(
+    'https://api.megasend.co.il/templates/analytics',
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'},
+    params={'instance_id': '550e8400-e29b-41d4-a716-446655440000', 'days': 30}
+)
+
+analytics = response.json()
+print(analytics['totals'], analytics['rates'])
+```
+
+</CodeGroup>
+
+### Query parameters
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `instance_id` | UUID | ✅ | WhatsApp instance to report on |
+| `days` | integer | ❌ | How far back to look. Defaults to 30. |
+| `template_ids` | string | ❌ | Comma-separated Meta template IDs, at most 10 |
+
+### Response
+
+```json
+{
+  "instance_id": "550e8400-e29b-41d4-a716-446655440000",
+  "days": 30,
+  "start_timestamp": 1753920000,
+  "end_timestamp": 1756512000,
+  "insights_enabled": true,
+  "unavailable_reason": null,
+  "totals": { "sent": 12480, "delivered": 12013, "read": 8422, "clicked": 1190 },
+  "rates": { "delivery_rate": 96.3, "read_rate": 70.1, "click_rate": 9.9 },
+  "templates": [
+    {
+      "template_id": "1234567890123456",
+      "sent": 5100,
+      "delivered": 4980,
+      "read": 3640,
+      "clicked": 702,
+      "delivery_rate": 97.6,
+      "read_rate": 73.1,
+      "click_rate": 14.1
+    }
+  ],
+  "daily_data": [
+    { "date": 1756425600, "sent": 412, "delivered": 401, "read": 288, "clicked": 39 }
+  ]
+}
+```
+
+| Field | Description |
+|-------|-------------|
+| `totals` | Raw counts across every template in the period |
+| `rates` | Percentages, rounded to one decimal |
+| `templates` | Same metrics broken down per Meta template ID |
+| `daily_data` | One entry per day, for charting a trend |
+| `insights_enabled` | `false` when Meta has not switched Template Insights on for this WABA |
+| `unavailable_reason` | Why the numbers are empty, for example `insights_not_enabled` |
+
+How the rates are derived:
+
+| Rate | Formula |
+|------|---------|
+| `delivery_rate` | `delivered / sent` |
+| `read_rate` | `read / delivered` |
+| `click_rate` | `clicked / delivered` |
+
+<Warning>
+A brand new WhatsApp Business Account returns zeros with `insights_enabled: false`. That is not an error and not a bug in your integration: Meta enables Template Insights per WABA, usually after the account has sent real traffic. Render an explanatory empty state rather than "0% read rate".
+</Warning>
+
+<Note>
+Template Insights is not offered for every region. WABAs in the EU, the UK and Japan may receive an error from Meta instead of data. The API surfaces that as an error body containing `error`, `error_code` and a `hint`.
+</Note>
+
+Results are cached for 15 minutes, so polling more often than that returns the same payload.
+
+## Top performing templates
+
+Rank templates by any metric instead of sorting the full payload yourself:
+
+```bash
+curl -X GET "https://api.megasend.co.il/templates/analytics/top?instance_id=550e8400-e29b-41d4-a716-446655440000&days=30&limit=5&sort_by=read_rate" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
+```
+
+| Parameter | Description |
+|-----------|-------------|
+| `limit` | How many templates to return. Defaults to 10. |
+| `sort_by` | `sent`, `delivered`, `read`, `clicked`, `delivery_rate`, `read_rate` or `click_rate`. Anything else falls back to `sent`. |
+
+The response is a plain array of the same per-template objects shown above, highest first.
+
+## A single template
+
+```bash
+curl -X GET "https://api.megasend.co.il/templates/analytics/1234567890123456?instance_id=550e8400-e29b-41d4-a716-446655440000&days=7" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
+```
+
+`template_id` in the path is the **Meta** template ID, the `id` returned by [List Templates](/templates/list), not the template name.
+
+## Reading the numbers
+
+<AccordionGroup>
+  <Accordion title="Delivered is lower than sent">
+    Normal. Phones that are off, numbers that no longer exist on WhatsApp and blocked senders all land here. A delivery rate under roughly 90% is worth investigating: it usually means list quality, not template quality.
+  </Accordion>
+  <Accordion title="Read rate is high but click rate is near zero">
+    The message is being read and the call to action is not landing. Test a different button label, or move the button above the fold by shortening the body.
+  </Accordion>
+  <Accordion title="Clicks are counted per button">
+    Meta reports clicks per button content. The `clicked` number sums every button on the template, so a template with two buttons can out-click a single-button template without being more effective.
+  </Accordion>
+  <Accordion title="The numbers disagree with Analytics Overview">
+    They measure different things. Template analytics counts what Meta delivered for template messages only. [Analytics Overview](/analytics/overview) counts everything MegaSend sent, including free-form messages, and updates from webhooks in near real time rather than on Meta's aggregation schedule.
+  </Accordion>
+</AccordionGroup>
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Create Templates" icon="file-template" href="/templates/create">
+    Build the templates these numbers describe
+  </Card>
+  <Card title="Analytics Overview" icon="chart-line" href="/analytics/overview">
+    Platform-side analytics across every message and channel
+  </Card>
+  <Card title="Conversation Analytics" icon="comments-dollar" href="/analytics/conversations">
+    What those conversations actually cost
+  </Card>
+  <Card title="Campaigns" icon="bullhorn" href="/campaigns/manage">
+    Send a template to a whole audience and track it
+  </Card>
+</CardGroup>

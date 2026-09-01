@@ -60,5 +60,5 @@ feat/telegram-channel branches deleted (merged). waba-hmac-wip preserved for use
 STILL BLOCKED ON USER: (1) live Telegram round-trip e2e needs a BotFather token + TELEGRAM_ENABLED=true + migration applied; (2) migration 20260701_telegram apply to remote DB (deploy step).
 
 === MIGRATION APPLIED 2026-06-30 ===
-alembic upgrade 20260626_conv_phone_no_plus -> 20260701_telegram on remote DB (s3.weblix.tech). Only this one migration was pending (no unrelated migrations applied). Verified: 8 tg_* columns + ix_instances_tg_bot_id unique index live; ORM<->schema query works (0 telegram instances, no UndefinedColumn). DB current==head.
+alembic upgrade 20260626_conv_phone_no_plus -> 20260701_telegram on remote DB (s3.weblix.tech). Only this one migration was pending (no unrelated migrations applied). Verified: 8 tg_* columns + ix_instances_tg_bot_id unique index live; `ORM<->schema` query works (0 telegram instances, no UndefinedColumn). DB current==head.
 REMAINING FOR LIVE FEATURE (user-gated): (1) deploy/push merged code (running prod app lacks telegram routes until deployed); (2) BotFather token to connect + drive a real message round-trip.

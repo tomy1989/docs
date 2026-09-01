@@ -461,6 +461,97 @@ Returns the full AI settings object with `ai_mode` set to `"shopify"` and `shopi
 Selecting a store clears the instance's manual system prompt. Save a copy first if you want to switch back to manual mode later.
 </Warning>
 
+## Browse Products and Take an Order
+
+Beyond catalog sync, you can read the live Shopify store from a conversation: search products, look up one product's variants, and turn a chat into a payable checkout link.
+
+```mermaid
+flowchart LR
+    A[Customer asks<br/>for a product] --> B[GET /shopify/products<br/>?query=...]
+    B --> C[GET /shopify/products/:id<br/>variants, stock, images]
+    C --> D[POST /shopify/products/draft-order]
+    D --> E[invoice_url]
+    E --> F[Send the link<br/>over WhatsApp]
+```
+
+### Search Products
+
+```bash
+curl -X GET "https://api.megasend.co.il/shopify/products?instance_id=INSTANCE_ID&query=running%20shoes&in_stock_only=true&limit=10" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
+```
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `instance_id` | UUID | ✅ | Instance whose store to search |
+| `query` | string | ❌ | Free-text product search |
+| `limit` | integer | ❌ | Maximum products to return |
+| `in_stock_only` | boolean | ❌ | Skip out-of-stock products |
+
+```json
+{
+  "success": true,
+  "products": [
+    { "id": "gid://shopify/Product/123", "title": "Trail Runner", "price": "29.99" }
+  ],
+  "shop_domain": "mystore.com",
+  "total_count": 10,
+  "has_more": true,
+  "error": null
+}
+```
+
+Product URLs point at the customer-facing domain rather than `myshopify.com`, so they are safe to send straight to a customer.
+
+### Product Detail and Shop Info
+
+```bash
+# Full product with every variant, its stock and its price
+curl -X GET "https://api.megasend.co.il/shopify/products/gid%3A%2F%2Fshopify%2FProduct%2F123?instance_id=INSTANCE_ID" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
+
+# Is a store connected at all, and does it have products?
+curl -X GET "https://api.megasend.co.il/shopify/products/shop-info?instance_id=INSTANCE_ID" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
+```
+
+<Tip>
+Call `shop-info` before showing any product UI. It answers `success`, `has_products` and an `error` string, which is enough to tell "no store connected" apart from "store connected but empty".
+</Tip>
+
+### Create a Draft Order
+
+```bash
+curl -X POST "https://api.megasend.co.il/shopify/products/draft-order" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "instance_id": "550e8400-e29b-41d4-a716-446655440000",
+    "line_items": [
+      { "variant_id": "gid://shopify/ProductVariant/456", "quantity": 2 }
+    ],
+    "customer_phone": "+1234567890",
+    "note": "Order via WhatsApp"
+  }'
+```
+
+```json
+{
+  "success": true,
+  "draft_order_id": "gid://shopify/DraftOrder/789",
+  "name": "#D123",
+  "invoice_url": "https://mystore.com/...",
+  "total_price": "59.98",
+  "currency": "USD"
+}
+```
+
+Send `invoice_url` to the customer and Shopify handles the payment. The draft becomes a real order when they pay, so the store's own notifications, inventory and reporting all behave normally.
+
+<Note>
+`variant_id` is a variant, not a product. Take it from the `variants` array in the product detail response, otherwise the draft order fails.
+</Note>
+
 ## Health Checks
 
 Two unauthenticated endpoints report the state of the integration, useful for monitoring:
@@ -491,6 +582,10 @@ curl -X GET "https://api.megasend.co.il/contacts/shopify-health"
 | `GET` | `/campaigns/{campaign_id}/shopify-analytics` | Campaign conversion, funnel, and ROI metrics |
 | `POST` | `/campaigns/{campaign_id}/shopify-analytics/refresh` | Queue an analytics re-computation |
 | `GET` | `/campaigns/{campaign_id}/shopify-recipients` | Recipients enriched with Shopify conversion data |
+| `GET` | `/shopify/products` | Search products in the connected store |
+| `GET` | `/shopify/products/shop-info` | Shop details and whether products exist |
+| `GET` | `/shopify/products/{product_id}` | One product with all its variants |
+| `POST` | `/shopify/products/draft-order` | Create a checkout and get an invoice URL |
 | `GET` | `/ai/shopify/stores` | List Shopify stores connected to your account |
 | `POST` | `/ai/shopify/select-store` | Link a store to an instance's AI settings |
 

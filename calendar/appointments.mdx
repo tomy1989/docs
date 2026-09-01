@@ -1,0 +1,221 @@
+---
+title: 'Appointments API'
+description: 'Book, list, reschedule and cancel appointments across Google Calendar and Calendly from one endpoint'
+icon: 'calendar-check'
+---
+
+Every booking MegaSend knows about lands in one place, whether the customer picked a slot on Calendly, the AI assistant arranged it, or your own code created it. The appointments API is the single view over both providers.
+
+<Info>
+Connect a provider first. See [Google Calendar](/calendar/google-calendar) for availability and direct booking, and [Calendly](/calendar/calendly) for scheduling links. [AI Appointment Booking](/calendar/ai-booking) writes into the same list when the assistant books on your behalf.
+</Info>
+
+## List appointments
+
+<CodeGroup>
+
+```bash cURL
+curl -X GET "https://api.megasend.co.il/appointments?time_min=2026-09-01T00:00:00Z&time_max=2026-09-30T23:59:59Z&status=confirmed" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
+```
+
+```javascript JavaScript
+const params = new URLSearchParams({
+  time_min: '2026-09-01T00:00:00Z',
+  time_max: '2026-09-30T23:59:59Z',
+  status: 'confirmed',
+  limit: '50'
+});
+
+const response = await fetch(`https://api.megasend.co.il/appointments?${params}`, {
+  headers: { 'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN' }
+});
+
+const { appointments, total_count, has_more } = await response.json();
+```
+
+```python Python
+import requests
+
+data = requests.get(
+    'https://api.megasend.co.il/appointments',
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'},
+    params={
+        'time_min': '2026-09-01T00:00:00Z',
+        'time_max': '2026-09-30T23:59:59Z',
+        'status': 'confirmed'
+    }
+).json()
+```
+
+</CodeGroup>
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `time_min` / `time_max` | datetime | Window to search, matched on the appointment start |
+| `status` | string | `confirmed` or `canceled` |
+| `provider` | string | `google_calendar` or `calendly` |
+| `connection_id` | UUID | One specific calendar connection |
+| `contact_id` | UUID | Every appointment with one contact |
+| `instance_id` | UUID | Only appointments booked against this instance |
+| `limit` / `offset` | integer | Pagination |
+
+```json
+{
+  "appointments": [
+    {
+      "appointment_id": "3f2504e0-4f89-11d3-9a0c-0305e82c3301",
+      "connection_id": "7c9e6679-7425-40de-944b-e07fc1f90ae7",
+      "provider": "calendly",
+      "title": "30 minute demo",
+      "description": "Product walkthrough",
+      "location": "Google Meet",
+      "meeting_url": "https://meet.google.com/abc-defg-hij",
+      "start_at": "2026-09-04T13:00:00Z",
+      "end_at": "2026-09-04T13:30:00Z",
+      "timezone": "Asia/Jerusalem",
+      "status": "confirmed",
+      "contact_id": "8f14e45f-ceea-467a-9f7c-1a2b3c4d5e6f",
+      "instance_id": "550e8400-e29b-41d4-a716-446655440000",
+      "invitee": { "name": "John Doe", "email": "john@example.com" },
+      "additional_invitees": [],
+      "source": "ai_assistant",
+      "canceled_at": null,
+      "cancel_reason": null,
+      "reschedule_url": "https://calendly.com/reschedulings/abc123",
+      "created_at": "2026-08-28T09:41:00Z"
+    }
+  ],
+  "total_count": 24,
+  "limit": 50,
+  "offset": 0,
+  "has_more": false
+}
+```
+
+<Tip>
+`contact_id` is the link back to the WhatsApp conversation. Combine it with [Conversations](/chats/conversations) to show an agent what the customer booked without leaving the thread.
+</Tip>
+
+## Create an appointment
+
+Booking directly requires a Google Calendar connection, because Calendly bookings are made by the invitee on a scheduling page rather than by your code.
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST "https://api.megasend.co.il/appointments" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "connection_id": "7c9e6679-7425-40de-944b-e07fc1f90ae7",
+    "title": "Fitting appointment",
+    "start_at": "2026-09-04T13:00:00Z",
+    "end_at": "2026-09-04T13:30:00Z",
+    "timezone": "Asia/Jerusalem",
+    "invitee": { "name": "John Doe", "email": "john@example.com" },
+    "contact_id": "8f14e45f-ceea-467a-9f7c-1a2b3c4d5e6f",
+    "add_meet_link": true
+  }'
+```
+
+```python Python
+appointment = requests.post(
+    'https://api.megasend.co.il/appointments',
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'},
+    json={
+        'connection_id': '7c9e6679-7425-40de-944b-e07fc1f90ae7',
+        'title': 'Fitting appointment',
+        'start_at': '2026-09-04T13:00:00Z',
+        'end_at': '2026-09-04T13:30:00Z',
+        'timezone': 'Asia/Jerusalem',
+        'invitee': {'name': 'John Doe', 'email': 'john@example.com'},
+        'contact_id': '8f14e45f-ceea-467a-9f7c-1a2b3c4d5e6f',
+        'add_meet_link': True
+    }
+).json()
+```
+
+</CodeGroup>
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `connection_id` | UUID | ✅ | Calendar connection to write the event into |
+| `title` | string | ✅ | Event title |
+| `start_at` / `end_at` | datetime | ✅ | Start and end of the slot |
+| `timezone` | string | ❌ | IANA name, for example `Asia/Jerusalem` |
+| `description` | string | ❌ | Event body |
+| `location` | string | ❌ | Free-text location |
+| `calendar_id` | string | ❌ | Target calendar when the connection has several |
+| `invitee` | object | ❌ | The main guest: `name` and `email` |
+| `invitees` | array | ❌ | Additional guests |
+| `contact_id` | UUID | ❌ | Link the booking to a MegaSend contact |
+| `instance_id` | UUID | ❌ | Link the booking to the number it was arranged on |
+| `add_meet_link` | boolean | ❌ | Ask Google to attach a Meet link, returned as `meeting_url` |
+
+The response is a single appointment object, with `201 Created`.
+
+## Reschedule
+
+`PATCH` accepts only the fields you send. Everything else stays as it is.
+
+```bash
+curl -X PATCH "https://api.megasend.co.il/appointments/3f2504e0-4f89-11d3-9a0c-0305e82c3301" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "start_at": "2026-09-05T09:00:00Z",
+    "end_at": "2026-09-05T09:30:00Z"
+  }'
+```
+
+Updatable fields: `title`, `description`, `location`, `start_at`, `end_at`.
+
+<Note>
+For a Calendly booking, prefer sending the customer the `reschedule_url` from the appointment object. Calendly owns the availability rules, so a change made there respects the buffers and limits your booking page enforces.
+</Note>
+
+## Cancel
+
+```bash
+curl -X POST "https://api.megasend.co.il/appointments/3f2504e0-4f89-11d3-9a0c-0305e82c3301/cancel" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"reason": "Customer asked to cancel over WhatsApp"}'
+```
+
+The appointment comes back with `status: "canceled"`, a `canceled_at` timestamp and your `cancel_reason`. Cancellations are pushed to the provider, so the event disappears from the underlying calendar too. Canceled appointments are kept and are still returned by `GET /appointments?status=canceled`.
+
+## A reminder pattern
+
+<Steps>
+  <Step title="Find tomorrow's bookings">
+    `GET /appointments?time_min=<tomorrow 00:00>&time_max=<tomorrow 23:59>&status=confirmed`
+  </Step>
+  <Step title="Skip anyone you cannot reach">
+    An appointment without a `contact_id` has no WhatsApp thread behind it.
+  </Step>
+  <Step title="Send a utility template">
+    A reminder the day before is almost always outside the 24-hour window, so it needs an approved `UTILITY` template. See [The 24-Hour Window](/guides/24-hour-window).
+  </Step>
+  <Step title="Handle the reply">
+    If the customer asks to move or cancel, call `PATCH` or the cancel endpoint, or send them `reschedule_url`.
+  </Step>
+</Steps>
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Google Calendar" icon="calendar-days" href="/calendar/google-calendar">
+    Connect a calendar and read availability
+  </Card>
+  <Card title="Calendly" icon="calendar" href="/calendar/calendly">
+    Scheduling links and event types
+  </Card>
+  <Card title="AI Appointment Booking" icon="robot" href="/calendar/ai-booking">
+    Let the assistant book from inside a conversation
+  </Card>
+  <Card title="Send Messages" icon="paper-plane" href="/messages/send">
+    Confirmations and reminders
+  </Card>
+</CardGroup>

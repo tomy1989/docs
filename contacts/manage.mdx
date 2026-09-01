@@ -4,8 +4,6 @@ description: 'Create, retrieve, update, and delete contacts. Track per-contact n
 icon: 'address-book'
 ---
 
-# Contact Management
-
 The MegaSend Contacts API lets you maintain a contact book tied to your account. You can create contacts from phone numbers or WhatsApp BSUIDs, attach free-text notes, look contacts up by various identifiers, and soft-delete them when no longer needed.
 
 For per-contact custom data fields (key/value pairs), see [Custom Fields](/contacts/custom-fields).
@@ -22,7 +20,7 @@ X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN
 
 ## Create Contact
 
-`POST /contacts`
+`POST /contacts/`
 
 Creates a new contact. At least one of `phone_number` or `bsuid` is required. `name` is always required.
 
@@ -59,7 +57,7 @@ Creates a new contact. At least one of `phone_number` or `bsuid` is required. `n
 <CodeGroup>
 
 ```bash cURL
-curl -X POST "https://api.megasend.co.il/contacts" \
+curl -X POST "https://api.megasend.co.il/contacts/" \
   -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -71,7 +69,7 @@ curl -X POST "https://api.megasend.co.il/contacts" \
 ```
 
 ```javascript JavaScript
-const response = await fetch('https://api.megasend.co.il/contacts', {
+const response = await fetch('https://api.megasend.co.il/contacts/', {
   method: 'POST',
   headers: {
     'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN',
@@ -92,7 +90,7 @@ const contact = await response.json();
 import requests
 
 response = requests.post(
-    'https://api.megasend.co.il/contacts',
+    'https://api.megasend.co.il/contacts/',
     headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'},
     json={
         'name': 'John Doe',
@@ -157,7 +155,7 @@ contact = response.json()
 
 ## List Contacts
 
-`GET /contacts`
+`GET /contacts/`
 
 Returns a paginated list of contacts belonging to your account.
 
@@ -206,13 +204,13 @@ Returns a paginated list of contacts belonging to your account.
 <CodeGroup>
 
 ```bash cURL
-curl -X GET "https://api.megasend.co.il/contacts?page=1&per_page=20&search=John" \
+curl -X GET "https://api.megasend.co.il/contacts/?page=1&per_page=20&search=John" \
   -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
 ```
 
 ```javascript JavaScript
 const params = new URLSearchParams({ page: 1, per_page: 20, search: 'John' });
-const response = await fetch(`https://api.megasend.co.il/contacts?${params}`, {
+const response = await fetch(`https://api.megasend.co.il/contacts/?${params}`, {
   headers: { 'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN' }
 });
 const data = await response.json();
@@ -222,7 +220,7 @@ const data = await response.json();
 import requests
 
 response = requests.get(
-    'https://api.megasend.co.il/contacts',
+    'https://api.megasend.co.il/contacts/',
     headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'},
     params={'page': 1, 'per_page': 20, 'search': 'John'}
 )
@@ -814,3 +812,4 @@ async function handleContactError(response) {
 - [Send messages](/messages/send) — send WhatsApp messages to contacts
 - [Manage unsubscribes](/unsubscribe/manage) — handle opt-out requests
 - [Monitor analytics](/analytics/overview) — understand contact engagement
+- [Export contacts](/contacts/export) — download a filtered list as CSV or XLSX

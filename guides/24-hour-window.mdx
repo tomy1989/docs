@@ -4,8 +4,6 @@ description: 'Understand the WhatsApp customer-service window, when to use templ
 icon: 'clock'
 ---
 
-# The 24-Hour Window & Opt-in
-
 The single most common cause of failed WhatsApp messages in production is sending free-form text outside the customer-service window. This guide explains what the window is, when it applies, and exactly what happens when you get it wrong — so you can build around it correctly from the start.
 
 ---
@@ -24,6 +22,23 @@ WhatsApp distinguishes between two contexts for messaging a customer:
 **The window closes** exactly 24 hours after that inbound message. If the customer sends another inbound message, the clock resets to 24 hours from that new message.
 
 **The window never opens** if you send the customer a message first and they never reply. In that case there is no window at all — you can only send approved templates.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant C as Customer
+    participant M as MegaSend
+    Note over C,M: No window yet: templates only
+    C->>M: "Where is my order?"
+    Note over C,M: Window opens, 24h countdown starts
+    M->>C: Free-form reply (text, media, buttons)
+    C->>M: "Thanks!"
+    Note over C,M: Clock RESETS to 24h from this message
+    M->>C: Free-form reply
+    Note over C,M: 24h pass with no inbound message
+    M--xC: Free-form send is rejected
+    M->>C: Approved template goes through
+```
 
 <Note>
 This rule is enforced at the MegaSend API layer before the request reaches Meta. A send that would violate the window is rejected immediately, protecting your message quota and preventing unnecessary Meta API calls.
