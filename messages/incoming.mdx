@@ -1,4 +1,4 @@
- ---
+---
 title: 'Get Incoming Messages'
 description: 'Retrieve incoming WhatsApp messages and customer responses using the MegaSend API'
 icon: 'message-arrow-down'
@@ -433,3 +433,14 @@ const response = await fetch('https://api.megasend.co.il/messages/incoming?' + n
 <Info>
 **Media Files**: Media content is referenced in `raw_data` by WhatsApp media ID. Use the media download endpoint to retrieve the actual file bytes.
 </Info>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Conversations" icon="comments" href="/chats/conversations">
+    Group these messages into threads with unread counts and window state
+  </Card>
+  <Card title="Webhook Setup" icon="webhook" href="/webhooks/setup">
+    Get pushed the same events instead of polling
+  </Card>
+</CardGroup>

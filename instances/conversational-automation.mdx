@@ -1,0 +1,170 @@
+---
+title: 'Ice Breakers & Commands'
+description: 'Configure the welcome message, ice breaker prompts and slash commands WhatsApp shows before a customer types anything'
+icon: 'wand-magic-sparkles'
+---
+
+Conversational automation is what WhatsApp shows a customer who has opened a chat with your business but has not written yet: a welcome message, up to four tappable prompts, and a list of slash commands. The settings live on Meta's side, attached to the phone number, and these endpoints read and write them for you.
+
+<Frame caption="Ice breakers and slash commands, as WhatsApp shows them">
+  <img src="/images/automation.webp" alt="Two WhatsApp chats: tappable ice breaker prompts above the input bar, and the slash command list a customer sees after typing a slash" />
+</Frame>
+
+<Info>
+These are Meta features, not MegaSend automations. Ice breakers and commands appear on the customer's phone; what happens when someone taps one is up to you. Wire the reply with an [Automation Flow](/flows/manage) or by handling the inbound message from a [webhook](/webhooks/setup).
+</Info>
+
+## Read the current settings
+
+<CodeGroup>
+
+```bash cURL
+curl -X GET "https://api.megasend.co.il/instances/550e8400-e29b-41d4-a716-446655440000/conversational_automation" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
+```
+
+```javascript JavaScript
+const response = await fetch(
+  'https://api.megasend.co.il/instances/550e8400-e29b-41d4-a716-446655440000/conversational_automation',
+  { headers: { 'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN' } }
+);
+
+const { conversational_automation, phone_number_id } = await response.json();
+```
+
+```python Python
+import requests
+
+data = requests.get(
+    'https://api.megasend.co.il/instances/550e8400-e29b-41d4-a716-446655440000/conversational_automation',
+    headers={'X-MEGASEND-AUTH': 'YOUR_ACCESS_TOKEN'}
+).json()
+```
+
+</CodeGroup>
+
+```json
+{
+  "conversational_automation": {
+    "enable_welcome_message": true,
+    "prompts": [
+      "Track my order",
+      "Opening hours",
+      "Talk to a person"
+    ],
+    "commands": [
+      { "command_name": "help", "command_description": "Show what I can do" },
+      { "command_name": "status", "command_description": "Check your latest order status" }
+    ]
+  },
+  "phone_number_id": "109876543210987"
+}
+```
+
+<Note>
+`conversational_automation` is `null` on a number that has never been configured. Treat that as "welcome message off, no prompts, no commands" rather than an error.
+</Note>
+
+## Update everything at once
+
+`PUT .../conversational_automation` replaces all three settings in one call. Send only the keys you want to change.
+
+```bash
+curl -X PUT "https://api.megasend.co.il/instances/550e8400-e29b-41d4-a716-446655440000/conversational_automation" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "enable_welcome_message": true,
+    "prompts": ["Track my order", "Opening hours", "Talk to a person"],
+    "commands": [
+      { "command_name": "help", "command_description": "Show what I can do" },
+      { "command_name": "status", "command_description": "Check your latest order status" }
+    ]
+  }'
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `enable_welcome_message` | boolean | Whether WhatsApp shows the welcome message |
+| `prompts` | array of strings | Ice breakers, at most 4, each at most 80 characters |
+| `commands` | array of objects | Slash commands, at most 30 |
+
+## Update one setting
+
+Three narrower endpoints exist so you do not have to resend the rest:
+
+<CodeGroup>
+
+```bash Ice breakers
+curl -X PUT "https://api.megasend.co.il/instances/550e8400-e29b-41d4-a716-446655440000/conversational_automation/ice_breakers" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"prompts": ["Track my order", "Opening hours"]}'
+```
+
+```bash Commands
+curl -X PUT "https://api.megasend.co.il/instances/550e8400-e29b-41d4-a716-446655440000/conversational_automation/commands" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"commands": [{"command_name": "help", "command_description": "Show what I can do"}]}'
+```
+
+```bash Welcome message
+curl -X PUT "https://api.megasend.co.il/instances/550e8400-e29b-41d4-a716-446655440000/conversational_automation/welcome_message" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"enable_welcome_message": false}'
+```
+
+</CodeGroup>
+
+Each of these replaces the whole list it owns. Sending `{"prompts": []}` removes every ice breaker.
+
+## Validation rules
+
+| Rule | Limit |
+|------|-------|
+| Ice breakers | At most **4**, each 1 to 80 characters, none empty |
+| Commands | At most **30**, names must be unique |
+| Command name | 1 to 32 characters, letters, numbers and underscores only |
+| Command description | 1 to 256 characters |
+
+A leading slash in `command_name` is stripped for you, and the name is lowercased. `"/Help"` and `"help"` are the same command, so sending both fails with "Command names must be unique".
+
+<Warning>
+Ice breakers and commands are only shown to customers who have **never messaged you before**, or who have cleared the chat. They will not appear in an existing conversation, so use a fresh number to test.
+</Warning>
+
+## Writing prompts that work
+
+<AccordionGroup>
+  <Accordion title="Write the customer's question, not your menu label">
+    "Track my order" beats "Order management". The prompt becomes the message the customer sends, so it should read like something a person would type.
+  </Accordion>
+  <Accordion title="Four is the ceiling, three is usually better">
+    Prompts compete with each other. Cover the three questions your support team actually receives most often, and let everything else arrive as free text.
+  </Accordion>
+  <Accordion title="Always offer a way to reach a person">
+    A "Talk to a person" prompt reduces frustration and gives you a clean signal to route the thread to an agent, which you can act on with [conversation assignment](/chats/conversations).
+  </Accordion>
+  <Accordion title="Handle the reply before you publish the prompt">
+    A prompt that gets no answer is worse than no prompt. Have the flow or webhook handler live first.
+  </Accordion>
+</AccordionGroup>
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Manage Instances" icon="mobile" href="/instances/manage">
+    Business profile, commerce settings and the rest of the number's configuration
+  </Card>
+  <Card title="Automation Flows" icon="diagram-project" href="/flows/manage">
+    Answer a tapped ice breaker automatically
+  </Card>
+  <Card title="Conversations" icon="comments" href="/chats/conversations">
+    Route "talk to a person" to the right agent
+  </Card>
+  <Card title="QR Codes" icon="qrcode" href="/instances/qr-codes">
+    Get customers into the chat in the first place
+  </Card>
+</CardGroup>

@@ -1,22 +1,37 @@
 ---
 title: Introduction
 description: "Professional WhatsApp Business API for seamless messaging automation and customer engagement"
+icon: 'hand-wave'
 ---
 
 <img
   className="block dark:hidden"
-  src="/images/hero-light.png"
-  alt="MegaSend API"
+  src="/images/hero-light.svg"
+  alt="MegaSend Cloud API: one REST API for WhatsApp Business, SMS and more"
 />
 <img
   className="hidden dark:block"
-  src="/images/hero-dark.png"
-  alt="MegaSend API"
+  src="/images/hero-dark.svg"
+  alt="MegaSend Cloud API: one REST API for WhatsApp Business, SMS and more"
 />
 
 ## Welcome to MegaSend API
 
-MegaSend is a powerful WhatsApp Business API platform that enables businesses to send messages, manage conversations, and automate customer engagement at scale. Our RESTful API provides comprehensive access to WhatsApp Business features with enterprise-grade reliability and security.
+MegaSend is a WhatsApp Business API platform for sending messages, managing conversations and automating customer engagement at scale. One REST API covers the whole path from your application to the customer's phone, across WhatsApp and a growing set of other channels.
+
+```mermaid
+flowchart LR
+    A[Your application] -->|X-MEGASEND-AUTH| B[MegaSend API]
+    B --> C[Instance<br/>a connected number]
+    C --> D[WhatsApp Business]
+    C --> E[SMS channels]
+    D --> F[Your customer]
+    E --> F
+    F -->|reply| G[Webhook to your server]
+    G --> A
+```
+
+An **instance** is one connected channel account, usually a WhatsApp number. Almost every endpoint takes an `instance_id` to say which one to act on. Start at [Quickstart](/quickstart) to create one and send a message in a few minutes.
 
 ## What You Can Build
 
@@ -30,7 +45,7 @@ MegaSend is a powerful WhatsApp Business API platform that enables businesses to
   </Card>
   <Card
     title="Template Management"
-    icon="template"
+    icon="file-lines"
     href="/templates/create"
   >
     Create, manage, and deploy WhatsApp message templates for consistent branding
@@ -119,7 +134,9 @@ Integrate with your e-commerce platform for cart abandonment, order updates, and
 
 ## API Structure
 
-Our RESTful API uses clean, predictable URLs without version prefixes. All endpoints are accessed directly at `https://api.megasend.co.il/`. We maintain backward compatibility and provide advance notice of any breaking changes.
+Our RESTful API uses clean, predictable URLs without version prefixes. All endpoints are accessed directly at `https://api.megasend.co.il/`. We maintain backward compatibility and provide advance notice of any breaking changes. See [Versioning & Deprecation](/resources/versioning).
+
+Every endpoint is listed with its parameters, schemas and a runnable playground in the [API Reference](/api-reference/introduction) tab.
 
 ## Rate Limits
 
@@ -133,4 +150,17 @@ Need help? Our support team is here to assist you:
 - **Dashboard**: [app.megasend.co.il](https://app.megasend.co.il)
 - **Documentation**: Comprehensive guides and examples in this documentation
 
-Let's get started building amazing WhatsApp experiences with MegaSend! 
+<CardGroup cols={2}>
+  <Card title="Quickstart" icon="rocket" href="/quickstart">
+    Connect a number and send your first message
+  </Card>
+  <Card title="The 24-Hour Window" icon="clock" href="/guides/24-hour-window">
+    The one WhatsApp rule that decides what you may send
+  </Card>
+  <Card title="Channels" icon="tower-broadcast" href="/instances/twilio">
+    Twilio, Telnyx, 019, InforU and LINE alongside WhatsApp
+  </Card>
+  <Card title="Integrations" icon="puzzle-piece" href="/integrations/shopify">
+    Shopify, Calendly, Google Calendar and AI assistants
+  </Card>
+</CardGroup> 

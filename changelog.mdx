@@ -1,6 +1,7 @@
 ---
 title: 'Changelog'
 description: 'Release history for the MegaSend API — new features, breaking changes, and bug fixes in reverse chronological order'
+icon: 'clock-rotate-left'
 ---
 
 This page tracks every public API release. Entries are ordered newest-first and follow the **Added / Changed / Fixed** convention. Integrate against the current stable version unless a migration path is noted.
@@ -8,6 +9,32 @@ This page tracks every public API release. Entries are ordered newest-first and 
 <Note>
 The current stable API version is **2.0.0**. All endpoints are served at `https://api.megasend.co.il`. Authenticate every request with the `X-MEGASEND-AUTH` header.
 </Note>
+
+---
+
+## 2026-09-01 — Documentation expansion & API reference
+
+### Added
+
+- **Conversations API** — read the inbox as threads: list conversations, page through a thread, track unread counts, assign a thread to an agent or team, snooze or close it, and send a typing indicator. See the [Conversations guide](/chats/conversations).
+- **Retry failed messages** — smart retry candidates with deduplication and exclusion counts, bulk retry up to 500 messages, and task polling. See [Retry Failed Messages](/messages/retries).
+- **Contact export** — export a filtered contact list as CSV or XLSX, with a background job and a 24-hour download token for large exports. See [Export Contacts](/contacts/export).
+- **Template analytics** — Meta's delivery, read and click metrics per template, plus a top-templates ranking. See [Template Analytics](/templates/analytics).
+- **Conversation analytics** — conversation counts and costs by direction and category, daily trends, and MM Lite savings estimates. See [Conversation Analytics](/analytics/conversations).
+- **Ice breakers, commands and welcome message** — configure what WhatsApp shows before a customer types. See [Ice Breakers & Commands](/instances/conversational-automation).
+- **WhatsApp QR codes** — create scannable codes and click-to-chat links with a pre-filled message. See [WhatsApp QR Codes](/instances/qr-codes).
+- **Appointments API** — list, create, reschedule and cancel bookings across Google Calendar and Calendly. See the [Appointments API](/calendar/appointments).
+- **Shopify product browsing and draft orders** — search the connected store, read variants, and turn a chat into a payable checkout link. See the [Shopify integration](/integrations/shopify).
+- **Interactive API reference** — every documented endpoint now has a generated reference page with schemas and a request playground, authenticated with `X-MEGASEND-AUTH`.
+
+### Changed
+
+- Documentation navigation is split into **Guides** and **API Reference** tabs, with guides grouped by topic.
+
+### Fixed
+
+- Corrected the `POST /messages/send` example on the [Authentication](/authentication) page, which used Meta's `to` and `type` fields instead of MegaSend's `instance_id`, `recipient` and `message_type`.
+- `POST /contacts/` and `GET /contacts/` are documented with their trailing slash, matching the API.
 
 ---
 

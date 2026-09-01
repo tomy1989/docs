@@ -1,9 +1,8 @@
 ---
 title: 'Campaigns'
 description: 'Create, schedule, and monitor WhatsApp bulk messaging campaigns with Google Sheets or Contact Segment audiences'
+icon: 'bullhorn'
 ---
-
-# Campaigns
 
 The MegaSend Campaigns API lets you send WhatsApp template messages in bulk to large recipient audiences. Campaigns are driven by approved WhatsApp message templates and support two audience sources: **Google Sheets** (with column mapping) and **Contact Segments** (saved audience filters from your contacts database). Progress is tracked in real time via per-recipient delivery statuses, aggregate stats, and an audit log.
 
@@ -1430,6 +1429,26 @@ for (const r of failures.items) {
 ---
 
 ## State Machine Reference
+
+```mermaid
+stateDiagram-v2
+    [*] --> draft: POST /campaigns/
+    draft --> scheduled: schedule
+    draft --> running: start
+    scheduled --> running: scheduled time arrives
+    scheduled --> draft: unschedule
+    running --> paused: pause
+    paused --> running: resume
+    running --> completed: every recipient processed
+    running --> failed: unrecoverable error
+    draft --> cancelled: cancel
+    scheduled --> cancelled: cancel
+    running --> cancelled: cancel
+    paused --> cancelled: cancel
+    completed --> running: start again
+    failed --> running: retry
+    cancelled --> running: start again
+```
 
 Valid status transitions:
 

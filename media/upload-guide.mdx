@@ -18,6 +18,20 @@ The Media Library provides centralized management for all media files used in yo
 - **Automatic expiry management** - Get notified before files expire
 - **Centralized storage** - All your media in one searchable location
 
+There are two ways to attach media to a message. Pick the one that matches how often the file is reused:
+
+```mermaid
+flowchart TD
+    A[You have a file] --> B{Will you send it<br/>more than once?}
+    B -->|no, one-off| C[Pass a public URL<br/>image_url, document_url, ...]
+    C --> D[Meta downloads it<br/>on every send]
+    B -->|yes, reused| E[POST /media-library/:instance_id/upload]
+    E --> F[Stored, tagged, usage tracked]
+    F --> G[Reuse in messages,<br/>templates and campaigns]
+    D --> H[Customer]
+    G --> H
+```
+
 ---
 
 ## Quick Start

@@ -1,32 +1,36 @@
-# Mintlify Starter Kit
+# MegaSend API Documentation
 
-Click on `Use this template` to copy the Mintlify starter kit. The starter kit contains examples including
+The public documentation for the MegaSend Cloud API, published with [Mintlify](https://mintlify.com).
 
-- Guide pages
-- Navigation
-- Customizations
-- API Reference pages
-- Use of popular components
+**Live site:** built from `main`. Pushing to `main` publishes, so every change goes through a branch and a pull request.
 
-### Development
+## Layout
 
-Install the [Mintlify CLI](https://www.npmjs.com/package/mint) to preview the documentation changes locally. To install, use the following command
+| Path | What it holds |
+|------|---------------|
+| `docs.json` | Site config: theme, navigation tabs and groups, navbar, API settings |
+| `openapi.json` | Curated OpenAPI spec that generates the **API Reference** tab |
+| `*.mdx` | One page per topic, grouped by folder (`messages/`, `contacts/`, `campaigns/`, ...) |
+| `images/`, `logo/`, `favicon.svg` | Brand assets. `logo/light.svg` is for light backgrounds, `logo/dark.svg` for dark. |
 
-```
-npm i -g mint
-```
+## Local preview
 
-Run the following command at the root of your documentation (where docs.json is)
-
-```
-mint dev
+```bash
+npm i -g mint     # Mintlify CLI
+mint dev          # run from the folder containing docs.json
 ```
 
-### Publishing Changes
+If a page 404s, check that its path is listed in `docs.json`. If the CLI misbehaves, run `mint update`.
 
-Install our Github App to auto propagate changes from your repo to your deployment. Changes will be deployed to production automatically after pushing to the default branch. Find the link to install on your dashboard. 
+## Writing conventions
 
-#### Troubleshooting
+- **Frontmatter on every page**: `title`, `description`, `icon` (a [Font Awesome](https://fontawesome.com/icons) name). No leading whitespace before the opening `---`, or the frontmatter is not parsed.
+- **No `# H1` in the body.** Mintlify renders the frontmatter `title` as the page heading, so a body H1 duplicates it.
+- **Examples must run.** Code samples use the real base URL `https://api.megasend.co.il` and the `X-MEGASEND-AUTH` header. Verify field names against the live schema before publishing.
+- **Document what is live.** Check an endpoint exists in production (`https://api.megasend.co.il/openapi.json`) before writing about it, and leave unlaunched features out.
+- **Diagrams** are Mermaid fences (` ```mermaid `). Mintlify renders them natively, so no image export is needed.
+- **Changelog**: add a dated `## YYYY-MM-DD — Title` entry with `Added` / `Changed` / `Fixed` sections for every user-visible change.
 
-- If the dev environment isn't running - Run `mint update` to ensure you have the most recent version of the CLI.
-- Page loads as a 404 - Make sure you are running in a folder with `docs.json`
+## Regenerating the OpenAPI spec
+
+`openapi.json` is a curated subset of the production spec: customer-facing endpoints only, with admin-only paths and unlaunched features removed, plus an `X-MEGASEND-AUTH` security scheme so the reference playground authenticates correctly. Refresh it from production rather than hand-editing it, and review the diff before committing.

@@ -6,6 +6,10 @@ icon: 'file-template'
 
 WhatsApp Business templates are pre-approved message formats that enable you to send marketing messages, notifications, and other business communications to customers who haven't messaged you in the last 24 hours.
 
+<Frame caption="The four component types, and where each one lands on the customer's phone">
+  <img src="/images/template-anatomy.webp" alt="A WhatsApp template message with its header, body, footer and buttons outlined and labelled with the matching component types" />
+</Frame>
+
 ## Template Structure
 
 WhatsApp templates consist of several components:
@@ -340,7 +344,7 @@ For verification codes and login confirmations.
 Use `{{1}}`, `{{2}}`, `{{3}}`, etc. as placeholders for dynamic content:
 
 ### Body Variables
-- Variables must be used in sequential order ({{1}}, {{2}}, {{3}})
+- Variables must be used in sequential order (`{{1}}`, `{{2}}`, `{{3}}`)
 - Cannot be empty when sending messages
 
 ### Header Variables
@@ -862,7 +866,7 @@ try {
 | 409 | Template name already exists | Use a different name |
 | 413 | File too large | Check size limits per media type |
 | 415 | Unsupported file type | Use JPEG/PNG for images, MP4/3GPP for video |
-| 422 | Invalid variable sequence | Use sequential numbering {{1}}, {{2}} |
+| 422 | Invalid variable sequence | Use sequential numbering `{{1}}`, `{{2}}` |
 | 422 | Unsupported language | Use supported language codes |
 | 422 | Invalid category | Use MARKETING, UTILITY, or AUTHENTICATION only |
 

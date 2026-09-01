@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 400" width="1200" height="400" role="img" aria-label="MegaSend Cloud API: one REST API for WhatsApp Business, SMS and more">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#FBFEF7"/>
+      <stop offset="55%" stop-color="#F4FCEA"/>
+      <stop offset="100%" stop-color="#E8F8D6"/>
+    </linearGradient>
+    <linearGradient id="wire" x1="810" y1="0" x2="950" y2="0" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#18534E" stop-opacity="0.18"/>
+      <stop offset="100%" stop-color="#18534E" stop-opacity="0.6"/>
+    </linearGradient>
+    <pattern id="dots" width="26" height="26" patternUnits="userSpaceOnUse">
+      <circle cx="1.5" cy="1.5" r="1.5" fill="#18534E" opacity="0.10"/>
+    </pattern>
+  </defs>
+
+  <rect width="1200" height="400" rx="20" fill="url(#bg)"/>
+  <rect width="1200" height="400" rx="20" fill="url(#dots)"/>
+
+  <g transform="translate(72 96) scale(2.9)">
+<rect width="25" height="25" rx="4" fill="#a8f04c"/>
+<path d="M19.1276 7.65378L15.3334 18.2884C15.2426 18.5525 15.0714 18.7815 14.8437 18.9433C14.6161 19.105 14.3434 19.1914 14.0642 19.1902C13.7881 19.1933 13.5179 19.1109 13.2906 18.9542C13.0633 18.7975 12.8902 18.5742 12.795 18.3151L11.3788 14.6277L12.4075 13.599L14.0708 11.9357C14.1966 11.8099 14.2673 11.6393 14.2673 11.4614C14.2673 11.2835 14.1966 11.1129 14.0708 10.9871C13.9451 10.8613 13.7745 10.7907 13.5966 10.7907C13.4187 10.7907 13.2481 10.8613 13.1223 10.9871L11.459 12.6504L10.4035 13.6858L6.72281 12.263C6.44795 12.1802 6.20707 12.0111 6.03584 11.7807C5.86462 11.5503 5.77216 11.2708 5.77216 10.9838C5.77216 10.6967 5.86462 10.4173 6.03584 10.1869C6.20707 9.95647 6.44795 9.78735 6.72281 9.70455L17.3841 5.91029C17.628 5.81012 17.8959 5.78431 18.1544 5.83611C18.4128 5.8879 18.6502 6.01499 18.8366 6.20137C19.0229 6.38775 19.15 6.6251 19.2018 6.88354C19.2536 7.14198 19.2278 7.40997 19.1276 7.65378Z" fill="#18534E"/>
+  </g>
+
+  <g font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif">
+    <text x="72" y="216" font-size="36" font-weight="700" fill="#083941">MegaSend Cloud API</text>
+    <text x="72" y="252" font-size="17" fill="#3F6B65">One REST API for WhatsApp Business,</text>
+    <text x="72" y="278" font-size="17" fill="#3F6B65">SMS and every channel in between.</text>
+  </g>
+
+  <g transform="translate(470 92)">
+    <rect width="340" height="216" rx="14" fill="#FFFFFF" stroke="#D8F2B8" stroke-width="2"/>
+    <circle cx="24" cy="26" r="5" fill="#F87171"/>
+    <circle cx="42" cy="26" r="5" fill="#FBBF24"/>
+    <circle cx="60" cy="26" r="5" fill="#A8F04C"/>
+    <g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="13">
+      <text x="24" y="74" font-size="14.5" fill="#18534E" font-weight="700">POST /messages/send</text>
+      <text x="24" y="108" fill="#3F6B65">{</text>
+      <text x="38" y="130" fill="#3F6B65">"recipient": "+972...",</text>
+      <text x="38" y="152" fill="#3F6B65">"message_type": "text",</text>
+      <text x="38" y="174" fill="#3F6B65">"text": "Order shipped"</text>
+      <text x="24" y="196" fill="#3F6B65">}</text>
+    </g>
+  </g>
+
+  <path d="M810 148 C 872 148, 890 118, 950 118" stroke="url(#wire)" stroke-width="2.5" fill="none"/>
+  <path d="M810 200 C 872 200, 890 200, 950 200" stroke="url(#wire)" stroke-width="2.5" fill="none"/>
+  <path d="M810 252 C 872 252, 890 282, 950 282" stroke="url(#wire)" stroke-width="2.5" fill="none"/>
+
+  <g font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="15" fill="#083941">
+    <rect x="950" y="96" width="180" height="44" rx="22" fill="#FFFFFF" stroke="#D8F2B8" stroke-width="2"/>
+    <circle cx="976" cy="118" r="7" fill="#18534E"/>
+    <text x="994" y="124">WhatsApp Business</text>
+
+    <rect x="950" y="178" width="180" height="44" rx="22" fill="#FFFFFF" stroke="#D8F2B8" stroke-width="2"/>
+    <circle cx="976" cy="200" r="7" fill="#7FD957"/>
+    <text x="994" y="206">SMS channels</text>
+
+    <rect x="950" y="260" width="180" height="44" rx="22" fill="#FFFFFF" stroke="#D8F2B8" stroke-width="2"/>
+    <circle cx="976" cy="282" r="7" fill="#A8F04C"/>
+    <text x="994" y="288">Campaigns &amp; flows</text>
+  </g>
+</svg>

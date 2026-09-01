@@ -2,106 +2,207 @@
   "$schema": "https://mintlify.com/docs.json",
   "theme": "mint",
   "name": "MegaSend API",
+  "description": "REST API for WhatsApp Business messaging, templates, contacts, campaigns and multi-channel automation.",
   "logo": {
     "light": "/logo/light.svg",
-    "dark": "/logo/dark.svg"
+    "dark": "/logo/dark.svg",
+    "href": "https://app.megasend.co.il"
   },
   "favicon": "/favicon.svg",
   "colors": {
-    "primary": "#25D366",
-    "light": "#40E884",
-    "dark": "#128C7E"
+    "primary": "#18534E",
+    "light": "#A8F04C",
+    "dark": "#0E3B37"
   },
-  "topbarLinks": [
-    {
-      "name": "Support",
-      "url": "mailto:team@weblix.co.il"
+  "appearance": {
+    "default": "system"
+  },
+  "navbar": {
+    "links": [
+      {
+        "label": "Support",
+        "href": "mailto:team@weblix.co.il"
+      },
+      {
+        "label": "Status",
+        "href": "https://api.megasend.co.il/health"
+      }
+    ],
+    "primary": {
+      "type": "button",
+      "label": "Dashboard",
+      "href": "https://app.megasend.co.il"
     }
-  ],
+  },
+  "footer": {
+    "socials": {
+      "website": "https://megasend.io"
+    }
+  },
+  "contextual": {
+    "options": [
+      "copy",
+      "view",
+      "chatgpt",
+      "claude"
+    ]
+  },
+  "api": {
+    "openapi": "/openapi.json",
+    "playground": {
+      "display": "interactive"
+    },
+    "mdx": {
+      "server": "https://api.megasend.co.il",
+      "auth": {
+        "method": "key",
+        "name": "X-MEGASEND-AUTH"
+      }
+    }
+  },
   "navigation": {
-    "groups": [
+    "tabs": [
       {
-        "group": "Getting Started",
-        "pages": [
-          "introduction",
-          "authentication",
-          "quickstart",
-          "guides/24-hour-window"
+        "tab": "Guides",
+        "icon": "book-open",
+        "groups": [
+          {
+            "group": "Getting Started",
+            "icon": "rocket",
+            "pages": [
+              "introduction",
+              "quickstart",
+              "authentication",
+              "guides/24-hour-window"
+            ]
+          },
+          {
+            "group": "Messaging",
+            "icon": "paper-plane",
+            "pages": [
+              "messages/send",
+              "messages/bulk-send",
+              "messages/schedule",
+              "messages/incoming",
+              "messages/responses",
+              "messages/retries",
+              "chats/conversations"
+            ]
+          },
+          {
+            "group": "Templates",
+            "icon": "file-lines",
+            "pages": [
+              "templates/create",
+              "templates/list",
+              "templates/details",
+              "templates/analytics"
+            ]
+          },
+          {
+            "group": "Contacts",
+            "icon": "address-book",
+            "pages": [
+              "contacts/manage",
+              "contacts/labels",
+              "contacts/custom-fields",
+              "contacts/segments",
+              "contacts/export"
+            ]
+          },
+          {
+            "group": "Campaigns & Automation",
+            "icon": "bullhorn",
+            "pages": [
+              "campaigns/manage",
+              "flows/manage",
+              "flows/whatsapp-flows"
+            ]
+          },
+          {
+            "group": "Commerce",
+            "icon": "cart-shopping",
+            "pages": [
+              "catalog/manage",
+              "integrations/shopify"
+            ]
+          },
+          {
+            "group": "Media",
+            "icon": "photo-film",
+            "pages": [
+              "media/upload-guide",
+              "media/api-reference"
+            ]
+          },
+          {
+            "group": "Analytics",
+            "icon": "chart-line",
+            "pages": [
+              "analytics/overview",
+              "analytics/conversations"
+            ]
+          },
+          {
+            "group": "Instances & Channels",
+            "icon": "mobile",
+            "pages": [
+              "instances/manage",
+              "instances/conversational-automation",
+              "instances/qr-codes",
+              "instances/instagram",
+              "instances/messenger",
+              "instances/telegram",
+              "instances/line",
+              "instances/web-widget",
+              "instances/email",
+              "instances/twilio",
+              "instances/telnyx",
+              "instances/sms-019",
+              "instances/sms-inforu"
+            ]
+          },
+          {
+            "group": "Integrations",
+            "icon": "puzzle-piece",
+            "pages": [
+              "integrations/mcp",
+              "calendar/calendly",
+              "calendar/google-calendar",
+              "calendar/ai-booking",
+              "calendar/appointments"
+            ]
+          },
+          {
+            "group": "Platform",
+            "icon": "gear",
+            "pages": [
+              "webhooks/setup",
+              "otp/verify",
+              "unsubscribe/manage",
+              "utilities/overview",
+              "resources/versioning",
+              "changelog"
+            ]
+          }
         ]
       },
       {
-        "group": "Guides",
-        "pages": [
-          "messages/send",
-          "messages/bulk-send",
-          "messages/schedule",
-          "messages/incoming",
-          "messages/responses",
-          "templates/create",
-          "templates/list",
-          "templates/details",
-          "media/upload-guide",
-          "instances/manage",
-          "webhooks/setup",
-          "analytics/overview",
-          "contacts/manage",
-          "contacts/labels",
-          "contacts/custom-fields",
-          "contacts/segments",
-          "campaigns/manage",
-          "flows/manage",
-          "flows/whatsapp-flows",
-          "catalog/manage",
-          "otp/verify",
-          "utilities/overview",
-          "unsubscribe/manage",
-          "guides/24-hour-window"
-        ]
-      },
-      {
-        "group": "Channels",
-        "pages": [
-          "instances/twilio",
-          "instances/telnyx",
-          "instances/sms-019",
-          "instances/sms-inforu",
-          "instances/line"
-        ]
-      },
-      {
-        "group": "Integrations",
-        "pages": [
-          "integrations/mcp",
-          "integrations/shopify",
-          "calendar/calendly",
-          "calendar/google-calendar",
-          "calendar/ai-booking"
-        ]
-      },
-      {
-        "group": "API Reference",
-        "pages": [
-          "api-reference/introduction",
-          "media/api-reference"
-        ]
-      },
-      {
-        "group": "Resources",
-        "pages": [
-          "changelog",
-          "resources/versioning"
+        "tab": "API Reference",
+        "icon": "code",
+        "groups": [
+          {
+            "group": "Overview",
+            "pages": [
+              "api-reference/introduction"
+            ]
+          },
+          {
+            "group": "Endpoints",
+            "openapi": "/openapi.json"
+          }
         ]
       }
     ]
-  },
-  "footerSocials": {
-    "website": "https://megasend.co"
-  },
-  "api": {
-    "baseUrl": "https://api.megasend.co.il",
-    "auth": {
-      "method": "bearer"
-    }
-  },
-  "openapi": "/openapi.json"
+  }
 }
