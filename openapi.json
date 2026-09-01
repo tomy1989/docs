@@ -10149,6 +10149,356 @@
     }
    }
   },
+  "/gmail/auth/callback": {
+   "post": {
+    "tags": [
+     "Gmail"
+    ],
+    "summary": "Auth Callback",
+    "description": "Exchange the code, read the profile email, create-or-rebind the instance.",
+    "operationId": "auth_callback_gmail_auth_callback_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/GmailAuthCallback"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/gmail/auth/start": {
+   "get": {
+    "tags": [
+     "Gmail"
+    ],
+    "summary": "Auth Start",
+    "description": "Build the Google consent URL for the FE popup.\n\nPlan/limit gates run UP FRONT (parity with TikTok) so an at-limit user is\nstopped before the Google popup opens — with a reconnect carve-out: a\ntenant who already owns a Gmail instance can re-OAuth at the cap (the\ncallback's will-reuse backstop still blocks a genuinely-new mailbox).",
+    "operationId": "auth_start_gmail_auth_start_get",
+    "parameters": [
+     {
+      "name": "nickname",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string",
+         "maxLength": 80
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Nickname"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/gmail/disconnect": {
+   "post": {
+    "tags": [
+     "Gmail"
+    ],
+    "summary": "Disconnect",
+    "operationId": "disconnect_gmail_disconnect_post",
+    "parameters": [
+     {
+      "name": "instance_id",
+      "in": "query",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Instance Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/gmail/status": {
+   "get": {
+    "tags": [
+     "Gmail"
+    ],
+    "summary": "Status",
+    "operationId": "status_gmail_status_get",
+    "parameters": [
+     {
+      "name": "instance_id",
+      "in": "query",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Instance Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/gmail/{instance_id}/attachments/{gmail_message_id}/{attachment_id}": {
+   "get": {
+    "tags": [
+     "Gmail"
+    ],
+    "summary": "Download Attachment",
+    "operationId": "download_attachment_gmail__instance_id__attachments__gmail_message_id___attachment_id__get",
+    "parameters": [
+     {
+      "name": "instance_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Instance Id"
+      }
+     },
+     {
+      "name": "gmail_message_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Gmail Message Id"
+      }
+     },
+     {
+      "name": "attachment_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Attachment Id"
+      }
+     },
+     {
+      "name": "filename",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string",
+         "maxLength": 512
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Filename"
+      }
+     },
+     {
+      "name": "mime",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string",
+         "maxLength": 255
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Mime"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/gmail/{instance_id}/automation-settings": {
+   "get": {
+    "tags": [
+     "Gmail"
+    ],
+    "summary": "Get Gmail Automation Settings",
+    "operationId": "get_gmail_automation_settings_gmail__instance_id__automation_settings_get",
+    "parameters": [
+     {
+      "name": "instance_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Instance Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   },
+   "put": {
+    "tags": [
+     "Gmail"
+    ],
+    "summary": "Set Gmail Automation Settings",
+    "description": "MERGE the provided top-level keys into gmail_automation_settings.\n\nThe FE sends partial objects (e.g. ``{\"welcome\": {...}}`` from the welcome\nform, ``{\"faq\": {...}}`` from the FAQ form). A full replace would wipe the\nother sections, so we do a top-level dict merge: only the provided keys\nare overwritten; absent keys are left untouched (telegram semantics).",
+    "operationId": "set_gmail_automation_settings_gmail__instance_id__automation_settings_put",
+    "parameters": [
+     {
+      "name": "instance_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Instance Id"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/GmailAutomationSettings"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
   "/google-calendar/auth/callback": {
    "post": {
     "tags": [
@@ -10794,6 +11144,2870 @@
       }
      }
     },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/instagram/auth/callback": {
+   "get": {
+    "tags": [
+     "Instagram"
+    ],
+    "summary": "Oauth Redirect Landing",
+    "description": "OAuth redirect landing page. Instagram redirects here with ?code=...&state=...\nafter user authorizes. This returns a simple HTML page that posts the code\nback to the parent window via postMessage and closes itself.",
+    "operationId": "oauth_redirect_landing_instagram_auth_callback_get",
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     }
+    }
+   },
+   "post": {
+    "tags": [
+     "Instagram"
+    ],
+    "summary": "Handle Callback",
+    "description": "Main OAuth callback handler.\n\nFlow:\n  1. Check for OAuth error (CN-10)\n  2. Parse & validate CSRF nonce from state (CN-5)\n  3. Exchange code -> short-lived -> long-lived token\n  4. Validate token + fetch profile\n  5. Check account_type (CN-17)\n  6. Check ig_user_id uniqueness\n  7. Create Instance (platform='instagram')\n  8. Subscribe to webhooks (CN-26 — don't fail the flow)\n  9. Return InstagramAuthResponse",
+    "operationId": "handle_callback_instagram_auth_callback_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/InstagramAuthCallback"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/InstagramAuthResponse"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/instagram/auth/refresh/{instance_id}": {
+   "post": {
+    "tags": [
+     "Instagram"
+    ],
+    "summary": "Refresh Instance Token",
+    "description": "Manually trigger a token refresh for an Instagram instance.",
+    "operationId": "refresh_instance_token_instagram_auth_refresh__instance_id__post",
+    "parameters": [
+     {
+      "name": "instance_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Instance Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/instagram/auth/url": {
+   "post": {
+    "tags": [
+     "Instagram"
+    ],
+    "summary": "Get Auth Url",
+    "description": "Return an Instagram OAuth authorization URL for the frontend to open.\n\nThe state parameter contains the user_id and a cryptographic CSRF nonce\nstored in Redis with a 1-hour TTL (CN-5).\n\nSafer branching gate: ``sessionInfoVersion=\"4\"`` is embedded in the state\npayload ONLY when the caller explicitly opts in via ``body.es_v4 = True``.\nThe legacy popup-redirect OAuth flow leaves the body absent / defaulted,\nso ``handle_callback`` will not match the ES v4 branch and will safely\nfall through to ``exchange_code_for_token``. This prevents accidental ES\nv4 routing on the legacy path if the FE feature flag ever flips false.",
+    "operationId": "get_auth_url_instagram_auth_url_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "anyOf": [
+         {
+          "$ref": "#/components/schemas/InstagramAuthUrlRequest"
+         },
+         {
+          "type": "null"
+         }
+        ],
+        "title": "Body"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/instagram/profile/{instance_id}": {
+   "get": {
+    "tags": [
+     "Instagram"
+    ],
+    "summary": "Get Profile",
+    "description": "Fetch the current Instagram profile for this instance.",
+    "operationId": "get_profile_instagram_profile__instance_id__get",
+    "parameters": [
+     {
+      "name": "instance_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Instance Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/instagram/{instance_id}/ad-attribution": {
+   "get": {
+    "tags": [
+     "Instagram"
+    ],
+    "summary": "Get Ad Attribution",
+    "description": "Get ad referral attribution analytics for an Instagram instance.",
+    "operationId": "get_ad_attribution_instagram__instance_id__ad_attribution_get",
+    "parameters": [
+     {
+      "name": "instance_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Instance Id"
+      }
+     },
+     {
+      "name": "start_date",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "description": "Start date (ISO 8601, e.g. 2026-01-01)",
+       "title": "Start Date"
+      },
+      "description": "Start date (ISO 8601, e.g. 2026-01-01)"
+     },
+     {
+      "name": "end_date",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "description": "End date (ISO 8601, e.g. 2026-12-31)",
+       "title": "End Date"
+      },
+      "description": "End date (ISO 8601, e.g. 2026-12-31)"
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/instagram/{instance_id}/analytics": {
+   "get": {
+    "tags": [
+     "Instagram"
+    ],
+    "summary": "Get Analytics",
+    "description": "Aggregate Instagram analytics for an instance over a date range.\n\nDefaults to the last 7 days if no range is supplied. Returns message\nvolume, unique contacts, per-day/per-type breakdowns, comment, story\nand reaction counts, comment-trigger activations and ad-referred\ncontact counts. Multi-tenant filtering is enforced via\n`_get_instagram_instance`.",
+    "operationId": "get_analytics_instagram__instance_id__analytics_get",
+    "parameters": [
+     {
+      "name": "instance_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Instance Id"
+      }
+     },
+     {
+      "name": "start_date",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "description": "ISO 8601 start date (inclusive)",
+       "title": "Start Date"
+      },
+      "description": "ISO 8601 start date (inclusive)"
+     },
+     {
+      "name": "end_date",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "description": "ISO 8601 end date (inclusive)",
+       "title": "End Date"
+      },
+      "description": "ISO 8601 end date (inclusive)"
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/instagram/{instance_id}/available-payloads": {
+   "get": {
+    "tags": [
+     "Instagram"
+    ],
+    "summary": "List Available Payloads",
+    "description": "Return every postback payload currently configured for this IG instance.\n\nAggregates:\n  1. Ice Breaker postback payloads (Meta API)\n  2. Persistent Menu postback payloads, including nested menus (Meta API)\n  3. Configured `response_type='postback'` comment triggers (DB) —\n     these are auto-reply triggers, but their payloads are also valid\n     flow-builder entry points.\n\nShape:\n    {\n      \"payloads\": [\n        {\"payload\": \"MEGASEND_PRICING\", \"title\": \"Pricing\", \"source\": \"ice_breaker\"},\n        {\"payload\": \"MEGASEND_DEMO\",    \"title\": \"Book demo\", \"source\": \"persistent_menu\"},\n        {\"payload\": \"MEGASEND_ABOUT\",   \"title\": \"About us (trigger)\", \"source\": \"comment_trigger\"},\n      ]\n    }\n\nOrder preserves discovery order (ice breakers first, then persistent\nmenu DFS, then DB triggers). Duplicates are de-duped by payload string,\nkeeping the first seen occurrence so UI can prefer the most \"natural\"\nlabel for each payload.",
+    "operationId": "list_available_payloads_instagram__instance_id__available_payloads_get",
+    "parameters": [
+     {
+      "name": "instance_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Instance Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/instagram/{instance_id}/away-message": {
+   "get": {
+    "tags": [
+     "Instagram"
+    ],
+    "summary": "Get Away Message",
+    "description": "Fetch the singleton 'out-of-hours' automation for an instance.",
+    "operationId": "get_away_message_instagram__instance_id__away_message_get",
+    "parameters": [
+     {
+      "name": "instance_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Instance Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   },
+   "put": {
+    "tags": [
+     "Instagram"
+    ],
+    "summary": "Upsert Away Message",
+    "description": "Create or update the away message for an instance.\n\nBody::\n\n    {\n      \"response_text\": \"We're offline right now...\",\n      \"is_active\": true,\n      \"business_hours_config\": {\n        \"timezone\": \"Asia/Jerusalem\",\n        \"days\": {\n          \"mon\": {\"enabled\": true, \"start\": \"09:00\", \"end\": \"18:00\"},\n          ...\n        }\n      }\n    }",
+    "operationId": "upsert_away_message_instagram__instance_id__away_message_put",
+    "parameters": [
+     {
+      "name": "instance_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Instance Id"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object",
+        "title": "Payload"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   },
+   "delete": {
+    "tags": [
+     "Instagram"
+    ],
+    "summary": "Delete Away Message",
+    "description": "Delete the away message config for an instance.",
+    "operationId": "delete_away_message_instagram__instance_id__away_message_delete",
+    "parameters": [
+     {
+      "name": "instance_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Instance Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/instagram/{instance_id}/comment-triggers": {
+   "get": {
+    "tags": [
+     "Instagram"
+    ],
+    "summary": "List Comment Triggers",
+    "description": "List all comment-to-DM triggers for an Instagram instance.",
+    "operationId": "list_comment_triggers_instagram__instance_id__comment_triggers_get",
+    "parameters": [
+     {
+      "name": "instance_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Instance Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "array",
+         "items": {
+          "$ref": "#/components/schemas/TriggerResponse"
+         },
+         "title": "Response List Comment Triggers Instagram  Instance Id  Comment Triggers Get"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   },
+   "post": {
+    "tags": [
+     "Instagram"
+    ],
+    "summary": "Create Comment Trigger",
+    "description": "Create a new comment-to-DM trigger for an Instagram instance.",
+    "operationId": "create_comment_trigger_instagram__instance_id__comment_triggers_post",
+    "parameters": [
+     {
+      "name": "instance_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Instance Id"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/CreateTriggerSchema"
+       }
+      }
+     }
+    },
+    "responses": {
+     "201": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/TriggerResponse"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/instagram/{instance_id}/comment-triggers/analytics": {
+   "get": {
+    "tags": [
+     "Instagram"
+    ],
+    "summary": "Get Comment Trigger Analytics",
+    "description": "Get trigger performance analytics for an Instagram instance.",
+    "operationId": "get_comment_trigger_analytics_instagram__instance_id__comment_triggers_analytics_get",
+    "parameters": [
+     {
+      "name": "instance_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Instance Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/instagram/{instance_id}/comment-triggers/{trigger_id}": {
+   "put": {
+    "tags": [
+     "Instagram"
+    ],
+    "summary": "Update Comment Trigger",
+    "description": "Update an existing comment-to-DM trigger.",
+    "operationId": "update_comment_trigger_instagram__instance_id__comment_triggers__trigger_id__put",
+    "parameters": [
+     {
+      "name": "instance_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Instance Id"
+      }
+     },
+     {
+      "name": "trigger_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Trigger Id"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/UpdateTriggerSchema"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/TriggerResponse"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   },
+   "delete": {
+    "tags": [
+     "Instagram"
+    ],
+    "summary": "Delete Comment Trigger",
+    "description": "Delete a comment-to-DM trigger.",
+    "operationId": "delete_comment_trigger_instagram__instance_id__comment_triggers__trigger_id__delete",
+    "parameters": [
+     {
+      "name": "instance_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Instance Id"
+      }
+     },
+     {
+      "name": "trigger_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Trigger Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/instagram/{instance_id}/comments/{comment_id}": {
+   "get": {
+    "tags": [
+     "Instagram"
+    ],
+    "summary": "Get Comment Route",
+    "description": "Fetch a single comment with parent media + replies.",
+    "operationId": "get_comment_route_instagram__instance_id__comments__comment_id__get",
+    "parameters": [
+     {
+      "name": "instance_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Instance Id"
+      }
+     },
+     {
+      "name": "comment_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Comment Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   },
+   "delete": {
+    "tags": [
+     "Instagram"
+    ],
+    "summary": "Delete Comment Route",
+    "description": "Permanently delete a comment.",
+    "operationId": "delete_comment_route_instagram__instance_id__comments__comment_id__delete",
+    "parameters": [
+     {
+      "name": "instance_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Instance Id"
+      }
+     },
+     {
+      "name": "comment_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Comment Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/instagram/{instance_id}/comments/{comment_id}/hide": {
+   "post": {
+    "tags": [
+     "Instagram"
+    ],
+    "summary": "Hide Comment Route",
+    "description": "Hide or unhide a comment (reversible — not deleted).",
+    "operationId": "hide_comment_route_instagram__instance_id__comments__comment_id__hide_post",
+    "parameters": [
+     {
+      "name": "instance_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Instance Id"
+      }
+     },
+     {
+      "name": "comment_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Comment Id"
+      }
+     },
+     {
+      "name": "hide",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "boolean",
+       "description": "True to hide, False to unhide",
+       "default": true,
+       "title": "Hide"
+      },
+      "description": "True to hide, False to unhide"
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/instagram/{instance_id}/comments/{comment_id}/private-reply": {
+   "post": {
+    "tags": [
+     "Instagram"
+    ],
+    "summary": "Send Private Reply Route",
+    "description": "Send a private DM reply to the author of a public comment.\n\nMeta only permits one private reply per comment, within 7 days of the\ncomment being posted. ``_run_ig_call`` raises HTTPException(502) on\n``result.success=False`` and returns ``result.data`` on success — so\n``ig_response`` is the Meta response dict and ``message_id`` is\nextracted from it, matching the standard reply pattern.",
+    "operationId": "send_private_reply_route_instagram__instance_id__comments__comment_id__private_reply_post",
+    "parameters": [
+     {
+      "name": "instance_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Instance Id"
+      }
+     },
+     {
+      "name": "comment_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Comment Id"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/PrivateReplyRequest"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/instagram/{instance_id}/comments/{comment_id}/reply": {
+   "post": {
+    "tags": [
+     "Instagram"
+    ],
+    "summary": "Reply To Comment Route",
+    "description": "Reply publicly to a comment. Body: {\"message\": \"...\"}.",
+    "operationId": "reply_to_comment_route_instagram__instance_id__comments__comment_id__reply_post",
+    "parameters": [
+     {
+      "name": "instance_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Instance Id"
+      }
+     },
+     {
+      "name": "comment_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Comment Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/instagram/{instance_id}/follower-analytics": {
+   "get": {
+    "tags": [
+     "Instagram"
+    ],
+    "summary": "Get Follower Analytics",
+    "description": "Aggregated follower + welcome-DM analytics.\n\nReturns the canonical 24h / 7d / 30d / all-time counters plus a\n``delivery_rate_7d`` derived from ``sent / (sent + failed + blocked)``.\nAll counts are produced by a single aggregate query — safe to call\non every dashboard render.",
+    "operationId": "get_follower_analytics_instagram__instance_id__follower_analytics_get",
+    "parameters": [
+     {
+      "name": "instance_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Instance Id"
+      }
+     },
+     {
+      "name": "days",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "maximum": 365,
+       "minimum": 1,
+       "default": 30,
+       "title": "Days"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/instagram/{instance_id}/follower-automation": {
+   "get": {
+    "tags": [
+     "Instagram"
+    ],
+    "summary": "Get Follower Automation",
+    "description": "Fetch the follower-welcome DM automation config for an instance.\n\nReturns ``{configured: false}`` if no config row exists — the\nfrontend uses this to render an empty-state form.",
+    "operationId": "get_follower_automation_instagram__instance_id__follower_automation_get",
+    "parameters": [
+     {
+      "name": "instance_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Instance Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   },
+   "put": {
+    "tags": [
+     "Instagram"
+    ],
+    "summary": "Upsert Follower Automation",
+    "description": "Create or update the follower-welcome DM automation config.\n\nBody fields:\n\n  - ``enabled`` (bool) — turn the automation on/off\n  - ``message_text`` (str, 1..1000 chars) — DM body\n  - ``daily_cap`` (int, 1..200, default 50) — per-day send ceiling\n  - ``dedupe_window_days`` (int, 1..3650, default 365)\n  - ``ack_policy_risk`` (bool) — REQUIRED to be ``true`` when ``enabled=true``\n\nRaises HTTP 400 if the schema is invalid or the policy ack is\nmissing while enabling the feature.",
+    "operationId": "upsert_follower_automation_instagram__instance_id__follower_automation_put",
+    "parameters": [
+     {
+      "name": "instance_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Instance Id"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object",
+        "title": "Payload"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   },
+   "delete": {
+    "tags": [
+     "Instagram"
+    ],
+    "summary": "Delete Follower Automation",
+    "description": "Delete the follower-welcome DM automation config.\n\nReturns 204 No Content on success, 404 if no config exists.",
+    "operationId": "delete_follower_automation_instagram__instance_id__follower_automation_delete",
+    "parameters": [
+     {
+      "name": "instance_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Instance Id"
+      }
+     }
+    ],
+    "responses": {
+     "204": {
+      "description": "Successful Response"
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/instagram/{instance_id}/follower-events": {
+   "get": {
+    "tags": [
+     "Instagram"
+    ],
+    "summary": "List Follower Events",
+    "description": "List follow-webhook events for an instance, newest first.\n\nEach event includes the ``welcome_dm_*`` lifecycle fields so the\ndashboard can show per-follower outcomes of the welcome DM\nautomation.",
+    "operationId": "list_follower_events_instagram__instance_id__follower_events_get",
+    "parameters": [
+     {
+      "name": "instance_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Instance Id"
+      }
+     },
+     {
+      "name": "status",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "description": "Optional welcome_dm_status filter: pending, sent, skipped_disabled, skipped_no_identity, skipped_duplicate, skipped_cap, policy_blocked, failed, or 'none' for events without a status.",
+       "title": "Status"
+      },
+      "description": "Optional welcome_dm_status filter: pending, sent, skipped_disabled, skipped_no_identity, skipped_duplicate, skipped_cap, policy_blocked, failed, or 'none' for events without a status."
+     },
+     {
+      "name": "limit",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "maximum": 200,
+       "minimum": 1,
+       "default": 50,
+       "title": "Limit"
+      }
+     },
+     {
+      "name": "offset",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "minimum": 0,
+       "default": 0,
+       "title": "Offset"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/instagram/{instance_id}/follower-stats": {
+   "get": {
+    "tags": [
+     "Instagram"
+    ],
+    "summary": "Get Follower Stats",
+    "description": "Aggregated follower-event counts (legacy endpoint).\n\nKept for backwards compatibility with the older dashboard widgets.\nNew integrations should use ``/follower-analytics`` which also\nreturns welcome-DM delivery metrics.",
+    "operationId": "get_follower_stats_instagram__instance_id__follower_stats_get",
+    "parameters": [
+     {
+      "name": "instance_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Instance Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/instagram/{instance_id}/followers/poll-now": {
+   "post": {
+    "tags": [
+     "Instagram"
+    ],
+    "summary": "Trigger Follower Poll Now",
+    "description": "Manually trigger a follower polling run for this instance.\n\nReplaces the old \"Fix Now\" flow for follow-webhook re-subscription, since\n`follow` is not publicly subscribable on graph.instagram.com. The polling\ntask diffs `followers_count` and inserts synthetic InstagramFollowerEvent\nrows when new followers are detected.",
+    "operationId": "trigger_follower_poll_now_instagram__instance_id__followers_poll_now_post",
+    "parameters": [
+     {
+      "name": "instance_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Instance Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/instagram/{instance_id}/ice-breakers": {
+   "get": {
+    "tags": [
+     "Instagram"
+    ],
+    "summary": "Get Ice Breakers",
+    "description": "Get current ice breaker configuration for an Instagram instance.",
+    "operationId": "get_ice_breakers_instagram__instance_id__ice_breakers_get",
+    "parameters": [
+     {
+      "name": "instance_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Instance Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   },
+   "post": {
+    "tags": [
+     "Instagram"
+    ],
+    "summary": "Set Ice Breakers",
+    "description": "Set ice breakers (up to 4) for an Instagram instance.",
+    "operationId": "set_ice_breakers_instagram__instance_id__ice_breakers_post",
+    "parameters": [
+     {
+      "name": "instance_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Instance Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   },
+   "delete": {
+    "tags": [
+     "Instagram"
+    ],
+    "summary": "Delete Ice Breakers",
+    "description": "Delete all ice breakers for an Instagram instance.",
+    "operationId": "delete_ice_breakers_instagram__instance_id__ice_breakers_delete",
+    "parameters": [
+     {
+      "name": "instance_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Instance Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/instagram/{instance_id}/insights/account": {
+   "get": {
+    "tags": [
+     "Instagram"
+    ],
+    "summary": "Get Account Insights Route",
+    "description": "Fetch account-level insights (reach, impressions, profile views, etc.).",
+    "operationId": "get_account_insights_route_instagram__instance_id__insights_account_get",
+    "parameters": [
+     {
+      "name": "instance_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Instance Id"
+      }
+     },
+     {
+      "name": "since",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "integer"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "description": "Unix timestamp — start of range",
+       "title": "Since"
+      },
+      "description": "Unix timestamp — start of range"
+     },
+     {
+      "name": "until",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "integer"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "description": "Unix timestamp — end of range",
+       "title": "Until"
+      },
+      "description": "Unix timestamp — end of range"
+     },
+     {
+      "name": "period",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "string",
+       "description": "day | week | days_28",
+       "default": "day",
+       "title": "Period"
+      },
+      "description": "day | week | days_28"
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/instagram/{instance_id}/insights/demographics": {
+   "get": {
+    "tags": [
+     "Instagram"
+    ],
+    "summary": "Get Demographics Route",
+    "description": "Fetch follower demographics.",
+    "operationId": "get_demographics_route_instagram__instance_id__insights_demographics_get",
+    "parameters": [
+     {
+      "name": "instance_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Instance Id"
+      }
+     },
+     {
+      "name": "breakdown",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "string",
+       "description": "age | city | country | gender",
+       "default": "age",
+       "title": "Breakdown"
+      },
+      "description": "age | city | country | gender"
+     },
+     {
+      "name": "timeframe",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "string",
+       "description": "last_14_days | last_30_days | last_90_days",
+       "default": "last_30_days",
+       "title": "Timeframe"
+      },
+      "description": "last_14_days | last_30_days | last_90_days"
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/instagram/{instance_id}/insights/media/{media_id}": {
+   "get": {
+    "tags": [
+     "Instagram"
+    ],
+    "summary": "Get Media Insights Route",
+    "description": "Fetch insights for a specific media object.\n\nIf ``metrics`` is omitted, we first fetch the media type and pick\nsensible defaults per Meta's supported metrics for that surface.",
+    "operationId": "get_media_insights_route_instagram__instance_id__insights_media__media_id__get",
+    "parameters": [
+     {
+      "name": "instance_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Instance Id"
+      }
+     },
+     {
+      "name": "media_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Media Id"
+      }
+     },
+     {
+      "name": "metrics",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "description": "Comma-separated metrics; defaults based on media type",
+       "title": "Metrics"
+      },
+      "description": "Comma-separated metrics; defaults based on media type"
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/instagram/{instance_id}/media": {
+   "get": {
+    "tags": [
+     "Instagram"
+    ],
+    "summary": "List Own Media",
+    "description": "List own Instagram media (posts/reels/stories) with pagination.",
+    "operationId": "list_own_media_instagram__instance_id__media_get",
+    "parameters": [
+     {
+      "name": "instance_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Instance Id"
+      }
+     },
+     {
+      "name": "limit",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "maximum": 50,
+       "minimum": 1,
+       "default": 20,
+       "title": "Limit"
+      }
+     },
+     {
+      "name": "after",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "description": "Pagination cursor",
+       "title": "After"
+      },
+      "description": "Pagination cursor"
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/instagram/{instance_id}/media/{media_id}/comments": {
+   "get": {
+    "tags": [
+     "Instagram"
+    ],
+    "summary": "List Media Comments Route",
+    "description": "List comments on a specific media object (cursor paginated).\n\nAuthor avatars are merged in afterwards (see\n:func:`enrich_comment_authors`) because Meta does not expose a picture\nfield on a comment's ``from`` node. Enrichment is best-effort and never\nfails the request.",
+    "operationId": "list_media_comments_route_instagram__instance_id__media__media_id__comments_get",
+    "parameters": [
+     {
+      "name": "instance_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Instance Id"
+      }
+     },
+     {
+      "name": "media_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Media Id"
+      }
+     },
+     {
+      "name": "limit",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "maximum": 50,
+       "minimum": 1,
+       "default": 25,
+       "title": "Limit"
+      }
+     },
+     {
+      "name": "after",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "After"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/instagram/{instance_id}/persistent-menu": {
+   "get": {
+    "tags": [
+     "Instagram"
+    ],
+    "summary": "Get Persistent Menu",
+    "description": "Get current persistent menu configuration for an Instagram instance.",
+    "operationId": "get_persistent_menu_instagram__instance_id__persistent_menu_get",
+    "parameters": [
+     {
+      "name": "instance_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Instance Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   },
+   "post": {
+    "tags": [
+     "Instagram"
+    ],
+    "summary": "Set Persistent Menu",
+    "description": "Set persistent menu (up to 3 items) for an Instagram instance.",
+    "operationId": "set_persistent_menu_instagram__instance_id__persistent_menu_post",
+    "parameters": [
+     {
+      "name": "instance_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Instance Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   },
+   "delete": {
+    "tags": [
+     "Instagram"
+    ],
+    "summary": "Delete Persistent Menu",
+    "description": "Delete the persistent menu for an Instagram instance.",
+    "operationId": "delete_persistent_menu_instagram__instance_id__persistent_menu_delete",
+    "parameters": [
+     {
+      "name": "instance_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Instance Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/instagram/{instance_id}/posts": {
+   "get": {
+    "tags": [
+     "Instagram"
+    ],
+    "summary": "List Instagram Posts",
+    "description": "List the connected IG Business account's own published posts.\n\nUsed by the Instagram Post Picker in:\n  - Flow Builder \"Share Post\" node (IGMediaShareNode)\n  - Comment Trigger media filter (CommentTriggers)\n\nCaching: per (instance_id, limit, after) for 10 minutes.\n`search` is applied post-cache so the cache stays hot for typeahead.\n\nTODO: When the IG access token is refreshed (via\n/instagram/auth/refresh/{instance_id} or the background refresh job),\nany cached `ig_media_list:{instance_id}:*` keys should be invalidated\nso stale permalinks don't linger. Out of scope for this wave.",
+    "operationId": "list_instagram_posts_instagram__instance_id__posts_get",
+    "parameters": [
+     {
+      "name": "instance_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Instance Id"
+      }
+     },
+     {
+      "name": "limit",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "maximum": 100,
+       "minimum": 1,
+       "default": 20,
+       "title": "Limit"
+      }
+     },
+     {
+      "name": "after",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "description": "Graph API `after` cursor",
+       "title": "After"
+      },
+      "description": "Graph API `after` cursor"
+     },
+     {
+      "name": "search",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "description": "Case-insensitive caption substring",
+       "title": "Search"
+      },
+      "description": "Case-insensitive caption substring"
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/instagram/{instance_id}/posts/resolve": {
+   "post": {
+    "tags": [
+     "Instagram"
+    ],
+    "summary": "Resolve Instagram Post",
+    "description": "Resolve an instagram.com/p/SHORTCODE permalink to the owner's media ID.\n\nOnly works for posts from the connected IG account — we scan the\naccount's own media pages looking for a permalink match. Up to 10\npages of 100 items each (1000 posts max) are scanned before giving up.",
+    "operationId": "resolve_instagram_post_instagram__instance_id__posts_resolve_post",
+    "parameters": [
+     {
+      "name": "instance_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Instance Id"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object",
+        "title": "Payload"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/instagram/{instance_id}/publish/carousel": {
+   "post": {
+    "tags": [
+     "Instagram"
+    ],
+    "summary": "Publish Carousel Post",
+    "description": "Publish a carousel post (2-10 images/videos).",
+    "operationId": "publish_carousel_post_instagram__instance_id__publish_carousel_post",
+    "parameters": [
+     {
+      "name": "instance_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Instance Id"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/PublishCarouselRequest"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/PublishResponse"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/instagram/{instance_id}/publish/image": {
+   "post": {
+    "tags": [
+     "Instagram"
+    ],
+    "summary": "Publish Image Post",
+    "description": "Publish a single image to the Instagram feed.\n\nAll Meta interaction (container creation, status polling, /media_publish\nwith retry) lives in :mod:`app.services.instagram_publish_service` so the\nHTTP endpoint and the Celery scheduled-post worker use exactly the same\ncode path. This route only handles request-level concerns: idempotency,\nthe dry-run safety switch, and auth.",
+    "operationId": "publish_image_post_instagram__instance_id__publish_image_post",
+    "parameters": [
+     {
+      "name": "instance_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Instance Id"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/PublishImageRequest"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/PublishResponse"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/instagram/{instance_id}/publish/limit": {
+   "get": {
+    "tags": [
+     "Instagram"
+    ],
+    "summary": "Get Publish Limit",
+    "description": "Return the current 24-hour feed publishing quota usage.\n\nMeta returns ``config.quota_total`` directly — we forward it verbatim so the\nUI always reflects the current per-account limit (Meta raises / lowers caps\ndynamically per IG account).",
+    "operationId": "get_publish_limit_instagram__instance_id__publish_limit_get",
+    "parameters": [
+     {
+      "name": "instance_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Instance Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/instagram/{instance_id}/publish/story": {
+   "post": {
+    "tags": [
+     "Instagram"
+    ],
+    "summary": "Publish Story Post",
+    "description": "Publish an Instagram Story (image or video).\n\nStories do **not** count toward the 24h publishing quota per Meta's docs,\nso no quota pre-check is performed here.",
+    "operationId": "publish_story_post_instagram__instance_id__publish_story_post",
+    "parameters": [
+     {
+      "name": "instance_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Instance Id"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/PublishStoryRequest"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/PublishResponse"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/instagram/{instance_id}/publish/upload": {
+   "post": {
+    "tags": [
+     "Instagram"
+    ],
+    "summary": "Upload Publish Media",
+    "description": "Upload a local file and return a presigned URL for /publish/*.\n\nThe returned ``media_url`` is a time-limited HTTPS URL that Meta's servers\ncan fetch. The frontend passes it verbatim to ``/publish/image`` or\n``/publish/video``. The URL signature expires after 1 hour.",
+    "operationId": "upload_publish_media_instagram__instance_id__publish_upload_post",
+    "parameters": [
+     {
+      "name": "instance_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Instance Id"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "multipart/form-data": {
+       "schema": {
+        "$ref": "#/components/schemas/Body_upload_publish_media_instagram__instance_id__publish_upload_post"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/instagram/{instance_id}/publish/video": {
+   "post": {
+    "tags": [
+     "Instagram"
+    ],
+    "summary": "Publish Video Post",
+    "description": "Publish a Reels video. REELS only — use /publish/story for stories.\n\nMeta processes the video asynchronously; the publish service polls for\nup to 5 minutes and only calls ``/media_publish`` once the container\nreports FINISHED. An idempotency key is strongly recommended because\nthe long poll makes double-submits likely.",
+    "operationId": "publish_video_post_instagram__instance_id__publish_video_post",
+    "parameters": [
+     {
+      "name": "instance_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Instance Id"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/PublishVideoRequest"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/PublishResponse"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/instagram/{instance_id}/schedule": {
+   "post": {
+    "tags": [
+     "Instagram"
+    ],
+    "summary": "Create Scheduled Post",
+    "description": "Schedule an Instagram publish for later, or enqueue an async publish.",
+    "operationId": "create_scheduled_post_instagram__instance_id__schedule_post",
+    "parameters": [
+     {
+      "name": "instance_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Instance Id"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/ScheduleRequest"
+       }
+      }
+     }
+    },
+    "responses": {
+     "201": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ScheduledPostResponse"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   },
+   "get": {
+    "tags": [
+     "Instagram"
+    ],
+    "summary": "List Scheduled Posts",
+    "operationId": "list_scheduled_posts_instagram__instance_id__schedule_get",
+    "parameters": [
+     {
+      "name": "instance_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Instance Id"
+      }
+     },
+     {
+      "name": "status",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "description": "Filter by status: pending, processing, published, failed, cancelled",
+       "title": "Status"
+      },
+      "description": "Filter by status: pending, processing, published, failed, cancelled"
+     },
+     {
+      "name": "limit",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "maximum": 200,
+       "minimum": 1,
+       "default": 50,
+       "title": "Limit"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "array",
+         "items": {
+          "$ref": "#/components/schemas/ScheduledPostResponse"
+         },
+         "title": "Response List Scheduled Posts Instagram  Instance Id  Schedule Get"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/instagram/{instance_id}/schedule/{post_id}": {
+   "delete": {
+    "tags": [
+     "Instagram"
+    ],
+    "summary": "Cancel Scheduled Post",
+    "description": "Cancel a scheduled post that hasn't started publishing yet.\n\nOnly rows in ``pending`` may be cancelled. Once the worker has claimed a\nrow the row moves to ``processing`` and cancellation is no longer safe.",
+    "operationId": "cancel_scheduled_post_instagram__instance_id__schedule__post_id__delete",
+    "parameters": [
+     {
+      "name": "instance_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Instance Id"
+      }
+     },
+     {
+      "name": "post_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Post Id"
+      }
+     }
+    ],
+    "responses": {
+     "204": {
+      "description": "Successful Response"
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/instagram/{instance_id}/webhook/subscribe": {
+   "post": {
+    "tags": [
+     "Instagram"
+    ],
+    "summary": "Retry Webhook Subscription",
+    "description": "(Re)subscribe Instagram webhooks for this instance.\n\nCalls POST /{ig_user_id}/subscribed_apps against the Graph API using\nthe current access token, persists the resulting subscription state\nto the instance, and returns it in the same shape the GET endpoint\nuses.",
+    "operationId": "retry_webhook_subscription_instagram__instance_id__webhook_subscribe_post",
+    "parameters": [
+     {
+      "name": "instance_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Instance Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/instagram/{instance_id}/webhook/subscription": {
+   "get": {
+    "tags": [
+     "Instagram"
+    ],
+    "summary": "Get Webhook Subscription",
+    "description": "Fetch current Instagram webhook subscription state for this instance.\n\nBy default returns the persisted SubscriptionState (fast, free, but\nmay be stale up to the reconciliation interval). Pass ``?live=true``\nto round-trip to Meta's Graph API for a ground-truth read — this\naligns the persisted ``subscribed_fields`` with Meta and bumps the\n``last_checked_at`` freshness marker. Use sparingly: the live path\ncounts against Meta's rate limit (200 calls / user / hour).\n\n``polling_info`` surfaces the Instagram follower-polling task's last\nsnapshot since ``follow`` is partner-only on Meta's public API.",
+    "operationId": "get_webhook_subscription_instagram__instance_id__webhook_subscription_get",
+    "parameters": [
+     {
+      "name": "instance_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Instance Id"
+      }
+     },
+     {
+      "name": "live",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "boolean",
+       "default": false,
+       "title": "Live"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/instagram/{instance_id}/webhooks/resubscribe": {
+   "post": {
+    "tags": [
+     "Instagram"
+    ],
+    "summary": "Resubscribe Webhooks",
+    "description": "Trigger a fresh Instagram webhook subscription for this instance.\n\nAuth: instance owner (same scope as the rest of the IG router — the\n``_get_instagram_instance`` helper filters ``user_id`` server-side and\n404s otherwise, so an agent who doesn't own the instance cannot reach\nthe underlying Meta call).\n\nCalls the existing ``InstagramAuthService.subscribe_webhooks`` —\nwhich is the same reconciliation path the periodic Celery task uses —\npersists the result via ``_persist_subscription_state``, and returns\nthe freshly-aligned ``subscribed_fields`` list (along with rejected\nfields and an error message when applicable) so the FE can render the\nnew state without a follow-up GET.",
+    "operationId": "resubscribe_webhooks_instagram__instance_id__webhooks_resubscribe_post",
+    "parameters": [
+     {
+      "name": "instance_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Instance Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/instagram/{instance_id}/welcome-message": {
+   "get": {
+    "tags": [
+     "Instagram"
+    ],
+    "summary": "Get Welcome Message",
+    "description": "Fetch the singleton 'first DM welcome' automation for an instance.\n\nReturns ``{configured: false}`` if none has been set up yet — the frontend\nuses this to show an empty state.",
+    "operationId": "get_welcome_message_instagram__instance_id__welcome_message_get",
+    "parameters": [
+     {
+      "name": "instance_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Instance Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   },
+   "put": {
+    "tags": [
+     "Instagram"
+    ],
+    "summary": "Upsert Welcome Message",
+    "description": "Create or update the welcome DM for an instance.\n\nBody::\n\n    {\n      \"response_text\": \"Hey! Thanks for reaching out...\",\n      \"is_active\": true\n    }",
+    "operationId": "upsert_welcome_message_instagram__instance_id__welcome_message_put",
+    "parameters": [
+     {
+      "name": "instance_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Instance Id"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object",
+        "title": "Payload"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   },
+   "delete": {
+    "tags": [
+     "Instagram"
+    ],
+    "summary": "Delete Welcome Message",
+    "description": "Delete the welcome DM config for an instance.",
+    "operationId": "delete_welcome_message_instagram__instance_id__welcome_message_delete",
+    "parameters": [
+     {
+      "name": "instance_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Instance Id"
+      }
+     }
+    ],
     "responses": {
      "200": {
       "description": "Successful Response",
@@ -15104,6 +18318,1035 @@
     }
    }
   },
+  "/messenger/auth/callback": {
+   "post": {
+    "tags": [
+     "Messenger"
+    ],
+    "summary": "Handle Callback",
+    "description": "Exchange the FB.login code, subscribe the Page, upsert the instance.",
+    "operationId": "handle_callback_messenger_auth_callback_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/MessengerAuthCallback"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/messenger/auth/select": {
+   "post": {
+    "tags": [
+     "Messenger"
+    ],
+    "summary": "Select Page",
+    "description": "Connect the Page the user picked from the multi-page chooser.",
+    "operationId": "select_page_messenger_auth_select_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/MessengerSelectPage"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/messenger/auth/url": {
+   "post": {
+    "tags": [
+     "Messenger"
+    ],
+    "summary": "Get Auth Url",
+    "description": "Mint a CSRF nonce (Redis, 1h TTL) and return the state for FB.login.",
+    "operationId": "get_auth_url_messenger_auth_url_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "anyOf": [
+         {
+          "$ref": "#/components/schemas/MessengerAuthUrlRequest"
+         },
+         {
+          "type": "null"
+         }
+        ],
+        "title": "Body"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/messenger/{instance_id}/business-manager/businesses": {
+   "get": {
+    "tags": [
+     "Messenger"
+    ],
+    "summary": "List Business Portfolios",
+    "description": "List the business portfolios reachable with this connection, with name,\nverification status and creation date. The Page id is passed through so a\nLogin-for-Business (system user) token, which reads nothing from\n/me/businesses, still resolves the portfolio that owns the Page.",
+    "operationId": "list_business_portfolios_messenger__instance_id__business_manager_businesses_get",
+    "parameters": [
+     {
+      "name": "instance_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Instance Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/messenger/{instance_id}/business-manager/businesses/{business_id}": {
+   "get": {
+    "tags": [
+     "Messenger"
+    ],
+    "summary": "Get Business Portfolio",
+    "description": "Details of one business portfolio.",
+    "operationId": "get_business_portfolio_messenger__instance_id__business_manager_businesses__business_id__get",
+    "parameters": [
+     {
+      "name": "instance_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Instance Id"
+      }
+     },
+     {
+      "name": "business_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Business Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/messenger/{instance_id}/business-manager/businesses/{business_id}/ad-accounts": {
+   "get": {
+    "tags": [
+     "Messenger"
+    ],
+    "summary": "List Business Ad Accounts",
+    "description": "Ad account assets of a business: owned accounts, client accounts\nshared with it, and claims still awaiting the current owner's approval.",
+    "operationId": "list_business_ad_accounts_messenger__instance_id__business_manager_businesses__business_id__ad_accounts_get",
+    "parameters": [
+     {
+      "name": "instance_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Instance Id"
+      }
+     },
+     {
+      "name": "business_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Business Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/messenger/{instance_id}/business-manager/businesses/{business_id}/ad-accounts/claim": {
+   "post": {
+    "tags": [
+     "Messenger"
+    ],
+    "summary": "Claim Business Ad Account",
+    "description": "Claim an ad account into the business. Meta attaches it immediately\n(GRANTED) or parks the claim for the current owner's approval (PENDING).",
+    "operationId": "claim_business_ad_account_messenger__instance_id__business_manager_businesses__business_id__ad_accounts_claim_post",
+    "parameters": [
+     {
+      "name": "instance_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Instance Id"
+      }
+     },
+     {
+      "name": "business_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Business Id"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/ClaimAdAccountRequest"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ClaimAdAccountResponse"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/messenger/{instance_id}/confirmations/send": {
+   "post": {
+    "tags": [
+     "Messenger"
+    ],
+    "summary": "Send Confirmation",
+    "description": "Send a booking / purchase / order confirmation into an open Messenger\nconversation (PSID).\n\nBuilds the structured message object (receipt or generic template), then\ndispatches through send_whatsapp_message so persistence, billing, the 24h\nwindow check and websocket broadcast match every other outbound Messenger\nmessage.",
+    "operationId": "send_confirmation_messenger__instance_id__confirmations_send_post",
+    "parameters": [
+     {
+      "name": "instance_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Instance Id"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/ConfirmationSend"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/messenger/{instance_id}/entry-actions": {
+   "get": {
+    "tags": [
+     "Messenger"
+    ],
+    "summary": "Get Entry Actions",
+    "operationId": "get_entry_actions_messenger__instance_id__entry_actions_get",
+    "parameters": [
+     {
+      "name": "instance_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Instance Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   },
+   "put": {
+    "tags": [
+     "Messenger"
+    ],
+    "summary": "Set Entry Actions",
+    "operationId": "set_entry_actions_messenger__instance_id__entry_actions_put",
+    "parameters": [
+     {
+      "name": "instance_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Instance Id"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/MessengerEntryActions"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/messenger/{instance_id}/page/overview": {
+   "get": {
+    "tags": [
+     "Messenger"
+    ],
+    "summary": "Get Page Overview",
+    "description": "Page profile + metadata: name, category, about, follower and fan\ncounts, profile picture, published state, verification status.",
+    "operationId": "get_page_overview_messenger__instance_id__page_overview_get",
+    "parameters": [
+     {
+      "name": "instance_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Instance Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/messenger/{instance_id}/page/posts": {
+   "get": {
+    "tags": [
+     "Messenger"
+    ],
+    "summary": "List Page Posts",
+    "description": "Content published BY the Page, newest first, with engagement summary\ncounts per post. `after` is Meta's paging cursor from the previous call.",
+    "operationId": "list_page_posts_messenger__instance_id__page_posts_get",
+    "parameters": [
+     {
+      "name": "instance_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Instance Id"
+      }
+     },
+     {
+      "name": "limit",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "default": 10,
+       "title": "Limit"
+      }
+     },
+     {
+      "name": "after",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "After"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/messenger/{instance_id}/profile": {
+   "get": {
+    "tags": [
+     "Messenger"
+    ],
+    "summary": "Get Messenger Profile",
+    "operationId": "get_messenger_profile_messenger__instance_id__profile_get",
+    "parameters": [
+     {
+      "name": "instance_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Instance Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   },
+   "put": {
+    "tags": [
+     "Messenger"
+    ],
+    "summary": "Set Messenger Profile",
+    "operationId": "set_messenger_profile_messenger__instance_id__profile_put",
+    "parameters": [
+     {
+      "name": "instance_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Instance Id"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/MessengerProfileBody"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   },
+   "delete": {
+    "tags": [
+     "Messenger"
+    ],
+    "summary": "Delete Messenger Profile",
+    "operationId": "delete_messenger_profile_messenger__instance_id__profile_delete",
+    "parameters": [
+     {
+      "name": "instance_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Instance Id"
+      }
+     },
+     {
+      "name": "fields",
+      "in": "query",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Fields"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/messenger/{instance_id}/utility-templates": {
+   "get": {
+    "tags": [
+     "Messenger"
+    ],
+    "summary": "List Utility Templates",
+    "operationId": "list_utility_templates_messenger__instance_id__utility_templates_get",
+    "parameters": [
+     {
+      "name": "instance_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Instance Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   },
+   "post": {
+    "tags": [
+     "Messenger"
+    ],
+    "summary": "Create Utility Template",
+    "operationId": "create_utility_template_messenger__instance_id__utility_templates_post",
+    "parameters": [
+     {
+      "name": "instance_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Instance Id"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/UtilityTemplateCreate"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/messenger/{instance_id}/utility-templates/send": {
+   "post": {
+    "tags": [
+     "Messenger"
+    ],
+    "summary": "Send Utility Template",
+    "description": "Send a pre-approved UTILITY template to a customer (PSID).\n\nResolves the template live from Meta (404 if missing, 400 if not yet\nAPPROVED or the parameter count is wrong), then dispatches through\nsend_whatsapp_message so persistence, billing and websocket broadcast\nmatch every other outbound Messenger message.",
+    "operationId": "send_utility_template_messenger__instance_id__utility_templates_send_post",
+    "parameters": [
+     {
+      "name": "instance_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Instance Id"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/UtilityTemplateSend"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/messenger/{instance_id}/utility-templates/{name}": {
+   "delete": {
+    "tags": [
+     "Messenger"
+    ],
+    "summary": "Delete Utility Template",
+    "operationId": "delete_utility_template_messenger__instance_id__utility_templates__name__delete",
+    "parameters": [
+     {
+      "name": "instance_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Instance Id"
+      }
+     },
+     {
+      "name": "name",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Name"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/messenger/{instance_id}/webhook-subscription": {
+   "get": {
+    "tags": [
+     "Messenger"
+    ],
+    "summary": "Get Webhook Subscription",
+    "description": "Current subscription as Meta sees it, plus the fields the panel may\noffer. `subscribed=false` means the app receives nothing for this Page.",
+    "operationId": "get_webhook_subscription_messenger__instance_id__webhook_subscription_get",
+    "parameters": [
+     {
+      "name": "instance_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Instance Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   },
+   "put": {
+    "tags": [
+     "Messenger"
+    ],
+    "summary": "Update Webhook Subscription",
+    "description": "Replace the subscribed field list (POST /subscribed_apps overwrites,\nit never merges). Returns the GET readback, not the request.",
+    "operationId": "update_webhook_subscription_messenger__instance_id__webhook_subscription_put",
+    "parameters": [
+     {
+      "name": "instance_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Instance Id"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/MessengerWebhookFields"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   },
+   "delete": {
+    "tags": [
+     "Messenger"
+    ],
+    "summary": "Remove Webhook Subscription",
+    "description": "Unsubscribe the app from this Page's webhooks entirely. The instance\nstays connected; re-enable any time with PUT.",
+    "operationId": "remove_webhook_subscription_messenger__instance_id__webhook_subscription_delete",
+    "parameters": [
+     {
+      "name": "instance_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Instance Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
   "/otp/send": {
    "post": {
     "tags": [
@@ -15172,6 +19415,356 @@
         "schema": {
          "$ref": "#/components/schemas/app__routes__otp_router__VerifyOTPResponse"
         }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/outlook/auth/callback": {
+   "post": {
+    "tags": [
+     "Outlook"
+    ],
+    "summary": "Auth Callback",
+    "description": "Exchange the code, read the profile email, create-or-rebind the instance.",
+    "operationId": "auth_callback_outlook_auth_callback_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/OutlookConnectCallbackRequest"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/outlook/auth/start": {
+   "get": {
+    "tags": [
+     "Outlook"
+    ],
+    "summary": "Auth Start",
+    "description": "Build the Microsoft consent URL for the FE redirect.\n\nPlan/limit gates run UP FRONT (parity with Gmail/TikTok) so an at-limit\nuser is stopped before the Microsoft consent screen opens — with a\nreconnect carve-out: a tenant who already owns an Outlook instance can\nre-OAuth at the cap (the callback's will-reuse backstop still blocks a\ngenuinely-new mailbox).",
+    "operationId": "auth_start_outlook_auth_start_get",
+    "parameters": [
+     {
+      "name": "nickname",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string",
+         "maxLength": 80
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Nickname"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/outlook/disconnect": {
+   "post": {
+    "tags": [
+     "Outlook"
+    ],
+    "summary": "Disconnect",
+    "operationId": "disconnect_outlook_disconnect_post",
+    "parameters": [
+     {
+      "name": "instance_id",
+      "in": "query",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Instance Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/outlook/status": {
+   "get": {
+    "tags": [
+     "Outlook"
+    ],
+    "summary": "Status",
+    "operationId": "status_outlook_status_get",
+    "parameters": [
+     {
+      "name": "instance_id",
+      "in": "query",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Instance Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/outlook/{instance_id}/attachments/{graph_message_id}/{attachment_id}": {
+   "get": {
+    "tags": [
+     "Outlook"
+    ],
+    "summary": "Download Attachment",
+    "operationId": "download_attachment_outlook__instance_id__attachments__graph_message_id___attachment_id__get",
+    "parameters": [
+     {
+      "name": "instance_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Instance Id"
+      }
+     },
+     {
+      "name": "graph_message_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Graph Message Id"
+      }
+     },
+     {
+      "name": "attachment_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Attachment Id"
+      }
+     },
+     {
+      "name": "filename",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string",
+         "maxLength": 512
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Filename"
+      }
+     },
+     {
+      "name": "mime",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string",
+         "maxLength": 255
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Mime"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/outlook/{instance_id}/automation-settings": {
+   "get": {
+    "tags": [
+     "Outlook"
+    ],
+    "summary": "Get Outlook Automation Settings",
+    "operationId": "get_outlook_automation_settings_outlook__instance_id__automation_settings_get",
+    "parameters": [
+     {
+      "name": "instance_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Instance Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   },
+   "put": {
+    "tags": [
+     "Outlook"
+    ],
+    "summary": "Set Outlook Automation Settings",
+    "description": "MERGE the provided top-level keys into outlook_automation_settings.\n\nThe FE sends partial objects (e.g. ``{\"welcome\": {...}}`` from the welcome\nform). A full replace would wipe the other sections, so we do a top-level\ndict merge: only the provided keys are overwritten (telegram semantics).",
+    "operationId": "set_outlook_automation_settings_outlook__instance_id__automation_settings_put",
+    "parameters": [
+     {
+      "name": "instance_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Instance Id"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/OutlookAutomationSettings"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
        }
       }
      },
@@ -16898,6 +21491,268 @@
         "schema": {
          "type": "object",
          "title": "Response Get My Subscription Stats Subscriptions Me Stats Get"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/telegram/connect": {
+   "post": {
+    "tags": [
+     "Telegram"
+    ],
+    "summary": "Connect",
+    "operationId": "connect_telegram_connect_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/TelegramConnectRequest"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/TelegramConnectResponse"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/telegram/disconnect": {
+   "post": {
+    "tags": [
+     "Telegram"
+    ],
+    "summary": "Disconnect",
+    "operationId": "disconnect_telegram_disconnect_post",
+    "parameters": [
+     {
+      "name": "instance_id",
+      "in": "query",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Instance Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/telegram/growth-link": {
+   "get": {
+    "tags": [
+     "Telegram"
+    ],
+    "summary": "Growth Link",
+    "description": "Generate a ``https://t.me/<bot>?start=<payload>`` deep-link.\n\nStores the payload→flow mapping in\n``tg_automation_settings[\"start_payload_routes\"]`` so the webhook service\ncan dispatch the correct flow when a user clicks the link and sends /start.",
+    "operationId": "growth_link_telegram_growth_link_get",
+    "parameters": [
+     {
+      "name": "instance_id",
+      "in": "query",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Instance Id"
+      }
+     },
+     {
+      "name": "flow_id",
+      "in": "query",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Flow Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/telegram/status": {
+   "get": {
+    "tags": [
+     "Telegram"
+    ],
+    "summary": "Status",
+    "operationId": "status_telegram_status_get",
+    "parameters": [
+     {
+      "name": "instance_id",
+      "in": "query",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Instance Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/TelegramStatusResponse"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/telegram/{instance_id}/automation-settings": {
+   "get": {
+    "tags": [
+     "Telegram"
+    ],
+    "summary": "Get Telegram Automation Settings",
+    "operationId": "get_telegram_automation_settings_telegram__instance_id__automation_settings_get",
+    "parameters": [
+     {
+      "name": "instance_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Instance Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   },
+   "put": {
+    "tags": [
+     "Telegram"
+    ],
+    "summary": "Set Telegram Automation Settings",
+    "description": "MERGE the provided top-level keys into tg_automation_settings.\n\nThe FE sends partial objects (e.g. ``{\"welcome\": {...}}`` from the welcome\nform, ``{\"faq\": {...}}`` from the FAQ form).  A full replace would wipe the\nother sections, so we do a top-level dict merge: only the provided keys are\noverwritten; absent keys are left untouched.",
+    "operationId": "set_telegram_automation_settings_telegram__instance_id__automation_settings_put",
+    "parameters": [
+     {
+      "name": "instance_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Instance Id"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/TelegramAutomationSettings"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
         }
        }
       }
@@ -18742,6 +23597,364 @@
     ]
    }
   },
+  "/web-widget": {
+   "get": {
+    "tags": [
+     "Web Widget"
+    ],
+    "summary": "List Web Widgets",
+    "description": "Return the web widget instances the current user may configure.",
+    "operationId": "list_web_widgets_web_widget_get",
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "items": {
+          "type": "object"
+         },
+         "type": "array",
+         "title": "Response List Web Widgets Web Widget Get"
+        }
+       }
+      }
+     }
+    }
+   },
+   "post": {
+    "tags": [
+     "Web Widget"
+    ],
+    "summary": "Create Web Widget",
+    "description": "Create a new web widget instance for the current user.\n\nThis instance is FREE — no subscription gate or instance-cap check is\nperformed.  A unique public ID is generated for the JS loader snippet.",
+    "operationId": "create_web_widget_web_widget_post",
+    "responses": {
+     "201": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     }
+    }
+   }
+  },
+  "/web-widget/{instance_id}": {
+   "delete": {
+    "tags": [
+     "Web Widget"
+    ],
+    "summary": "Delete Web Widget",
+    "description": "Retire a web widget: it stops serving publicly and leaves the dashboard.\n\nDeliberately an archive rather than a row delete (see ``_is_archived``).\nIdempotent, so retiring an already-archived widget is a no-op success.",
+    "operationId": "delete_web_widget_web_widget__instance_id__delete",
+    "parameters": [
+     {
+      "name": "instance_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Instance Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/web-widget/{instance_id}/ai": {
+   "get": {
+    "tags": [
+     "Web Widget"
+    ],
+    "summary": "Get Widget Ai",
+    "description": "Report where the widget's AI comes from (custom / inherited / none).",
+    "operationId": "get_widget_ai_web_widget__instance_id__ai_get",
+    "parameters": [
+     {
+      "name": "instance_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Instance Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   },
+   "put": {
+    "tags": [
+     "Web Widget"
+    ],
+    "summary": "Put Widget Ai",
+    "description": "Upsert a widget-specific AI persona (overrides the inherited default).",
+    "operationId": "put_widget_ai_web_widget__instance_id__ai_put",
+    "parameters": [
+     {
+      "name": "instance_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Instance Id"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/WebWidgetAIBody"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   },
+   "delete": {
+    "tags": [
+     "Web Widget"
+    ],
+    "summary": "Delete Widget Ai",
+    "description": "Remove the widget-specific persona → revert to the inherited default.\nIdempotent: a no-op when no override exists.",
+    "operationId": "delete_widget_ai_web_widget__instance_id__ai_delete",
+    "parameters": [
+     {
+      "name": "instance_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Instance Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/web-widget/{instance_id}/ai/preview": {
+   "post": {
+    "tags": [
+     "Web Widget"
+    ],
+    "summary": "Preview Widget Ai",
+    "description": "Owner-only: run the widget's AI on a test message and return the reply.",
+    "operationId": "preview_widget_ai_web_widget__instance_id__ai_preview_post",
+    "parameters": [
+     {
+      "name": "instance_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Instance Id"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/WidgetAIPreviewBody"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/web-widget/{instance_id}/settings": {
+   "put": {
+    "tags": [
+     "Web Widget"
+    ],
+    "summary": "Update Widget Settings",
+    "description": "Validate and persist updated widget settings.\n\nRaises 422 if the body fails ``WebWidgetSettings`` validation (e.g. a\nmanual channel without a handle).",
+    "operationId": "update_widget_settings_web_widget__instance_id__settings_put",
+    "parameters": [
+     {
+      "name": "instance_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Instance Id"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object",
+        "title": "Body"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/web-widget/{instance_id}/snippet": {
+   "get": {
+    "tags": [
+     "Web Widget"
+    ],
+    "summary": "Get Widget Snippet",
+    "description": "Return the JS embed snippet for the given web widget instance.",
+    "operationId": "get_widget_snippet_web_widget__instance_id__snippet_get",
+    "parameters": [
+     {
+      "name": "instance_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Instance Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
   "/webhook-management/status": {
    "get": {
     "tags": [
@@ -19661,6 +24874,87 @@
         "schema": {
          "$ref": "#/components/schemas/HTTPValidationError"
         }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/widget/v1/config": {
+   "get": {
+    "tags": [
+     "Widget Public"
+    ],
+    "summary": "Get Widget Config",
+    "description": "Return the public widget config for ``wid`` after an origin check.",
+    "operationId": "get_widget_config_widget_v1_config_get",
+    "parameters": [
+     {
+      "name": "wid",
+      "in": "query",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Wid"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/widget/v1/loader.js": {
+   "get": {
+    "tags": [
+     "Widget Public"
+    ],
+    "summary": "Get Widget Loader",
+    "description": "Serve the static widget loader (ES module) with CORS + cache headers.",
+    "operationId": "get_widget_loader_widget_v1_loader_js_get",
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     }
+    }
+   }
+  },
+  "/widget/v1/preview": {
+   "get": {
+    "tags": [
+     "Widget Public"
+    ],
+    "summary": "Get Widget Preview Page",
+    "description": "Serve the preview host page that the dashboard frames.",
+    "operationId": "get_widget_preview_page_widget_v1_preview_get",
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
        }
       }
      }
@@ -21262,6 +26556,20 @@
     ],
     "title": "Body_upload_media_endpoint_media_library__instance_id__upload_post"
    },
+   "Body_upload_publish_media_instagram__instance_id__publish_upload_post": {
+    "properties": {
+     "file": {
+      "type": "string",
+      "format": "binary",
+      "title": "File"
+     }
+    },
+    "type": "object",
+    "required": [
+     "file"
+    ],
+    "title": "Body_upload_publish_media_instagram__instance_id__publish_upload_post"
+   },
    "Body_upload_template_media_templates__instance_id__upload_media_post": {
     "properties": {
      "file": {
@@ -21303,6 +26611,68 @@
     ],
     "title": "BookingCalendarRequest",
     "description": "Pick which connected calendar the AI books into, for one provider.\n\n``connection_id: null`` clears the pick and goes back to inferring it\n(the owner's own account first, then oldest), which is what an account\nthat never chose has always done."
+   },
+   "BookingConfirmationBody": {
+    "properties": {
+     "title": {
+      "type": "string",
+      "title": "Title"
+     },
+     "date": {
+      "type": "string",
+      "title": "Date"
+     },
+     "time": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Time"
+     },
+     "location": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Location"
+     },
+     "notes": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Notes"
+     },
+     "url": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Url"
+     }
+    },
+    "type": "object",
+    "required": [
+     "title",
+     "date"
+    ],
+    "title": "BookingConfirmationBody"
    },
    "BulkMediaDeleteRequest": {
     "properties": {
@@ -24156,6 +29526,56 @@
     "title": "CarouselComponent",
     "description": "The CAROUSEL component containing 2-10 cards.\nAll cards must use the same header format and button structure."
    },
+   "CarouselItem": {
+    "properties": {
+     "image_url": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 2083,
+        "minLength": 1,
+        "format": "uri"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Image Url"
+     },
+     "video_url": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 2083,
+        "minLength": 1,
+        "format": "uri"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Video Url"
+     },
+     "user_tags": {
+      "anyOf": [
+       {
+        "items": {
+         "$ref": "#/components/schemas/UserTag"
+        },
+        "type": "array",
+        "maxItems": 20
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "User Tags"
+     }
+    },
+    "type": "object",
+    "title": "CarouselItem",
+    "description": "A single child in a carousel — either image or video, never both."
+   },
    "CatalogResponse": {
     "properties": {
      "id": {
@@ -25032,6 +30452,50 @@
     "title": "ChatMessageResponse",
     "description": "Chat message response model.\n\nWAVE-3 binding closure: ``ChatMessage.to_dict()`` (chat_service.py) emits\ntyped columns sourced directly from the ORM — reply_to_wa_message_id,\nreaction_target_wa_message_id, reaction_emoji, pricing_billable,\npricing_model, pricing_type, pricing_category, conversation_id,\nconversation_origin_type, conversation_expiration, group_id. These are\ndeclared explicitly below so FastAPI's response_model validation does\nnot strip them (Pydantic v2 defaults to ``extra='ignore'``). The\nfrontend chatStore HTTP mapper depends on these being present —\nwithout them the typed-column contract collapses to the legacy metadata\nfallback path only."
    },
+   "ClaimAdAccountRequest": {
+    "properties": {
+     "ad_account_id": {
+      "type": "string",
+      "maxLength": 32,
+      "minLength": 1,
+      "title": "Ad Account Id",
+      "description": "Ad account to claim into the business, as act_<id> or the bare numeric ID.",
+      "examples": [
+       "act_1234567890"
+      ]
+     }
+    },
+    "type": "object",
+    "required": [
+     "ad_account_id"
+    ],
+    "title": "ClaimAdAccountRequest"
+   },
+   "ClaimAdAccountResponse": {
+    "properties": {
+     "success": {
+      "type": "boolean",
+      "title": "Success"
+     },
+     "ad_account_id": {
+      "type": "string",
+      "title": "Ad Account Id",
+      "description": "Canonical act_<id> form of the claimed account."
+     },
+     "access_status": {
+      "type": "string",
+      "title": "Access Status",
+      "description": "GRANTED when attached immediately, PENDING when the current owner must approve."
+     }
+    },
+    "type": "object",
+    "required": [
+     "success",
+     "ad_account_id",
+     "access_status"
+    ],
+    "title": "ClaimAdAccountResponse"
+   },
    "CommandItem": {
     "properties": {
      "command_name": {
@@ -25186,6 +30650,105 @@
     ],
     "title": "ConditionSchema",
     "description": "A single segment condition descriptor."
+   },
+   "ConfirmationOrderItem": {
+    "properties": {
+     "title": {
+      "type": "string",
+      "title": "Title"
+     },
+     "subtitle": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Subtitle"
+     },
+     "quantity": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Quantity"
+     },
+     "price": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Price"
+     },
+     "image_url": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Image Url"
+     }
+    },
+    "type": "object",
+    "required": [
+     "title"
+    ],
+    "title": "ConfirmationOrderItem"
+   },
+   "ConfirmationSend": {
+    "properties": {
+     "recipient_psid": {
+      "type": "string",
+      "title": "Recipient Psid"
+     },
+     "kind": {
+      "type": "string",
+      "enum": [
+       "order",
+       "booking"
+      ],
+      "title": "Kind"
+     },
+     "order": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/OrderConfirmationBody"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "booking": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/BookingConfirmationBody"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     }
+    },
+    "type": "object",
+    "required": [
+     "recipient_psid",
+     "kind"
+    ],
+    "title": "ConfirmationSend"
    },
    "ContactAddress": {
     "properties": {
@@ -27740,6 +33303,99 @@
     "title": "CreateTemplateResponse",
     "description": "Response from the Meta endpoint after creating a template.\nTypically returns: { \"id\": \"...\", \"status\": \"...\", \"category\": \"...\" }"
    },
+   "CreateTriggerSchema": {
+    "properties": {
+     "keyword": {
+      "type": "string",
+      "maxLength": 100,
+      "minLength": 1,
+      "title": "Keyword",
+      "description": "Trigger keyword (case-insensitive match; use '*' for story_mention)"
+     },
+     "response_text": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Response Text",
+      "description": "DM text to send when the trigger fires"
+     },
+     "public_reply_text": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 1000
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Public Reply Text",
+      "description": "Optional PUBLIC reply posted under the matched comment (ManyChat-style 'Sent you a DM 📩'). Only fires on the comment path (text/product/generic_template) — in addition to the private DM."
+     },
+     "response_type": {
+      "type": "string",
+      "title": "Response Type",
+      "description": "One of: text, product, generic_template, story_mention, story_reply",
+      "default": "text"
+     },
+     "product_retailer_ids": {
+      "anyOf": [
+       {
+        "items": {
+         "type": "string"
+        },
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Product Retailer Ids",
+      "description": "Product retailer IDs for product template responses"
+     },
+     "template_elements": {
+      "anyOf": [
+       {
+        "type": "object"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Template Elements",
+      "description": "Template elements for generic template responses"
+     },
+     "media_filter": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Media Filter",
+      "description": "Specific media_id to match, or null for all posts"
+     },
+     "is_active": {
+      "type": "boolean",
+      "title": "Is Active",
+      "description": "Whether the trigger is active",
+      "default": true
+     }
+    },
+    "type": "object",
+    "required": [
+     "keyword"
+    ],
+    "title": "CreateTriggerSchema",
+    "description": "Schema for creating a new comment-to-DM or story trigger."
+   },
    "CreateUnsubscribeCodeRequest": {
     "properties": {
      "phone_number": {
@@ -29408,6 +35064,153 @@
     "title": "GenerateAIDraftResponse",
     "description": "Schema for AI draft generation response.\n\nReturns the generated text to fill in the chat input textarea.\nDoes NOT send the message - user can edit before sending."
    },
+   "GmailAuthCallback": {
+    "properties": {
+     "code": {
+      "type": "string",
+      "title": "Code"
+     },
+     "state": {
+      "type": "string",
+      "title": "State"
+     },
+     "nickname": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Nickname"
+     }
+    },
+    "type": "object",
+    "required": [
+     "code",
+     "state"
+    ],
+    "title": "GmailAuthCallback"
+   },
+   "GmailAutomationSettings": {
+    "properties": {
+     "welcome": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/GmailWelcome"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "away": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/GmailAway"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "faq": {
+      "anyOf": [
+       {
+        "additionalProperties": {
+         "$ref": "#/components/schemas/GmailFaqAction"
+        },
+        "type": "object"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Faq"
+     }
+    },
+    "type": "object",
+    "title": "GmailAutomationSettings",
+    "description": "Flexible MERGE-friendly body for PUT /gmail/{id}/automation-settings.\n\nAll top-level keys are optional so the FE can POST only the section it\nowns (welcome form, faq form, etc.) without wiping the others.\n`model_dump(exclude_unset=True)` is used for the top-level merge.\n(Mirror of TelegramAutomationSettings, minus the Telegram-only\nstart_payload_routes.)"
+   },
+   "GmailAway": {
+    "properties": {
+     "enabled": {
+      "type": "boolean",
+      "title": "Enabled",
+      "default": false
+     },
+     "text": {
+      "type": "string",
+      "maxLength": 2000,
+      "title": "Text",
+      "default": ""
+     },
+     "business_hours": {
+      "$ref": "#/components/schemas/BusinessHoursConfig"
+     }
+    },
+    "type": "object",
+    "title": "GmailAway"
+   },
+   "GmailFaqAction": {
+    "properties": {
+     "type": {
+      "type": "string",
+      "enum": [
+       "reply",
+       "flow"
+      ],
+      "title": "Type"
+     },
+     "reply_text": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 2000
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Reply Text"
+     },
+     "flow_id": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Flow Id"
+     }
+    },
+    "type": "object",
+    "required": [
+     "type"
+    ],
+    "title": "GmailFaqAction"
+   },
+   "GmailWelcome": {
+    "properties": {
+     "enabled": {
+      "type": "boolean",
+      "title": "Enabled",
+      "default": false
+     },
+     "text": {
+      "type": "string",
+      "maxLength": 2000,
+      "title": "Text",
+      "default": ""
+     }
+    },
+    "type": "object",
+    "title": "GmailWelcome"
+   },
    "GoogleCalendarAuthCallback": {
     "properties": {
      "code": {
@@ -30331,6 +36134,149 @@
     },
     "type": "object",
     "title": "InforUWelcome"
+   },
+   "InstagramAuthCallback": {
+    "properties": {
+     "code": {
+      "type": "string",
+      "title": "Code",
+      "description": "OAuth authorization code from Instagram"
+     },
+     "state": {
+      "type": "string",
+      "title": "State",
+      "description": "JSON with user_id + CSRF nonce (CN-5)"
+     },
+     "nickname": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 50
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Nickname",
+      "description": "User-chosen nickname (defaults to @username if empty)"
+     },
+     "error": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Error",
+      "description": "OAuth error code (user denied, etc.)"
+     },
+     "error_reason": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Error Reason",
+      "description": "Human-readable error reason"
+     }
+    },
+    "type": "object",
+    "required": [
+     "code",
+     "state"
+    ],
+    "title": "InstagramAuthCallback",
+    "description": "Received from frontend after OAuth popup completes."
+   },
+   "InstagramAuthResponse": {
+    "properties": {
+     "instance_id": {
+      "type": "string",
+      "title": "Instance Id",
+      "description": "UUID of the created instance"
+     },
+     "ig_user_id": {
+      "type": "string",
+      "title": "Ig User Id",
+      "description": "Instagram-Scoped User ID"
+     },
+     "ig_username": {
+      "type": "string",
+      "title": "Ig Username",
+      "description": "Instagram @username handle"
+     },
+     "ig_profile_picture_url": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Ig Profile Picture Url",
+      "description": "Instagram profile picture URL"
+     },
+     "ig_token_expires_at": {
+      "type": "string",
+      "title": "Ig Token Expires At",
+      "description": "ISO 8601 token expiry timestamp"
+     },
+     "nickname": {
+      "type": "string",
+      "title": "Nickname",
+      "description": "Final nickname (from user input or @username default)"
+     },
+     "platform": {
+      "type": "string",
+      "title": "Platform",
+      "description": "Always 'instagram'",
+      "default": "instagram"
+     },
+     "subscription_state": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/SubscriptionState"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "follower_detection_mode": {
+      "type": "string",
+      "title": "Follower Detection Mode",
+      "default": "polling"
+     }
+    },
+    "type": "object",
+    "required": [
+     "instance_id",
+     "ig_user_id",
+     "ig_username",
+     "ig_token_expires_at",
+     "nickname"
+    ],
+    "title": "InstagramAuthResponse",
+    "description": "Returned to frontend after successful instance creation."
+   },
+   "InstagramAuthUrlRequest": {
+    "properties": {
+     "es_v4": {
+      "type": "boolean",
+      "title": "Es V4",
+      "description": "True iff the caller will use ES v4 (FB.login response_type=code). Adds sessionInfoVersion=4 to the state payload.",
+      "default": false
+     }
+    },
+    "type": "object",
+    "title": "InstagramAuthUrlRequest",
+    "description": "Optional request body for POST /instagram/auth/url.\n\nSet ``es_v4=True`` only when the caller is launching the Instagram\nEmbedded Signup v4 flow (FB.login with sessionInfoVersion=\"4\"). The\nlegacy popup-redirect OAuth flow must NOT set this flag — keeping it\nFalse ensures ``sessionInfoVersion`` is absent from the minted state,\nso ``handle_callback`` falls through to ``exchange_code_for_token``."
    },
    "InstanceCreate": {
     "properties": {
@@ -34282,6 +40228,199 @@
     "title": "MessagesPaginationResponse",
     "description": "Pagination metadata for messages"
    },
+   "MessengerAuthCallback": {
+    "properties": {
+     "code": {
+      "type": "string",
+      "title": "Code"
+     },
+     "state": {
+      "type": "string",
+      "title": "State"
+     },
+     "nickname": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Nickname"
+     },
+     "page_id": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Page Id"
+     },
+     "error": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Error"
+     }
+    },
+    "type": "object",
+    "required": [
+     "code",
+     "state"
+    ],
+    "title": "MessengerAuthCallback"
+   },
+   "MessengerAuthUrlRequest": {
+    "properties": {
+     "es_v4": {
+      "type": "boolean",
+      "title": "Es V4",
+      "default": true
+     }
+    },
+    "type": "object",
+    "title": "MessengerAuthUrlRequest"
+   },
+   "MessengerEntryActions": {
+    "properties": {
+     "actions": {
+      "type": "object",
+      "title": "Actions"
+     }
+    },
+    "type": "object",
+    "required": [
+     "actions"
+    ],
+    "title": "MessengerEntryActions"
+   },
+   "MessengerProfileBody": {
+    "properties": {
+     "get_started": {
+      "anyOf": [
+       {
+        "type": "object"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Get Started"
+     },
+     "persistent_menu": {
+      "anyOf": [
+       {
+        "items": {
+         "type": "object"
+        },
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Persistent Menu"
+     },
+     "ice_breakers": {
+      "anyOf": [
+       {
+        "items": {
+         "type": "object"
+        },
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Ice Breakers"
+     },
+     "greeting": {
+      "anyOf": [
+       {
+        "items": {
+         "type": "object"
+        },
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Greeting"
+     },
+     "whitelisted_domains": {
+      "anyOf": [
+       {
+        "items": {
+         "type": "string"
+        },
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Whitelisted Domains"
+     }
+    },
+    "type": "object",
+    "title": "MessengerProfileBody"
+   },
+   "MessengerSelectPage": {
+    "properties": {
+     "selection_token": {
+      "type": "string",
+      "title": "Selection Token"
+     },
+     "page_id": {
+      "type": "string",
+      "title": "Page Id"
+     },
+     "nickname": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Nickname"
+     }
+    },
+    "type": "object",
+    "required": [
+     "selection_token",
+     "page_id"
+    ],
+    "title": "MessengerSelectPage"
+   },
+   "MessengerWebhookFields": {
+    "properties": {
+     "fields": {
+      "items": {
+       "type": "string"
+      },
+      "type": "array",
+      "title": "Fields"
+     }
+    },
+    "type": "object",
+    "required": [
+     "fields"
+    ],
+    "title": "MessengerWebhookFields"
+   },
    "MetaTemplateCategory": {
     "type": "string",
     "enum": [
@@ -34535,6 +40674,97 @@
     },
     "type": "object",
     "title": "Mobile019Welcome"
+   },
+   "OrderConfirmationBody": {
+    "properties": {
+     "recipient_name": {
+      "type": "string",
+      "title": "Recipient Name"
+     },
+     "order_number": {
+      "type": "string",
+      "title": "Order Number"
+     },
+     "currency": {
+      "type": "string",
+      "title": "Currency",
+      "default": "USD"
+     },
+     "payment_method": {
+      "type": "string",
+      "title": "Payment Method"
+     },
+     "total": {
+      "type": "number",
+      "title": "Total"
+     },
+     "subtotal": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Subtotal"
+     },
+     "shipping_cost": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Shipping Cost"
+     },
+     "tax": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Tax"
+     },
+     "order_url": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Order Url"
+     },
+     "items": {
+      "anyOf": [
+       {
+        "items": {
+         "$ref": "#/components/schemas/ConfirmationOrderItem"
+        },
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Items"
+     }
+    },
+    "type": "object",
+    "required": [
+     "recipient_name",
+     "order_number",
+     "payment_method",
+     "total"
+    ],
+    "title": "OrderConfirmationBody"
    },
    "OrderDetailsRequest": {
     "properties": {
@@ -35085,6 +41315,154 @@
      "ordered_at"
     ],
     "title": "OrderSummaryResponse"
+   },
+   "OutlookAutomationSettings": {
+    "properties": {
+     "welcome": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/OutlookWelcome"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "away": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/OutlookAway"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "faq": {
+      "anyOf": [
+       {
+        "additionalProperties": {
+         "$ref": "#/components/schemas/OutlookFaqAction"
+        },
+        "type": "object"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Faq"
+     }
+    },
+    "type": "object",
+    "title": "OutlookAutomationSettings",
+    "description": "MERGE-friendly body for PUT /outlook/{id}/automation-settings — all\ntop-level keys optional so the FE can POST one section without wiping\nothers (model_dump(exclude_unset=True) for the top-level merge). Mirror of\nGmailAutomationSettings."
+   },
+   "OutlookAway": {
+    "properties": {
+     "enabled": {
+      "type": "boolean",
+      "title": "Enabled",
+      "default": false
+     },
+     "text": {
+      "type": "string",
+      "maxLength": 2000,
+      "title": "Text",
+      "default": ""
+     },
+     "business_hours": {
+      "$ref": "#/components/schemas/BusinessHoursConfig"
+     }
+    },
+    "type": "object",
+    "title": "OutlookAway"
+   },
+   "OutlookConnectCallbackRequest": {
+    "properties": {
+     "code": {
+      "type": "string",
+      "title": "Code"
+     },
+     "state": {
+      "type": "string",
+      "title": "State"
+     },
+     "nickname": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Nickname"
+     }
+    },
+    "type": "object",
+    "required": [
+     "code",
+     "state"
+    ],
+    "title": "OutlookConnectCallbackRequest",
+    "description": "POST /outlook/auth/callback — the FE callback page posts the Microsoft\nauthorization code + our signed state back to the backend. (Defined here\nin the schema module, fixing the Gmail inline-model inconsistency.)"
+   },
+   "OutlookFaqAction": {
+    "properties": {
+     "type": {
+      "type": "string",
+      "enum": [
+       "reply",
+       "flow"
+      ],
+      "title": "Type"
+     },
+     "reply_text": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 2000
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Reply Text"
+     },
+     "flow_id": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Flow Id"
+     }
+    },
+    "type": "object",
+    "required": [
+     "type"
+    ],
+    "title": "OutlookFaqAction"
+   },
+   "OutlookWelcome": {
+    "properties": {
+     "enabled": {
+      "type": "boolean",
+      "title": "Enabled",
+      "default": false
+     },
+     "text": {
+      "type": "string",
+      "maxLength": 2000,
+      "title": "Text",
+      "default": ""
+     }
+    },
+    "type": "object",
+    "title": "OutlookWelcome"
    },
    "OverviewResponse": {
     "properties": {
@@ -36971,6 +43349,22 @@
     "title": "PriceRange",
     "description": "Price range for a product with multiple variants."
    },
+   "PrivateReplyRequest": {
+    "properties": {
+     "text": {
+      "type": "string",
+      "maxLength": 1000,
+      "minLength": 1,
+      "title": "Text"
+     }
+    },
+    "type": "object",
+    "required": [
+     "text"
+    ],
+    "title": "PrivateReplyRequest",
+    "description": "Request schema for sending a private DM reply to a public comment.\n\nMirrors the comment-related schemas (e.g. ``CreateTriggerSchema``) for\nconsistency. ``text`` is bounded to 1-1000 chars to match Meta's DM\npayload limits."
+   },
    "ProductDetailResponse": {
     "properties": {
      "success": {
@@ -37275,6 +43669,378 @@
     ],
     "title": "ProductsSection",
     "description": "For PRODUCTS_LIST usage: define multiple sections with SKUs."
+   },
+   "PublishCarouselRequest": {
+    "properties": {
+     "items": {
+      "items": {
+       "$ref": "#/components/schemas/CarouselItem"
+      },
+      "type": "array",
+      "maxItems": 10,
+      "minItems": 2,
+      "title": "Items"
+     },
+     "caption": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 2200
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Caption"
+     },
+     "location_id": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Location Id"
+     },
+     "collaborators": {
+      "anyOf": [
+       {
+        "items": {
+         "type": "string"
+        },
+        "type": "array",
+        "maxItems": 3
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Collaborators"
+     },
+     "idempotency_key": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 128,
+        "minLength": 8
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Idempotency Key"
+     }
+    },
+    "type": "object",
+    "required": [
+     "items"
+    ],
+    "title": "PublishCarouselRequest",
+    "description": "POST /instagram/{id}/publish/carousel body."
+   },
+   "PublishImageRequest": {
+    "properties": {
+     "image_url": {
+      "type": "string",
+      "maxLength": 2083,
+      "minLength": 1,
+      "format": "uri",
+      "title": "Image Url",
+      "description": "Publicly reachable HTTPS image URL"
+     },
+     "caption": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 2200
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Caption"
+     },
+     "location_id": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Location Id",
+      "description": "Meta Page/location id"
+     },
+     "user_tags": {
+      "anyOf": [
+       {
+        "items": {
+         "$ref": "#/components/schemas/UserTag"
+        },
+        "type": "array",
+        "maxItems": 20
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "User Tags"
+     },
+     "collaborators": {
+      "anyOf": [
+       {
+        "items": {
+         "type": "string"
+        },
+        "type": "array",
+        "maxItems": 3
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Collaborators",
+      "description": "IG usernames to invite as collaborators"
+     },
+     "idempotency_key": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 128,
+        "minLength": 8
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Idempotency Key",
+      "description": "Client-supplied token to dedupe retries within a 10 min window"
+     }
+    },
+    "type": "object",
+    "required": [
+     "image_url"
+    ],
+    "title": "PublishImageRequest",
+    "description": "POST /instagram/{id}/publish/image body."
+   },
+   "PublishResponse": {
+    "properties": {
+     "success": {
+      "type": "boolean",
+      "title": "Success",
+      "default": true
+     },
+     "container_id": {
+      "type": "string",
+      "title": "Container Id"
+     },
+     "media_id": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Media Id"
+     },
+     "media_type": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Media Type"
+     },
+     "child_count": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Child Count"
+     },
+     "idempotent_replay": {
+      "type": "boolean",
+      "title": "Idempotent Replay",
+      "description": "True if this is the cached response of a prior identical request",
+      "default": false
+     }
+    },
+    "type": "object",
+    "required": [
+     "container_id"
+    ],
+    "title": "PublishResponse",
+    "description": "Response returned after a successful publish."
+   },
+   "PublishStoryRequest": {
+    "properties": {
+     "image_url": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 2083,
+        "minLength": 1,
+        "format": "uri"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Image Url"
+     },
+     "video_url": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 2083,
+        "minLength": 1,
+        "format": "uri"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Video Url"
+     },
+     "idempotency_key": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 128,
+        "minLength": 8
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Idempotency Key"
+     }
+    },
+    "type": "object",
+    "title": "PublishStoryRequest",
+    "description": "POST /instagram/{id}/publish/story body. Exactly one of image/video."
+   },
+   "PublishVideoRequest": {
+    "properties": {
+     "video_url": {
+      "type": "string",
+      "maxLength": 2083,
+      "minLength": 1,
+      "format": "uri",
+      "title": "Video Url"
+     },
+     "caption": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 2200
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Caption"
+     },
+     "media_type": {
+      "type": "string",
+      "const": "REELS",
+      "title": "Media Type",
+      "description": "Only REELS is supported here; use /publish/story for stories.",
+      "default": "REELS"
+     },
+     "share_to_feed": {
+      "type": "boolean",
+      "title": "Share To Feed",
+      "description": "Meta default is True — Reel also appears in the feed grid.",
+      "default": true
+     },
+     "thumb_offset": {
+      "anyOf": [
+       {
+        "type": "integer",
+        "minimum": 0.0
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Thumb Offset",
+      "description": "Millisecond offset for the cover frame (0 = first frame)."
+     },
+     "cover_url": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 2083,
+        "minLength": 1,
+        "format": "uri"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Cover Url",
+      "description": "Optional explicit cover image URL (overrides thumb_offset)."
+     },
+     "location_id": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Location Id"
+     },
+     "collaborators": {
+      "anyOf": [
+       {
+        "items": {
+         "type": "string"
+        },
+        "type": "array",
+        "maxItems": 3
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Collaborators"
+     },
+     "idempotency_key": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 128,
+        "minLength": 8
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Idempotency Key"
+     }
+    },
+    "type": "object",
+    "required": [
+     "video_url"
+    ],
+    "title": "PublishVideoRequest",
+    "description": "POST /instagram/{id}/publish/video body.\n\nReels on the Instagram Login API supersede the old video-to-feed flow —\n``media_type`` must be REELS. STORIES go through the dedicated story\nendpoint."
    },
    "PyWaButtonWrapper": {
     "properties": {
@@ -39210,6 +45976,38 @@
     "title": "ScheduleMessageRequest",
     "description": "Extends SendMessageRequest to support message scheduling.\nWhen scheduled_at is provided, the message will be queued for future sending."
    },
+   "ScheduleRequest": {
+    "properties": {
+     "kind": {
+      "type": "string",
+      "enum": [
+       "image",
+       "video",
+       "story",
+       "carousel"
+      ],
+      "title": "Kind"
+     },
+     "scheduled_at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Scheduled At",
+      "description": "UTC timestamp at which to publish"
+     },
+     "payload": {
+      "type": "object",
+      "title": "Payload"
+     }
+    },
+    "type": "object",
+    "required": [
+     "kind",
+     "scheduled_at",
+     "payload"
+    ],
+    "title": "ScheduleRequest",
+    "description": "POST /instagram/{id}/schedule body.\n\nThe caller picks a ``kind`` and supplies the matching publish payload in\n``payload``. The payload is re-validated both at schedule time and again\nby the worker at publish time — a schema change between the two deploys\nnever silently ruins an in-flight row."
+   },
    "ScheduledMessageResponse": {
     "properties": {
      "id": {
@@ -39423,6 +46221,132 @@
     "type": "object",
     "title": "ScheduledMessageSummary",
     "description": "Summary statistics for scheduled messages"
+   },
+   "ScheduledPostResponse": {
+    "properties": {
+     "id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Id"
+     },
+     "instance_id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Instance Id"
+     },
+     "kind": {
+      "type": "string",
+      "enum": [
+       "image",
+       "video",
+       "story",
+       "carousel"
+      ],
+      "title": "Kind"
+     },
+     "payload": {
+      "type": "object",
+      "title": "Payload"
+     },
+     "scheduled_at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Scheduled At"
+     },
+     "status": {
+      "type": "string",
+      "title": "Status"
+     },
+     "attempts": {
+      "type": "integer",
+      "title": "Attempts"
+     },
+     "max_attempts": {
+      "type": "integer",
+      "title": "Max Attempts"
+     },
+     "container_id": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Container Id"
+     },
+     "media_id": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Media Id"
+     },
+     "media_type": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Media Type"
+     },
+     "error_message": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Error Message"
+     },
+     "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Created At"
+     },
+     "updated_at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Updated At"
+     },
+     "published_at": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date-time"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Published At"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "instance_id",
+     "kind",
+     "payload",
+     "scheduled_at",
+     "status",
+     "attempts",
+     "max_attempts",
+     "created_at",
+     "updated_at"
+    ],
+    "title": "ScheduledPostResponse",
+    "description": "Serialized ``ScheduledInstagramPost`` row."
    },
    "SchedulingLinkResponse": {
     "properties": {
@@ -40924,6 +47848,71 @@
     ],
     "title": "SubscriptionField"
    },
+   "SubscriptionState": {
+    "properties": {
+     "status": {
+      "type": "string",
+      "enum": [
+       "active",
+       "degraded",
+       "rate_limited",
+       "token_invalid",
+       "unsubscribed"
+      ],
+      "title": "Status"
+     },
+     "subscribed_fields": {
+      "items": {
+       "type": "string"
+      },
+      "type": "array",
+      "title": "Subscribed Fields",
+      "default": []
+     },
+     "rejected_fields": {
+      "items": {
+       "type": "string"
+      },
+      "type": "array",
+      "title": "Rejected Fields",
+      "default": []
+     },
+     "rate_limited": {
+      "type": "boolean",
+      "title": "Rate Limited",
+      "default": false
+     },
+     "error_message": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Error Message"
+     },
+     "last_checked_at": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date-time"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Last Checked At"
+     }
+    },
+    "type": "object",
+    "required": [
+     "status"
+    ],
+    "title": "SubscriptionState",
+    "description": "Represents the current state of Instagram webhook subscriptions for an instance.\n\nStatus values:\n- active       : all desired fields subscribed, webhooks delivering.\n- degraded     : some fields rejected by Meta (e.g. requires partner access).\n- rate_limited : Meta returned a BUC rate-limit on the last subscribe attempt.\n- token_invalid: Meta returned code 190; user must reconnect.\n- unsubscribed : no successful subscription has been performed."
+   },
    "SuccessResponse": {
     "properties": {
      "message": {
@@ -40951,6 +47940,58 @@
     "title": "SuccessResponse",
     "description": "Schema for success responses."
    },
+   "TelegramAutomationSettings": {
+    "properties": {
+     "welcome": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/TelegramWelcome"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "away": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/TelegramAway"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "faq": {
+      "anyOf": [
+       {
+        "additionalProperties": {
+         "$ref": "#/components/schemas/TelegramFaqAction"
+        },
+        "type": "object"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Faq"
+     },
+     "start_payload_routes": {
+      "anyOf": [
+       {
+        "type": "object"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Start Payload Routes"
+     }
+    },
+    "type": "object",
+    "title": "TelegramAutomationSettings",
+    "description": "Flexible MERGE-friendly body for PUT /telegram/{id}/automation-settings.\n\nAll top-level keys are optional so the FE can POST only the section it\nowns (welcome form, faq form, etc.) without wiping the others.\n`model_dump(exclude_unset=True)` is used for the top-level merge."
+   },
    "TelegramAway": {
     "properties": {
      "enabled": {
@@ -40970,6 +48011,67 @@
     },
     "type": "object",
     "title": "TelegramAway"
+   },
+   "TelegramConnectRequest": {
+    "properties": {
+     "bot_token": {
+      "type": "string",
+      "title": "Bot Token"
+     },
+     "nickname": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Nickname"
+     }
+    },
+    "type": "object",
+    "required": [
+     "bot_token"
+    ],
+    "title": "TelegramConnectRequest"
+   },
+   "TelegramConnectResponse": {
+    "properties": {
+     "instance_id": {
+      "type": "string",
+      "title": "Instance Id"
+     },
+     "bot_username": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Bot Username"
+     },
+     "bot_name": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Bot Name"
+     }
+    },
+    "type": "object",
+    "required": [
+     "instance_id",
+     "bot_username",
+     "bot_name"
+    ],
+    "title": "TelegramConnectResponse"
    },
    "TelegramFaqAction": {
     "properties": {
@@ -41010,6 +48112,35 @@
      "type"
     ],
     "title": "TelegramFaqAction"
+   },
+   "TelegramStatusResponse": {
+    "properties": {
+     "connected": {
+      "type": "boolean",
+      "title": "Connected"
+     },
+     "bot_username": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Bot Username"
+     },
+     "webhook_ok": {
+      "type": "boolean",
+      "title": "Webhook Ok",
+      "default": false
+     }
+    },
+    "type": "object",
+    "required": [
+     "connected"
+    ],
+    "title": "TelegramStatusResponse"
    },
    "TelegramWelcome": {
     "properties": {
@@ -42470,6 +49601,129 @@
      "has_conflict": true
     }
    },
+   "TriggerResponse": {
+    "properties": {
+     "id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Id"
+     },
+     "instance_id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Instance Id"
+     },
+     "keyword": {
+      "type": "string",
+      "title": "Keyword"
+     },
+     "response_text": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Response Text"
+     },
+     "public_reply_text": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Public Reply Text"
+     },
+     "response_type": {
+      "type": "string",
+      "title": "Response Type",
+      "default": "text"
+     },
+     "product_retailer_ids": {
+      "anyOf": [
+       {
+        "items": {
+         "type": "string"
+        },
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Product Retailer Ids"
+     },
+     "template_elements": {
+      "anyOf": [
+       {
+        "type": "object"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Template Elements"
+     },
+     "media_filter": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Media Filter"
+     },
+     "is_active": {
+      "type": "boolean",
+      "title": "Is Active",
+      "default": true
+     },
+     "trigger_count": {
+      "type": "integer",
+      "title": "Trigger Count",
+      "default": 0
+     },
+     "last_triggered_at": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date-time"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Last Triggered At"
+     },
+     "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Created At"
+     },
+     "updated_at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Updated At"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "instance_id",
+     "keyword",
+     "created_at",
+     "updated_at"
+    ],
+    "title": "TriggerResponse",
+    "description": "Response schema for a comment-to-DM trigger."
+   },
    "TwilioAutomationSettings": {
     "properties": {
      "welcome": {
@@ -43720,6 +50974,115 @@
     "title": "UpdateTemplateRequest",
     "description": "For the \"update template\" operation (POST /<TEMPLATE_ID>).\nWe can either update 'category' or 'components' or both."
    },
+   "UpdateTriggerSchema": {
+    "properties": {
+     "keyword": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 100,
+        "minLength": 1
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Keyword",
+      "description": "Updated trigger keyword"
+     },
+     "response_text": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Response Text",
+      "description": "Updated DM text response"
+     },
+     "public_reply_text": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 1000
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Public Reply Text",
+      "description": "Updated public reply text posted under the matched comment (comment path only)"
+     },
+     "response_type": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Response Type",
+      "description": "Updated response type"
+     },
+     "product_retailer_ids": {
+      "anyOf": [
+       {
+        "items": {
+         "type": "string"
+        },
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Product Retailer Ids",
+      "description": "Updated product retailer IDs"
+     },
+     "template_elements": {
+      "anyOf": [
+       {
+        "type": "object"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Template Elements",
+      "description": "Updated template elements"
+     },
+     "media_filter": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Media Filter",
+      "description": "Updated media filter"
+     },
+     "is_active": {
+      "anyOf": [
+       {
+        "type": "boolean"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Is Active",
+      "description": "Updated active status"
+     }
+    },
+    "type": "object",
+    "title": "UpdateTriggerSchema",
+    "description": "Schema for updating an existing trigger."
+   },
    "UpdateWelcomeMessageRequest": {
     "properties": {
      "enable_welcome_message": {
@@ -43855,6 +51218,160 @@
     ],
     "title": "UserResponse",
     "description": "Schema for returning user details."
+   },
+   "UserTag": {
+    "properties": {
+     "username": {
+      "type": "string",
+      "maxLength": 30,
+      "minLength": 1,
+      "title": "Username"
+     },
+     "x": {
+      "type": "number",
+      "maximum": 1.0,
+      "minimum": 0.0,
+      "title": "X",
+      "description": "Horizontal 0-1"
+     },
+     "y": {
+      "type": "number",
+      "maximum": 1.0,
+      "minimum": 0.0,
+      "title": "Y",
+      "description": "Vertical 0-1"
+     }
+    },
+    "type": "object",
+    "required": [
+     "username",
+     "x",
+     "y"
+    ],
+    "title": "UserTag",
+    "description": "A tag marking an Instagram user at a position on an image.\n\nCoordinates are normalized 0.0-1.0 relative to the image. Meta rejects\nthe container if a tag is outside that range or references an unknown\nuser. Max 20 tags per image."
+   },
+   "UtilityTemplateButton": {
+    "properties": {
+     "type": {
+      "type": "string",
+      "title": "Type",
+      "default": "URL"
+     },
+     "text": {
+      "type": "string",
+      "title": "Text"
+     },
+     "url": {
+      "type": "string",
+      "title": "Url"
+     }
+    },
+    "type": "object",
+    "required": [
+     "text",
+     "url"
+    ],
+    "title": "UtilityTemplateButton"
+   },
+   "UtilityTemplateCreate": {
+    "properties": {
+     "name": {
+      "type": "string",
+      "title": "Name"
+     },
+     "language": {
+      "type": "string",
+      "title": "Language",
+      "default": "en"
+     },
+     "body_text": {
+      "type": "string",
+      "title": "Body Text"
+     },
+     "header_text": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Header Text"
+     },
+     "buttons": {
+      "anyOf": [
+       {
+        "items": {
+         "$ref": "#/components/schemas/UtilityTemplateButton"
+        },
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Buttons"
+     },
+     "example_values": {
+      "anyOf": [
+       {
+        "items": {
+         "type": "string"
+        },
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Example Values"
+     }
+    },
+    "type": "object",
+    "required": [
+     "name",
+     "body_text"
+    ],
+    "title": "UtilityTemplateCreate"
+   },
+   "UtilityTemplateSend": {
+    "properties": {
+     "template_name": {
+      "type": "string",
+      "title": "Template Name"
+     },
+     "language": {
+      "type": "string",
+      "title": "Language",
+      "default": "en"
+     },
+     "recipient_psid": {
+      "type": "string",
+      "title": "Recipient Psid"
+     },
+     "parameters": {
+      "anyOf": [
+       {
+        "items": {
+         "type": "string"
+        },
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Parameters"
+     }
+    },
+    "type": "object",
+    "required": [
+     "template_name",
+     "recipient_psid"
+    ],
+    "title": "UtilityTemplateSend"
    },
    "ValidateSheetsRequest": {
     "properties": {
@@ -44206,6 +51723,76 @@
      "display_label"
     ],
     "title": "WabaOption"
+   },
+   "WebWidgetAIBody": {
+    "properties": {
+     "system_prompt": {
+      "type": "string",
+      "maxLength": 4000,
+      "minLength": 1,
+      "title": "System Prompt"
+     },
+     "tone": {
+      "type": "string",
+      "title": "Tone",
+      "default": "friendly"
+     }
+    },
+    "type": "object",
+    "required": [
+     "system_prompt"
+    ],
+    "title": "WebWidgetAIBody",
+    "description": "Light per-widget AI override — persona prompt + tone only.\n\nEverything else (mode='manual', enabled, KB-by-user) is fixed; the heavy\nper-instance AI fields (business hours, admin phones, Shopify) are not\nexposed for a website chat widget."
+   },
+   "WidgetAIPreviewBody": {
+    "properties": {
+     "message": {
+      "type": "string",
+      "maxLength": 2000,
+      "minLength": 1,
+      "title": "Message"
+     },
+     "system_prompt": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 4000
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "System Prompt"
+     },
+     "tone": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Tone"
+     },
+     "history": {
+      "items": {
+       "additionalProperties": {
+        "type": "string"
+       },
+       "type": "object"
+      },
+      "type": "array",
+      "title": "History"
+     }
+    },
+    "type": "object",
+    "required": [
+     "message"
+    ],
+    "title": "WidgetAIPreviewBody",
+    "description": "Owner-only \"test your AI\" — runs the SAME web prompt + KB + model the\nlive widget uses, but with NO conversation/metering side-effects. Lets the\nmerchant try their persona (saved OR the unsaved draft they're editing)\nright in the dashboard preview before going live."
    },
    "app__routes__otp_router__SendOTPRequest": {
     "properties": {

@@ -150,11 +150,16 @@
               "instances/manage",
               "instances/conversational-automation",
               "instances/qr-codes",
+              "instances/instagram",
+              "instances/messenger",
+              "instances/telegram",
+              "instances/line",
+              "instances/web-widget",
+              "instances/email",
               "instances/twilio",
               "instances/telnyx",
               "instances/sms-019",
-              "instances/sms-inforu",
-              "instances/line"
+              "instances/sms-inforu"
             ]
           },
           {

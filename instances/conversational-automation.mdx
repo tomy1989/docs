@@ -6,21 +6,9 @@ icon: 'wand-magic-sparkles'
 
 Conversational automation is what WhatsApp shows a customer who has opened a chat with your business but has not written yet: a welcome message, up to four tappable prompts, and a list of slash commands. The settings live on Meta's side, attached to the phone number, and these endpoints read and write them for you.
 
-```
-┌──────────────────────────────┐
-│  Your Business               │
-│                              │
-│  ┌────────────────────────┐  │
-│  │ Welcome message        │  │  enable_welcome_message
-│  └────────────────────────┘  │
-│                              │
-│   [ Track my order      ]    │  prompts[0]
-│   [ Opening hours       ]    │  prompts[1]
-│   [ Talk to a person    ]    │  prompts[2]
-│                              │
-│  /help  /status  /agent      │  commands[]
-└──────────────────────────────┘
-```
+<Frame caption="Ice breakers and slash commands, as WhatsApp shows them">
+  <img src="/images/automation.webp" alt="Two WhatsApp chats: tappable ice breaker prompts above the input bar, and the slash command list a customer sees after typing a slash" />
+</Frame>
 
 <Info>
 These are Meta features, not MegaSend automations. Ice breakers and commands appear on the customer's phone; what happens when someone taps one is up to you. Wire the reply with an [Automation Flow](/flows/manage) or by handling the inbound message from a [webhook](/webhooks/setup).
