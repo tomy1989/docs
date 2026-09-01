@@ -4,3 +4,9 @@ plans/custom-plan-detection-architecture.md
 plans/instance-slot-upgrade-plan.md
 plans/instance-slot-upgrade-plan-v2.md
 plans/subscription-lifecycle-audit.md
+
+# Engineering plans, specs and SDD reports. This repo is PUBLIC and Mintlify
+# serves unlisted pages, so anything committed here is reachable on the live
+# site whether or not it is in docs.json. Internal material belongs in the
+# private MegaSend-CloudApi repo under docs/.
+superpowers/
