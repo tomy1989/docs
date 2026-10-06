@@ -1,0 +1,186 @@
+---
+title: 'WhatsApp Groups'
+description: 'Create WhatsApp groups on your business number, invite people, and message one group or many at once'
+icon: 'users'
+---
+
+The WhatsApp Groups API lets your business number own small WhatsApp groups:
+create a group, share its invite link, talk in it, and send one message to many
+groups in a single broadcast. Every endpoint lives under
+`https://api.megasend.co.il/whatsapp-groups/{instance_id}` and uses the same
+`X-MEGASEND-AUTH` access token as the rest of the API.
+
+## Before you start
+
+Meta only opens the Groups API to some numbers, so check what yours can do first.
+Every list and detail response carries an `eligibility` object:
+
+| `eligibility.code` | What it means |
+| --- | --- |
+| `GROUPS_OK` | Real groups. Messages reach WhatsApp. |
+| `GROUPS_PREVIEW` (`dry_run: true`) | Preview mode. Everything works end to end, but nothing is sent to WhatsApp and nothing is billed. Numbers that are not yet a verified Official Business Account (green tick) run in preview, and switch to real traffic on their own once Meta confirms eligibility. |
+| `GROUPS_COEXISTENCE_EXCLUDED` | The number is connected in coexistence with the WhatsApp Business app. Meta does not allow groups on these numbers. |
+
+Limits set by Meta: a group holds the business plus up to 7 members, and one
+business number can own up to 10,000 groups. People join only through the invite
+link; you cannot add them directly.
+
+## Create a group
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST "https://api.megasend.co.il/whatsapp-groups/YOUR_INSTANCE_ID" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "subject": "Order 1042 support",
+    "description": "Questions about your delivery"
+  }'
+```
+
+```python Python
+import requests
+
+group = requests.post(
+    f"https://api.megasend.co.il/whatsapp-groups/{instance_id}",
+    headers={"X-MEGASEND-AUTH": "YOUR_ACCESS_TOKEN"},
+    json={"subject": "Order 1042 support", "description": "Questions about your delivery"},
+).json()
+print(group["id"], group["invite_link"])
+```
+
+</CodeGroup>
+
+`subject` is required (up to 128 characters); `description` is optional (up to
+2,048). The response is the group, including its `id`, `wa_group_id`, `status`
+and `participant_count`.
+
+List your groups with `GET /whatsapp-groups/{instance_id}` (`limit`, `offset`, and
+an optional `label` filter), and read one group with its participants with
+`GET /whatsapp-groups/{instance_id}/{group_id}`.
+
+## Invite people
+
+Fetch the group's invite link and send it to people however you like:
+
+```bash
+curl "https://api.megasend.co.il/whatsapp-groups/YOUR_INSTANCE_ID/GROUP_ID/invite-link" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
+```
+
+To send it over WhatsApp, use an approved template with the link in its single
+body variable (`link_target: "body"`) or in a URL button
+(`link_target: "button"`). Up to 50 recipients per call:
+
+```bash
+curl -X POST "https://api.megasend.co.il/whatsapp-groups/YOUR_INSTANCE_ID/GROUP_ID/invite-send" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "recipients": ["+972501234567", "+972521234567"],
+    "template_name": "group_invite",
+    "language": "en",
+    "link_target": "body"
+  }'
+```
+
+`POST .../invite-link/reset` issues a new link (the old one stops working) and
+`POST .../invite-link/revoke` turns invites off. Remove a member with
+`DELETE .../participants/{participant_id}`.
+
+## Send a message to a group
+
+```bash
+curl -X POST "https://api.megasend.co.il/whatsapp-groups/YOUR_INSTANCE_ID/GROUP_ID/messages" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "message_type": "text",
+    "text": "Your order left the warehouse this morning."
+  }'
+```
+
+Groups accept `text`, `image`, `video`, `audio`, `document` and `template`
+(utility or marketing). Media types take `image_url`, `video_url`, `audio_url` or
+`document_url` plus an optional `caption`.
+
+<Warning>
+Groups follow the same [24-hour window](/guides/24-hour-window) as one-to-one
+chats, measured from the last message any member sent to the group. Outside the
+window a free-form message is refused with `GROUPS_WINDOW_CLOSED`; send a template
+to re-open the conversation.
+</Warning>
+
+A group message is billed once per member it reaches. The response reports this
+as `recipient_count`.
+
+Group conversations show up in the inbox. To read them through the API, use
+`GET /chats/groups` and `GET /chats/groups/{group_id}/messages`.
+
+## Labels
+
+Labels let you target a broadcast at a subset of groups. Set a group's labels
+with `PUT /whatsapp-groups/{instance_id}/{group_id}/labels` and
+`{"labels": ["vip", "tel-aviv"]}`. `GET /whatsapp-groups/{instance_id}/labels`
+lists every label with its group count.
+
+## Broadcast to many groups
+
+A broadcast sends one message to every group you select: all groups, the groups
+with given labels, or a list of group ids. Preview it first, then create it.
+
+<Steps>
+  <Step title="Preview">
+    ```bash
+    curl -X POST "https://api.megasend.co.il/whatsapp-groups/YOUR_INSTANCE_ID/broadcasts/preview" \
+      -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN" \
+      -H "Content-Type: application/json" \
+      -d '{
+        "selection": {"mode": "labels", "label_names": ["vip"]},
+        "message": {"message_type": "text", "text": "Doors open at 18:00 tonight."}
+      }'
+    ```
+
+    The preview tells you how many groups will receive it (`sendable_groups`),
+    which are skipped and why (`skipped`, for example `window_closed` or `no_members`),
+    how many billable recipients that is, and whether your plan has enough
+    messages left (`quota.sufficient`).
+  </Step>
+  <Step title="Send">
+    Post the same body to `/broadcasts` with an `idempotency_key` (8 to 64
+    characters). Retrying with the same key never sends twice.
+
+    ```bash
+    curl -X POST "https://api.megasend.co.il/whatsapp-groups/YOUR_INSTANCE_ID/broadcasts" \
+      -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN" \
+      -H "Content-Type: application/json" \
+      -d '{
+        "selection": {"mode": "labels", "label_names": ["vip"]},
+        "message": {"message_type": "text", "text": "Doors open at 18:00 tonight."},
+        "idempotency_key": "vip-doors-2026-10-07"
+      }'
+    ```
+  </Step>
+  <Step title="Track">
+    `GET /whatsapp-groups/{instance_id}/broadcasts/{broadcast_id}` returns the
+    per-group results and delivered/read totals. You can cancel a broadcast
+    that is still running (`POST .../cancel`) or retry the groups that failed
+    (`POST .../retry-failed`).
+  </Step>
+</Steps>
+
+Creating, cancelling and retrying a broadcast needs the **Manage campaigns**
+permission when you use an agent's token. Owners always have it.
+
+## Create groups in bulk
+
+To set up many groups at once, each with its own members, use the onboarding
+job: `POST /whatsapp-groups/{instance_id}/onboarding/preview` checks your list
+(subjects, member phone numbers, an optional invite template), then
+`POST /whatsapp-groups/{instance_id}/onboarding` with an `idempotency_key`
+creates the groups and sends the invites in the background. Follow progress with
+`GET /whatsapp-groups/{instance_id}/onboarding/{job_id}`.
+
+The full request and response shapes for every endpoint are in the
+[API reference](/api-reference/introduction).

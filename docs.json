@@ -86,7 +86,8 @@
               "messages/incoming",
               "messages/responses",
               "messages/retries",
-              "chats/conversations"
+              "chats/conversations",
+              "groups/manage"
             ]
           },
           {
