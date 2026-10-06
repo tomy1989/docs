@@ -6,7 +6,7 @@
   "logo": {
     "light": "/logo/light.svg",
     "dark": "/logo/dark.svg",
-    "href": "https://app.megasend.co.il"
+    "href": "https://app.megasend.io"
   },
   "favicon": "/favicon.svg",
   "colors": {
@@ -31,7 +31,7 @@
     "primary": {
       "type": "button",
       "label": "Dashboard",
-      "href": "https://app.megasend.co.il"
+      "href": "https://app.megasend.io"
     }
   },
   "footer": {

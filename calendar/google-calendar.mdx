@@ -9,7 +9,7 @@ Connect a Google account to MegaSend and your calendar becomes part of your mess
 Google Calendar connections are **account-level**, not per-instance. A connection belongs to your MegaSend account and is shared across all of your instances. Team members with integration management permission can each connect their own Google account, so an account can hold multiple connections at once.
 
 <Note>
-Most users connect Google Calendar from the dashboard at [app.megasend.co.il](https://app.megasend.co.il), which handles the whole OAuth flow with a single click. The API endpoints below are for programmatic control: building your own connection UI, monitoring connection health, or querying availability from your own systems.
+Most users connect Google Calendar from the dashboard at [app.megasend.io](https://app.megasend.io), which handles the whole OAuth flow with a single click. The API endpoints below are for programmatic control: building your own connection UI, monitoring connection health, or querying availability from your own systems.
 </Note>
 
 ## Connecting a Google Account
@@ -496,7 +496,7 @@ Removing a connection cannot be undone. All MegaSend booking records attached to
 
 ## Best Practices
 
-1. **Prefer the dashboard for one-off connections.** The [dashboard](https://app.megasend.co.il) runs the full OAuth flow for you; use the API when you need automation or your own UI.
+1. **Prefer the dashboard for one-off connections.** The [dashboard](https://app.megasend.io) runs the full OAuth flow for you; use the API when you need automation or your own UI.
 2. **Set a default calendar early.** Until you set `default_calendar_id`, availability checks and AI bookings fall back to the account's primary calendar, which may include personal events.
 3. **Watch for `409` responses.** They mean the Google grant was revoked or expired. Send the user through `/auth/start` again; the existing connection is rebound on reconnect.
 4. **Use `/status` for health checks.** One call returns every connection's `status`, `last_error`, and booking count.
