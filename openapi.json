@@ -24960,6 +24960,1734 @@
      }
     }
    }
+  },
+  "/whatsapp-groups/{instance_id}": {
+   "get": {
+    "tags": [
+     "WhatsApp Groups"
+    ],
+    "summary": "List Groups",
+    "operationId": "list_groups_whatsapp_groups__instance_id__get",
+    "parameters": [
+     {
+      "name": "instance_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "description": "Instance ID",
+       "title": "Instance Id"
+      },
+      "description": "Instance ID"
+     },
+     {
+      "name": "limit",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "maximum": 200,
+       "minimum": 1,
+       "default": 50,
+       "title": "Limit"
+      }
+     },
+     {
+      "name": "offset",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "minimum": 0,
+       "default": 0,
+       "title": "Offset"
+      }
+     },
+     {
+      "name": "label",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string",
+         "maxLength": 50
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "description": "Only groups with this label (case-insensitive)",
+       "title": "Label"
+      },
+      "description": "Only groups with this label (case-insensitive)"
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/GroupListResponse"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   },
+   "post": {
+    "tags": [
+     "WhatsApp Groups"
+    ],
+    "summary": "Create Group",
+    "operationId": "create_group_whatsapp_groups__instance_id__post",
+    "parameters": [
+     {
+      "name": "instance_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "description": "Instance ID",
+       "title": "Instance Id"
+      },
+      "description": "Instance ID"
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/GroupCreateRequest"
+       }
+      }
+     }
+    },
+    "responses": {
+     "201": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/GroupResponse"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/whatsapp-groups/{instance_id}/labels": {
+   "get": {
+    "tags": [
+     "WhatsApp Groups"
+    ],
+    "summary": "List Group Labels",
+    "operationId": "list_group_labels_whatsapp_groups__instance_id__labels_get",
+    "parameters": [
+     {
+      "name": "instance_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "description": "Instance ID",
+       "title": "Instance Id"
+      },
+      "description": "Instance ID"
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "array",
+         "items": {
+          "$ref": "#/components/schemas/GroupLabelSummary"
+         },
+         "title": "Response List Group Labels Whatsapp Groups  Instance Id  Labels Get"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/whatsapp-groups/{instance_id}/broadcasts/preview": {
+   "post": {
+    "tags": [
+     "WhatsApp Groups"
+    ],
+    "summary": "Preview Group Broadcast",
+    "operationId": "preview_group_broadcast_whatsapp_groups__instance_id__broadcasts_preview_post",
+    "parameters": [
+     {
+      "name": "instance_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "description": "Instance ID",
+       "title": "Instance Id"
+      },
+      "description": "Instance ID"
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/BroadcastPreviewRequest"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/BroadcastPreviewResponse"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/whatsapp-groups/{instance_id}/broadcasts": {
+   "post": {
+    "tags": [
+     "WhatsApp Groups"
+    ],
+    "summary": "Create Group Broadcast",
+    "operationId": "create_group_broadcast_whatsapp_groups__instance_id__broadcasts_post",
+    "parameters": [
+     {
+      "name": "instance_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "description": "Instance ID",
+       "title": "Instance Id"
+      },
+      "description": "Instance ID"
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/BroadcastCreateRequest"
+       }
+      }
+     }
+    },
+    "responses": {
+     "201": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/BroadcastResponse"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   },
+   "get": {
+    "tags": [
+     "WhatsApp Groups"
+    ],
+    "summary": "List Group Broadcasts",
+    "operationId": "list_group_broadcasts_whatsapp_groups__instance_id__broadcasts_get",
+    "parameters": [
+     {
+      "name": "instance_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "description": "Instance ID",
+       "title": "Instance Id"
+      },
+      "description": "Instance ID"
+     },
+     {
+      "name": "limit",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "maximum": 100,
+       "minimum": 1,
+       "default": 20,
+       "title": "Limit"
+      }
+     },
+     {
+      "name": "offset",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "minimum": 0,
+       "default": 0,
+       "title": "Offset"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/BroadcastListResponse"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/whatsapp-groups/{instance_id}/broadcasts/{broadcast_id}": {
+   "get": {
+    "tags": [
+     "WhatsApp Groups"
+    ],
+    "summary": "Get Group Broadcast",
+    "operationId": "get_group_broadcast_whatsapp_groups__instance_id__broadcasts__broadcast_id__get",
+    "parameters": [
+     {
+      "name": "instance_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "description": "Instance ID",
+       "title": "Instance Id"
+      },
+      "description": "Instance ID"
+     },
+     {
+      "name": "broadcast_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Broadcast Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/BroadcastDetailResponse"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/whatsapp-groups/{instance_id}/broadcasts/{broadcast_id}/cancel": {
+   "post": {
+    "tags": [
+     "WhatsApp Groups"
+    ],
+    "summary": "Cancel Group Broadcast",
+    "operationId": "cancel_group_broadcast_whatsapp_groups__instance_id__broadcasts__broadcast_id__cancel_post",
+    "parameters": [
+     {
+      "name": "instance_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "description": "Instance ID",
+       "title": "Instance Id"
+      },
+      "description": "Instance ID"
+     },
+     {
+      "name": "broadcast_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Broadcast Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/BroadcastResponse"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/whatsapp-groups/{instance_id}/broadcasts/{broadcast_id}/retry-failed": {
+   "post": {
+    "tags": [
+     "WhatsApp Groups"
+    ],
+    "summary": "Retry Failed Group Broadcast",
+    "operationId": "retry_failed_group_broadcast_whatsapp_groups__instance_id__broadcasts__broadcast_id__retry_failed_post",
+    "parameters": [
+     {
+      "name": "instance_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "description": "Instance ID",
+       "title": "Instance Id"
+      },
+      "description": "Instance ID"
+     },
+     {
+      "name": "broadcast_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Broadcast Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/BroadcastResponse"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/whatsapp-groups/{instance_id}/onboarding/preview": {
+   "post": {
+    "tags": [
+     "WhatsApp Groups"
+    ],
+    "summary": "Preview Group Onboarding",
+    "operationId": "preview_group_onboarding_whatsapp_groups__instance_id__onboarding_preview_post",
+    "parameters": [
+     {
+      "name": "instance_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "description": "Instance ID",
+       "title": "Instance Id"
+      },
+      "description": "Instance ID"
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/OnboardingPreviewRequest"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/OnboardingPreviewResponse"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/whatsapp-groups/{instance_id}/onboarding": {
+   "post": {
+    "tags": [
+     "WhatsApp Groups"
+    ],
+    "summary": "Create Group Onboarding",
+    "operationId": "create_group_onboarding_whatsapp_groups__instance_id__onboarding_post",
+    "parameters": [
+     {
+      "name": "instance_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "description": "Instance ID",
+       "title": "Instance Id"
+      },
+      "description": "Instance ID"
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/OnboardingCreateRequest"
+       }
+      }
+     }
+    },
+    "responses": {
+     "201": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/OnboardingJobResponse"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   },
+   "get": {
+    "tags": [
+     "WhatsApp Groups"
+    ],
+    "summary": "List Group Onboarding",
+    "operationId": "list_group_onboarding_whatsapp_groups__instance_id__onboarding_get",
+    "parameters": [
+     {
+      "name": "instance_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "description": "Instance ID",
+       "title": "Instance Id"
+      },
+      "description": "Instance ID"
+     },
+     {
+      "name": "limit",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "maximum": 100,
+       "minimum": 1,
+       "default": 20,
+       "title": "Limit"
+      }
+     },
+     {
+      "name": "offset",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "minimum": 0,
+       "default": 0,
+       "title": "Offset"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/OnboardingJobListResponse"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/whatsapp-groups/{instance_id}/onboarding/{job_id}": {
+   "get": {
+    "tags": [
+     "WhatsApp Groups"
+    ],
+    "summary": "Get Group Onboarding",
+    "operationId": "get_group_onboarding_whatsapp_groups__instance_id__onboarding__job_id__get",
+    "parameters": [
+     {
+      "name": "instance_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "description": "Instance ID",
+       "title": "Instance Id"
+      },
+      "description": "Instance ID"
+     },
+     {
+      "name": "job_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Job Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/OnboardingJobDetailResponse"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/whatsapp-groups/{instance_id}/onboarding/{job_id}/cancel": {
+   "post": {
+    "tags": [
+     "WhatsApp Groups"
+    ],
+    "summary": "Cancel Group Onboarding",
+    "operationId": "cancel_group_onboarding_whatsapp_groups__instance_id__onboarding__job_id__cancel_post",
+    "parameters": [
+     {
+      "name": "instance_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "description": "Instance ID",
+       "title": "Instance Id"
+      },
+      "description": "Instance ID"
+     },
+     {
+      "name": "job_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Job Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/OnboardingJobResponse"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/whatsapp-groups/{instance_id}/onboarding/{job_id}/retry-failed": {
+   "post": {
+    "tags": [
+     "WhatsApp Groups"
+    ],
+    "summary": "Retry Failed Group Onboarding",
+    "operationId": "retry_failed_group_onboarding_whatsapp_groups__instance_id__onboarding__job_id__retry_failed_post",
+    "parameters": [
+     {
+      "name": "instance_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "description": "Instance ID",
+       "title": "Instance Id"
+      },
+      "description": "Instance ID"
+     },
+     {
+      "name": "job_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Job Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/OnboardingJobResponse"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/whatsapp-groups/{instance_id}/onboarding/{job_id}/items/{item_id}/resend-invites": {
+   "post": {
+    "tags": [
+     "WhatsApp Groups"
+    ],
+    "summary": "Resend Group Onboarding Invites",
+    "operationId": "resend_group_onboarding_invites_whatsapp_groups__instance_id__onboarding__job_id__items__item_id__resend_invites_post",
+    "parameters": [
+     {
+      "name": "instance_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "description": "Instance ID",
+       "title": "Instance Id"
+      },
+      "description": "Instance ID"
+     },
+     {
+      "name": "job_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Job Id"
+      }
+     },
+     {
+      "name": "item_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Item Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/OnboardingItemResponse"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/whatsapp-groups/{instance_id}/onboarding/{job_id}/items/{item_id}/create-anyway": {
+   "post": {
+    "tags": [
+     "WhatsApp Groups"
+    ],
+    "summary": "Create Group Onboarding Item Anyway",
+    "description": "A row whose create was interrupted (the group may exist on WhatsApp):\nadopt the group if it can be identified, else create it again.",
+    "operationId": "create_group_onboarding_item_anyway_whatsapp_groups__instance_id__onboarding__job_id__items__item_id__create_anyway_post",
+    "parameters": [
+     {
+      "name": "instance_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "description": "Instance ID",
+       "title": "Instance Id"
+      },
+      "description": "Instance ID"
+     },
+     {
+      "name": "job_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Job Id"
+      }
+     },
+     {
+      "name": "item_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Item Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/OnboardingItemResponse"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/whatsapp-groups/{instance_id}/{group_id}/labels": {
+   "put": {
+    "tags": [
+     "WhatsApp Groups"
+    ],
+    "summary": "Set Group Labels",
+    "operationId": "set_group_labels_whatsapp_groups__instance_id___group_id__labels_put",
+    "parameters": [
+     {
+      "name": "instance_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "description": "Instance ID",
+       "title": "Instance Id"
+      },
+      "description": "Instance ID"
+     },
+     {
+      "name": "group_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Group Id"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/GroupLabelsUpdateRequest"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/GroupLabelsResponse"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/whatsapp-groups/{instance_id}/{group_id}": {
+   "get": {
+    "tags": [
+     "WhatsApp Groups"
+    ],
+    "summary": "Get Group",
+    "operationId": "get_group_whatsapp_groups__instance_id___group_id__get",
+    "parameters": [
+     {
+      "name": "instance_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "description": "Instance ID",
+       "title": "Instance Id"
+      },
+      "description": "Instance ID"
+     },
+     {
+      "name": "group_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Group Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/GroupDetailResponse"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   },
+   "put": {
+    "tags": [
+     "WhatsApp Groups"
+    ],
+    "summary": "Update Group",
+    "operationId": "update_group_whatsapp_groups__instance_id___group_id__put",
+    "parameters": [
+     {
+      "name": "instance_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "description": "Instance ID",
+       "title": "Instance Id"
+      },
+      "description": "Instance ID"
+     },
+     {
+      "name": "group_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Group Id"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/GroupUpdateRequest"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/GroupResponse"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   },
+   "delete": {
+    "tags": [
+     "WhatsApp Groups"
+    ],
+    "summary": "Delete Group",
+    "operationId": "delete_group_whatsapp_groups__instance_id___group_id__delete",
+    "parameters": [
+     {
+      "name": "instance_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "description": "Instance ID",
+       "title": "Instance Id"
+      },
+      "description": "Instance ID"
+     },
+     {
+      "name": "group_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Group Id"
+      }
+     }
+    ],
+    "responses": {
+     "204": {
+      "description": "Successful Response"
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/whatsapp-groups/{instance_id}/{group_id}/archive": {
+   "post": {
+    "tags": [
+     "WhatsApp Groups"
+    ],
+    "summary": "Archive Group",
+    "operationId": "archive_group_whatsapp_groups__instance_id___group_id__archive_post",
+    "parameters": [
+     {
+      "name": "instance_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "description": "Instance ID",
+       "title": "Instance Id"
+      },
+      "description": "Instance ID"
+     },
+     {
+      "name": "group_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Group Id"
+      }
+     },
+     {
+      "name": "archived",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "boolean",
+       "description": "true = archive, false = unarchive",
+       "default": true,
+       "title": "Archived"
+      },
+      "description": "true = archive, false = unarchive"
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/GroupResponse"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/whatsapp-groups/{instance_id}/{group_id}/participants": {
+   "get": {
+    "tags": [
+     "WhatsApp Groups"
+    ],
+    "summary": "List Participants",
+    "operationId": "list_participants_whatsapp_groups__instance_id___group_id__participants_get",
+    "parameters": [
+     {
+      "name": "instance_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "description": "Instance ID",
+       "title": "Instance Id"
+      },
+      "description": "Instance ID"
+     },
+     {
+      "name": "group_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Group Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "array",
+         "items": {
+          "$ref": "#/components/schemas/GroupParticipantResponse"
+         },
+         "title": "Response List Participants Whatsapp Groups  Instance Id   Group Id  Participants Get"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/whatsapp-groups/{instance_id}/{group_id}/participants/{participant_id}": {
+   "delete": {
+    "tags": [
+     "WhatsApp Groups"
+    ],
+    "summary": "Remove Participant",
+    "operationId": "remove_participant_whatsapp_groups__instance_id___group_id__participants__participant_id__delete",
+    "parameters": [
+     {
+      "name": "instance_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "description": "Instance ID",
+       "title": "Instance Id"
+      },
+      "description": "Instance ID"
+     },
+     {
+      "name": "group_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Group Id"
+      }
+     },
+     {
+      "name": "participant_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Participant Id"
+      }
+     }
+    ],
+    "responses": {
+     "204": {
+      "description": "Successful Response"
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/whatsapp-groups/{instance_id}/{group_id}/invite-link": {
+   "get": {
+    "tags": [
+     "WhatsApp Groups"
+    ],
+    "summary": "Get Invite Link",
+    "operationId": "get_invite_link_whatsapp_groups__instance_id___group_id__invite_link_get",
+    "parameters": [
+     {
+      "name": "instance_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "description": "Instance ID",
+       "title": "Instance Id"
+      },
+      "description": "Instance ID"
+     },
+     {
+      "name": "group_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Group Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/InviteLinkResponse"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/whatsapp-groups/{instance_id}/{group_id}/invite-link/reset": {
+   "post": {
+    "tags": [
+     "WhatsApp Groups"
+    ],
+    "summary": "Reset Invite Link",
+    "operationId": "reset_invite_link_whatsapp_groups__instance_id___group_id__invite_link_reset_post",
+    "parameters": [
+     {
+      "name": "instance_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "description": "Instance ID",
+       "title": "Instance Id"
+      },
+      "description": "Instance ID"
+     },
+     {
+      "name": "group_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Group Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/InviteLinkResponse"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/whatsapp-groups/{instance_id}/{group_id}/invite-link/revoke": {
+   "post": {
+    "tags": [
+     "WhatsApp Groups"
+    ],
+    "summary": "Revoke Invite Link",
+    "operationId": "revoke_invite_link_whatsapp_groups__instance_id___group_id__invite_link_revoke_post",
+    "parameters": [
+     {
+      "name": "instance_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "description": "Instance ID",
+       "title": "Instance Id"
+      },
+      "description": "Instance ID"
+     },
+     {
+      "name": "group_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Group Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/InviteLinkResponse"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/whatsapp-groups/{instance_id}/{group_id}/invite-send": {
+   "post": {
+    "tags": [
+     "WhatsApp Groups"
+    ],
+    "summary": "Send Invite Via Template",
+    "operationId": "send_invite_via_template_whatsapp_groups__instance_id___group_id__invite_send_post",
+    "parameters": [
+     {
+      "name": "instance_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "description": "Instance ID",
+       "title": "Instance Id"
+      },
+      "description": "Instance ID"
+     },
+     {
+      "name": "group_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Group Id"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/GroupInviteSendRequest"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/whatsapp-groups/{instance_id}/{group_id}/messages": {
+   "post": {
+    "tags": [
+     "WhatsApp Groups"
+    ],
+    "summary": "Send Group Message",
+    "operationId": "send_group_message_whatsapp_groups__instance_id___group_id__messages_post",
+    "parameters": [
+     {
+      "name": "instance_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "description": "Instance ID",
+       "title": "Instance Id"
+      },
+      "description": "Instance ID"
+     },
+     {
+      "name": "group_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Group Id"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/GroupMessageSendRequest"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/GroupMessageSendResponse"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/whatsapp-groups/{instance_id}/{group_id}/messages/{message_id}/pin": {
+   "post": {
+    "tags": [
+     "WhatsApp Groups"
+    ],
+    "summary": "Pin Group Message",
+    "operationId": "pin_group_message_whatsapp_groups__instance_id___group_id__messages__message_id__pin_post",
+    "parameters": [
+     {
+      "name": "instance_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "description": "Instance ID",
+       "title": "Instance Id"
+      },
+      "description": "Instance ID"
+     },
+     {
+      "name": "group_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Group Id"
+      }
+     },
+     {
+      "name": "message_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Message Id"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/GroupPinRequest"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/GroupResponse"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
   }
  },
  "components": {
@@ -53683,6 +55411,2251 @@
     ],
     "title": "FlowResponse",
     "description": "Response for a single WhatsApp Flow."
+   },
+   "GroupResponse": {
+    "properties": {
+     "id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Id"
+     },
+     "instance_id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Instance Id"
+     },
+     "wa_group_id": {
+      "type": "string",
+      "title": "Wa Group Id"
+     },
+     "subject": {
+      "type": "string",
+      "title": "Subject"
+     },
+     "description": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Description"
+     },
+     "icon_url": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Icon Url"
+     },
+     "status": {
+      "type": "string",
+      "title": "Status"
+     },
+     "invite_link": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Invite Link"
+     },
+     "invite_link_epoch": {
+      "type": "integer",
+      "title": "Invite Link Epoch"
+     },
+     "pinned_wa_message_id": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Pinned Wa Message Id"
+     },
+     "participant_count": {
+      "type": "integer",
+      "title": "Participant Count"
+     },
+     "ai_enabled": {
+      "type": "boolean",
+      "title": "Ai Enabled"
+     },
+     "eligibility_ok": {
+      "type": "boolean",
+      "title": "Eligibility Ok"
+     },
+     "last_inbound_at": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date-time"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Last Inbound At"
+     },
+     "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Created At"
+     },
+     "updated_at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Updated At"
+     },
+     "labels": {
+      "items": {
+       "type": "string"
+      },
+      "type": "array",
+      "title": "Labels",
+      "default": []
+     },
+     "last_message": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/GroupLastMessage"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "last_message_at": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date-time"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Last Message At"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "instance_id",
+     "wa_group_id",
+     "subject",
+     "status",
+     "invite_link_epoch",
+     "participant_count",
+     "ai_enabled",
+     "eligibility_ok",
+     "created_at",
+     "updated_at"
+    ],
+    "title": "GroupResponse"
+   },
+   "GroupLastMessage": {
+    "properties": {
+     "text": {
+      "type": "string",
+      "title": "Text",
+      "default": ""
+     },
+     "type": {
+      "type": "string",
+      "title": "Type",
+      "default": ""
+     },
+     "direction": {
+      "type": "string",
+      "title": "Direction",
+      "default": "outbound"
+     },
+     "sender_name": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Sender Name"
+     },
+     "at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "At"
+     }
+    },
+    "type": "object",
+    "required": [
+     "at"
+    ],
+    "title": "GroupLastMessage"
+   },
+   "GroupPinRequest": {
+    "properties": {
+     "wa_message_id": {
+      "type": "string",
+      "minLength": 1,
+      "title": "Wa Message Id"
+     },
+     "pin": {
+      "type": "boolean",
+      "title": "Pin",
+      "default": true
+     }
+    },
+    "type": "object",
+    "required": [
+     "wa_message_id"
+    ],
+    "title": "GroupPinRequest"
+   },
+   "GroupMessageSendResponse": {
+    "properties": {
+     "message_id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Message Id"
+     },
+     "wa_message_id": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Wa Message Id"
+     },
+     "status": {
+      "type": "string",
+      "title": "Status"
+     },
+     "recipient_count": {
+      "type": "integer",
+      "title": "Recipient Count",
+      "description": "N recipients this send fanned out to (billable)"
+     },
+     "dry_run": {
+      "type": "boolean",
+      "title": "Dry Run",
+      "default": false
+     }
+    },
+    "type": "object",
+    "required": [
+     "message_id",
+     "status",
+     "recipient_count"
+    ],
+    "title": "GroupMessageSendResponse"
+   },
+   "GroupMessageSendRequest": {
+    "properties": {
+     "message_type": {
+      "type": "string",
+      "title": "Message Type",
+      "description": "text | image | video | audio | document | template"
+     },
+     "text": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Text"
+     },
+     "image_url": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Image Url"
+     },
+     "video_url": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Video Url"
+     },
+     "document_url": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Document Url"
+     },
+     "audio_url": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Audio Url"
+     },
+     "caption": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Caption"
+     },
+     "filename": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Filename"
+     },
+     "template_data": {
+      "anyOf": [
+       {
+        "type": "object"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Template Data"
+     },
+     "reply_to_wa_message_id": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Reply To Wa Message Id"
+     }
+    },
+    "additionalProperties": true,
+    "type": "object",
+    "required": [
+     "message_type"
+    ],
+    "title": "GroupMessageSendRequest",
+    "description": "A message to send to a whole group (fans out to N billable recipients)."
+   },
+   "GroupInviteSendRequest": {
+    "properties": {
+     "recipients": {
+      "items": {
+       "type": "string"
+      },
+      "type": "array",
+      "maxItems": 50,
+      "minItems": 1,
+      "title": "Recipients"
+     },
+     "template_name": {
+      "type": "string",
+      "minLength": 1,
+      "title": "Template Name"
+     },
+     "language": {
+      "type": "string",
+      "title": "Language",
+      "default": "he"
+     },
+     "link_target": {
+      "type": "string",
+      "enum": [
+       "body",
+       "button"
+      ],
+      "title": "Link Target",
+      "default": "body"
+     },
+     "button_index": {
+      "type": "integer",
+      "maximum": 9.0,
+      "minimum": 0.0,
+      "title": "Button Index",
+      "default": 0
+     }
+    },
+    "type": "object",
+    "required": [
+     "recipients",
+     "template_name"
+    ],
+    "title": "GroupInviteSendRequest",
+    "description": "Deliver the group invite link to people via an approved template.\n\n``link_target`` says WHERE the link goes (the frontend only offers templates\nwhose slot matches): ``body`` = full link in the single body variable;\n``button`` = the invite code in a dynamic WhatsApp URL button."
+   },
+   "InviteLinkResponse": {
+    "properties": {
+     "invite_link": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Invite Link"
+     },
+     "invite_link_epoch": {
+      "type": "integer",
+      "title": "Invite Link Epoch",
+      "default": 0
+     },
+     "revoked": {
+      "type": "boolean",
+      "title": "Revoked",
+      "default": false
+     }
+    },
+    "type": "object",
+    "title": "InviteLinkResponse"
+   },
+   "GroupParticipantResponse": {
+    "properties": {
+     "id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Id"
+     },
+     "phone_number": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Phone Number"
+     },
+     "bsuid": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Bsuid"
+     },
+     "wa_username": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Wa Username"
+     },
+     "display_name": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Display Name"
+     },
+     "role": {
+      "type": "string",
+      "title": "Role"
+     },
+     "state": {
+      "type": "string",
+      "title": "State"
+     },
+     "is_business_contact": {
+      "type": "boolean",
+      "title": "Is Business Contact"
+     },
+     "joined_at": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date-time"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Joined At"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "role",
+     "state",
+     "is_business_contact"
+    ],
+    "title": "GroupParticipantResponse"
+   },
+   "GroupUpdateRequest": {
+    "properties": {
+     "subject": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 128,
+        "minLength": 1
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Subject"
+     },
+     "description": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 2048
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Description"
+     },
+     "icon": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Icon",
+      "description": "Media handle/URL for the group icon"
+     },
+     "ai_enabled": {
+      "anyOf": [
+       {
+        "type": "boolean"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Ai Enabled"
+     }
+    },
+    "type": "object",
+    "title": "GroupUpdateRequest"
+   },
+   "GroupDetailResponse": {
+    "properties": {
+     "id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Id"
+     },
+     "instance_id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Instance Id"
+     },
+     "wa_group_id": {
+      "type": "string",
+      "title": "Wa Group Id"
+     },
+     "subject": {
+      "type": "string",
+      "title": "Subject"
+     },
+     "description": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Description"
+     },
+     "icon_url": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Icon Url"
+     },
+     "status": {
+      "type": "string",
+      "title": "Status"
+     },
+     "invite_link": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Invite Link"
+     },
+     "invite_link_epoch": {
+      "type": "integer",
+      "title": "Invite Link Epoch"
+     },
+     "pinned_wa_message_id": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Pinned Wa Message Id"
+     },
+     "participant_count": {
+      "type": "integer",
+      "title": "Participant Count"
+     },
+     "ai_enabled": {
+      "type": "boolean",
+      "title": "Ai Enabled"
+     },
+     "eligibility_ok": {
+      "type": "boolean",
+      "title": "Eligibility Ok"
+     },
+     "last_inbound_at": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date-time"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Last Inbound At"
+     },
+     "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Created At"
+     },
+     "updated_at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Updated At"
+     },
+     "labels": {
+      "items": {
+       "type": "string"
+      },
+      "type": "array",
+      "title": "Labels",
+      "default": []
+     },
+     "last_message": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/GroupLastMessage"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "last_message_at": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date-time"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Last Message At"
+     },
+     "participants": {
+      "items": {
+       "$ref": "#/components/schemas/GroupParticipantResponse"
+      },
+      "type": "array",
+      "title": "Participants",
+      "default": []
+     },
+     "eligibility": {
+      "anyOf": [
+       {
+        "type": "object"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Eligibility"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "instance_id",
+     "wa_group_id",
+     "subject",
+     "status",
+     "invite_link_epoch",
+     "participant_count",
+     "ai_enabled",
+     "eligibility_ok",
+     "created_at",
+     "updated_at"
+    ],
+    "title": "GroupDetailResponse"
+   },
+   "GroupLabelsResponse": {
+    "properties": {
+     "labels": {
+      "items": {
+       "type": "string"
+      },
+      "type": "array",
+      "title": "Labels"
+     }
+    },
+    "type": "object",
+    "required": [
+     "labels"
+    ],
+    "title": "GroupLabelsResponse"
+   },
+   "GroupLabelsUpdateRequest": {
+    "properties": {
+     "labels": {
+      "items": {
+       "type": "string"
+      },
+      "type": "array",
+      "title": "Labels"
+     }
+    },
+    "type": "object",
+    "title": "GroupLabelsUpdateRequest"
+   },
+   "OnboardingItemResponse": {
+    "properties": {
+     "id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Id"
+     },
+     "position": {
+      "type": "integer",
+      "title": "Position"
+     },
+     "subject": {
+      "type": "string",
+      "title": "Subject"
+     },
+     "status": {
+      "type": "string",
+      "title": "Status"
+     },
+     "reason": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Reason"
+     },
+     "error_message": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Error Message"
+     },
+     "member_count": {
+      "type": "integer",
+      "title": "Member Count"
+     },
+     "group_id": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "uuid"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Group Id"
+     },
+     "invite_results": {
+      "anyOf": [
+       {
+        "items": {
+         "$ref": "#/components/schemas/OnboardingInviteResult"
+        },
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Invite Results"
+     },
+     "joined_count": {
+      "type": "integer",
+      "title": "Joined Count",
+      "default": 0
+     },
+     "members": {
+      "items": {
+       "$ref": "#/components/schemas/OnboardingItemMember"
+      },
+      "type": "array",
+      "title": "Members"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "position",
+     "subject",
+     "status",
+     "member_count"
+    ],
+    "title": "OnboardingItemResponse"
+   },
+   "OnboardingItemMember": {
+    "properties": {
+     "phone": {
+      "type": "string",
+      "title": "Phone"
+     },
+     "name": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Name"
+     },
+     "invite_status": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Invite Status"
+     },
+     "joined": {
+      "type": "boolean",
+      "title": "Joined",
+      "default": false
+     }
+    },
+    "type": "object",
+    "required": [
+     "phone"
+    ],
+    "title": "OnboardingItemMember"
+   },
+   "OnboardingInviteResult": {
+    "properties": {
+     "phone": {
+      "type": "string",
+      "title": "Phone"
+     },
+     "status": {
+      "type": "string",
+      "title": "Status"
+     }
+    },
+    "type": "object",
+    "required": [
+     "phone",
+     "status"
+    ],
+    "title": "OnboardingInviteResult"
+   },
+   "OnboardingJobResponse": {
+    "properties": {
+     "id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Id"
+     },
+     "instance_id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Instance Id"
+     },
+     "status": {
+      "type": "string",
+      "title": "Status"
+     },
+     "total_items": {
+      "type": "integer",
+      "title": "Total Items"
+     },
+     "done_count": {
+      "type": "integer",
+      "title": "Done Count"
+     },
+     "failed_count": {
+      "type": "integer",
+      "title": "Failed Count"
+     },
+     "skipped_count": {
+      "type": "integer",
+      "title": "Skipped Count"
+     },
+     "pending_count": {
+      "type": "integer",
+      "title": "Pending Count"
+     },
+     "invites_sent": {
+      "type": "integer",
+      "title": "Invites Sent"
+     },
+     "invites_failed": {
+      "type": "integer",
+      "title": "Invites Failed"
+     },
+     "has_invite": {
+      "type": "boolean",
+      "title": "Has Invite"
+     },
+     "dry_run": {
+      "type": "boolean",
+      "title": "Dry Run"
+     },
+     "waiting_reason": {
+      "anyOf": [
+       {
+        "type": "string",
+        "enum": [
+         "daily_cap",
+         "awaiting_group",
+         "cap_unavailable"
+        ]
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Waiting Reason"
+     },
+     "next_run_at": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date-time"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Next Run At"
+     },
+     "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Created At"
+     },
+     "started_at": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date-time"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Started At"
+     },
+     "completed_at": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date-time"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Completed At"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "instance_id",
+     "status",
+     "total_items",
+     "done_count",
+     "failed_count",
+     "skipped_count",
+     "pending_count",
+     "invites_sent",
+     "invites_failed",
+     "has_invite",
+     "dry_run",
+     "created_at"
+    ],
+    "title": "OnboardingJobResponse"
+   },
+   "OnboardingJobDetailResponse": {
+    "properties": {
+     "id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Id"
+     },
+     "instance_id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Instance Id"
+     },
+     "status": {
+      "type": "string",
+      "title": "Status"
+     },
+     "total_items": {
+      "type": "integer",
+      "title": "Total Items"
+     },
+     "done_count": {
+      "type": "integer",
+      "title": "Done Count"
+     },
+     "failed_count": {
+      "type": "integer",
+      "title": "Failed Count"
+     },
+     "skipped_count": {
+      "type": "integer",
+      "title": "Skipped Count"
+     },
+     "pending_count": {
+      "type": "integer",
+      "title": "Pending Count"
+     },
+     "invites_sent": {
+      "type": "integer",
+      "title": "Invites Sent"
+     },
+     "invites_failed": {
+      "type": "integer",
+      "title": "Invites Failed"
+     },
+     "has_invite": {
+      "type": "boolean",
+      "title": "Has Invite"
+     },
+     "dry_run": {
+      "type": "boolean",
+      "title": "Dry Run"
+     },
+     "waiting_reason": {
+      "anyOf": [
+       {
+        "type": "string",
+        "enum": [
+         "daily_cap",
+         "awaiting_group",
+         "cap_unavailable"
+        ]
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Waiting Reason"
+     },
+     "next_run_at": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date-time"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Next Run At"
+     },
+     "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Created At"
+     },
+     "started_at": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date-time"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Started At"
+     },
+     "completed_at": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date-time"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Completed At"
+     },
+     "items": {
+      "items": {
+       "$ref": "#/components/schemas/OnboardingItemResponse"
+      },
+      "type": "array",
+      "title": "Items"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "instance_id",
+     "status",
+     "total_items",
+     "done_count",
+     "failed_count",
+     "skipped_count",
+     "pending_count",
+     "invites_sent",
+     "invites_failed",
+     "has_invite",
+     "dry_run",
+     "created_at",
+     "items"
+    ],
+    "title": "OnboardingJobDetailResponse"
+   },
+   "OnboardingJobListResponse": {
+    "properties": {
+     "items": {
+      "items": {
+       "$ref": "#/components/schemas/OnboardingJobResponse"
+      },
+      "type": "array",
+      "title": "Items"
+     },
+     "total": {
+      "type": "integer",
+      "title": "Total"
+     }
+    },
+    "type": "object",
+    "required": [
+     "items",
+     "total"
+    ],
+    "title": "OnboardingJobListResponse"
+   },
+   "OnboardingCreateRequest": {
+    "properties": {
+     "items": {
+      "items": {
+       "$ref": "#/components/schemas/OnboardingItemIn"
+      },
+      "type": "array",
+      "maxItems": 2000,
+      "title": "Items"
+     },
+     "invite": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/OnboardingInvite"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "default_country": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 2,
+        "minLength": 2,
+        "pattern": "^[A-Za-z]{2}$"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Default Country"
+     },
+     "idempotency_key": {
+      "type": "string",
+      "maxLength": 64,
+      "minLength": 8,
+      "title": "Idempotency Key"
+     }
+    },
+    "type": "object",
+    "required": [
+     "items",
+     "idempotency_key"
+    ],
+    "title": "OnboardingCreateRequest"
+   },
+   "OnboardingInvite": {
+    "properties": {
+     "template_name": {
+      "type": "string",
+      "maxLength": 512,
+      "minLength": 1,
+      "title": "Template Name"
+     },
+     "language": {
+      "type": "string",
+      "maxLength": 20,
+      "minLength": 1,
+      "title": "Language",
+      "default": "he"
+     },
+     "link_target": {
+      "type": "string",
+      "enum": [
+       "body",
+       "button"
+      ],
+      "title": "Link Target",
+      "default": "body"
+     },
+     "button_index": {
+      "type": "integer",
+      "maximum": 9.0,
+      "minimum": 0.0,
+      "title": "Button Index",
+      "default": 0
+     }
+    },
+    "type": "object",
+    "required": [
+     "template_name"
+    ],
+    "title": "OnboardingInvite"
+   },
+   "OnboardingItemIn": {
+    "properties": {
+     "subject": {
+      "type": "string",
+      "title": "Subject",
+      "default": ""
+     },
+     "description": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Description"
+     },
+     "members": {
+      "items": {
+       "$ref": "#/components/schemas/OnboardingMemberIn"
+      },
+      "type": "array",
+      "title": "Members"
+     }
+    },
+    "type": "object",
+    "title": "OnboardingItemIn"
+   },
+   "OnboardingMemberIn": {
+    "properties": {
+     "phone": {
+      "type": "string",
+      "title": "Phone",
+      "default": ""
+     },
+     "name": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Name"
+     }
+    },
+    "type": "object",
+    "title": "OnboardingMemberIn"
+   },
+   "OnboardingPreviewResponse": {
+    "properties": {
+     "total_items": {
+      "type": "integer",
+      "title": "Total Items"
+     },
+     "valid_items": {
+      "type": "integer",
+      "title": "Valid Items"
+     },
+     "invites_to_send": {
+      "type": "integer",
+      "title": "Invites To Send"
+     },
+     "skipped": {
+      "items": {
+       "$ref": "#/components/schemas/OnboardingSkippedRow"
+      },
+      "type": "array",
+      "title": "Skipped"
+     },
+     "skipped_counts": {
+      "additionalProperties": {
+       "type": "integer"
+      },
+      "type": "object",
+      "title": "Skipped Counts"
+     },
+     "dropped_phones": {
+      "items": {
+       "$ref": "#/components/schemas/OnboardingDroppedPhone"
+      },
+      "type": "array",
+      "title": "Dropped Phones"
+     },
+     "dropped_phone_count": {
+      "type": "integer",
+      "title": "Dropped Phone Count"
+     },
+     "daily_cap": {
+      "$ref": "#/components/schemas/OnboardingDailyCap"
+     },
+     "limit": {
+      "$ref": "#/components/schemas/OnboardingLimit"
+     },
+     "quota": {
+      "$ref": "#/components/schemas/OnboardingQuota"
+     },
+     "invite_template_ok": {
+      "type": "boolean",
+      "title": "Invite Template Ok"
+     },
+     "dry_run": {
+      "type": "boolean",
+      "title": "Dry Run"
+     }
+    },
+    "type": "object",
+    "required": [
+     "total_items",
+     "valid_items",
+     "invites_to_send",
+     "skipped",
+     "skipped_counts",
+     "dropped_phones",
+     "dropped_phone_count",
+     "daily_cap",
+     "limit",
+     "quota",
+     "invite_template_ok",
+     "dry_run"
+    ],
+    "title": "OnboardingPreviewResponse"
+   },
+   "OnboardingQuota": {
+    "properties": {
+     "needed": {
+      "type": "integer",
+      "title": "Needed"
+     },
+     "remaining": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Remaining"
+     },
+     "sufficient": {
+      "type": "boolean",
+      "title": "Sufficient"
+     }
+    },
+    "type": "object",
+    "required": [
+     "needed",
+     "sufficient"
+    ],
+    "title": "OnboardingQuota"
+   },
+   "OnboardingLimit": {
+    "properties": {
+     "max_per_number": {
+      "type": "integer",
+      "title": "Max Per Number"
+     },
+     "live_groups": {
+      "type": "integer",
+      "title": "Live Groups"
+     },
+     "remaining": {
+      "type": "integer",
+      "title": "Remaining"
+     }
+    },
+    "type": "object",
+    "required": [
+     "max_per_number",
+     "live_groups",
+     "remaining"
+    ],
+    "title": "OnboardingLimit"
+   },
+   "OnboardingDailyCap": {
+    "properties": {
+     "limit": {
+      "type": "integer",
+      "title": "Limit"
+     },
+     "used_today": {
+      "type": "integer",
+      "title": "Used Today"
+     },
+     "remaining_today": {
+      "type": "integer",
+      "title": "Remaining Today"
+     },
+     "days_needed": {
+      "type": "integer",
+      "title": "Days Needed"
+     }
+    },
+    "type": "object",
+    "required": [
+     "limit",
+     "used_today",
+     "remaining_today",
+     "days_needed"
+    ],
+    "title": "OnboardingDailyCap"
+   },
+   "OnboardingDroppedPhone": {
+    "properties": {
+     "position": {
+      "type": "integer",
+      "title": "Position"
+     },
+     "phone": {
+      "type": "string",
+      "title": "Phone"
+     }
+    },
+    "type": "object",
+    "required": [
+     "position",
+     "phone"
+    ],
+    "title": "OnboardingDroppedPhone"
+   },
+   "OnboardingSkippedRow": {
+    "properties": {
+     "position": {
+      "type": "integer",
+      "title": "Position"
+     },
+     "subject": {
+      "type": "string",
+      "title": "Subject"
+     },
+     "reason": {
+      "type": "string",
+      "title": "Reason"
+     }
+    },
+    "type": "object",
+    "required": [
+     "position",
+     "subject",
+     "reason"
+    ],
+    "title": "OnboardingSkippedRow"
+   },
+   "OnboardingPreviewRequest": {
+    "properties": {
+     "items": {
+      "items": {
+       "$ref": "#/components/schemas/OnboardingItemIn"
+      },
+      "type": "array",
+      "maxItems": 2000,
+      "title": "Items"
+     },
+     "invite": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/OnboardingInvite"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "default_country": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 2,
+        "minLength": 2,
+        "pattern": "^[A-Za-z]{2}$"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Default Country"
+     }
+    },
+    "type": "object",
+    "required": [
+     "items"
+    ],
+    "title": "OnboardingPreviewRequest"
+   },
+   "BroadcastResponse": {
+    "properties": {
+     "id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Id"
+     },
+     "instance_id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Instance Id"
+     },
+     "status": {
+      "type": "string",
+      "title": "Status"
+     },
+     "message_type": {
+      "type": "string",
+      "title": "Message Type"
+     },
+     "message_preview": {
+      "type": "string",
+      "title": "Message Preview"
+     },
+     "selection": {
+      "type": "object",
+      "title": "Selection"
+     },
+     "total_groups": {
+      "type": "integer",
+      "title": "Total Groups"
+     },
+     "sent_count": {
+      "type": "integer",
+      "title": "Sent Count"
+     },
+     "failed_count": {
+      "type": "integer",
+      "title": "Failed Count"
+     },
+     "skipped_count": {
+      "type": "integer",
+      "title": "Skipped Count"
+     },
+     "pending_count": {
+      "type": "integer",
+      "title": "Pending Count"
+     },
+     "recipient_count": {
+      "type": "integer",
+      "title": "Recipient Count"
+     },
+     "dry_run": {
+      "type": "boolean",
+      "title": "Dry Run"
+     },
+     "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Created At"
+     },
+     "started_at": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date-time"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Started At"
+     },
+     "completed_at": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date-time"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Completed At"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "instance_id",
+     "status",
+     "message_type",
+     "message_preview",
+     "selection",
+     "total_groups",
+     "sent_count",
+     "failed_count",
+     "skipped_count",
+     "pending_count",
+     "recipient_count",
+     "dry_run",
+     "created_at"
+    ],
+    "title": "BroadcastResponse"
+   },
+   "BroadcastDetailResponse": {
+    "properties": {
+     "id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Id"
+     },
+     "instance_id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Instance Id"
+     },
+     "status": {
+      "type": "string",
+      "title": "Status"
+     },
+     "message_type": {
+      "type": "string",
+      "title": "Message Type"
+     },
+     "message_preview": {
+      "type": "string",
+      "title": "Message Preview"
+     },
+     "selection": {
+      "type": "object",
+      "title": "Selection"
+     },
+     "total_groups": {
+      "type": "integer",
+      "title": "Total Groups"
+     },
+     "sent_count": {
+      "type": "integer",
+      "title": "Sent Count"
+     },
+     "failed_count": {
+      "type": "integer",
+      "title": "Failed Count"
+     },
+     "skipped_count": {
+      "type": "integer",
+      "title": "Skipped Count"
+     },
+     "pending_count": {
+      "type": "integer",
+      "title": "Pending Count"
+     },
+     "recipient_count": {
+      "type": "integer",
+      "title": "Recipient Count"
+     },
+     "dry_run": {
+      "type": "boolean",
+      "title": "Dry Run"
+     },
+     "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Created At"
+     },
+     "started_at": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date-time"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Started At"
+     },
+     "completed_at": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date-time"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Completed At"
+     },
+     "targets": {
+      "items": {
+       "$ref": "#/components/schemas/BroadcastTargetResponse"
+      },
+      "type": "array",
+      "title": "Targets"
+     },
+     "delivery": {
+      "$ref": "#/components/schemas/BroadcastDeliveryTotals"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "instance_id",
+     "status",
+     "message_type",
+     "message_preview",
+     "selection",
+     "total_groups",
+     "sent_count",
+     "failed_count",
+     "skipped_count",
+     "pending_count",
+     "recipient_count",
+     "dry_run",
+     "created_at",
+     "targets",
+     "delivery"
+    ],
+    "title": "BroadcastDetailResponse"
+   },
+   "BroadcastDeliveryTotals": {
+    "properties": {
+     "delivered": {
+      "type": "integer",
+      "title": "Delivered",
+      "default": 0
+     },
+     "read": {
+      "type": "integer",
+      "title": "Read",
+      "default": 0
+     },
+     "failed": {
+      "type": "integer",
+      "title": "Failed",
+      "default": 0
+     }
+    },
+    "type": "object",
+    "title": "BroadcastDeliveryTotals"
+   },
+   "BroadcastTargetResponse": {
+    "properties": {
+     "id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Id"
+     },
+     "group_id": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "uuid"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Group Id"
+     },
+     "group_subject": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Group Subject"
+     },
+     "status": {
+      "type": "string",
+      "title": "Status"
+     },
+     "reason": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Reason"
+     },
+     "error_message": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Error Message"
+     },
+     "recipient_count": {
+      "type": "integer",
+      "title": "Recipient Count"
+     },
+     "delivered_count": {
+      "type": "integer",
+      "title": "Delivered Count",
+      "default": 0
+     },
+     "read_count": {
+      "type": "integer",
+      "title": "Read Count",
+      "default": 0
+     },
+     "failed_recipient_count": {
+      "type": "integer",
+      "title": "Failed Recipient Count",
+      "default": 0
+     },
+     "sent_at": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date-time"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Sent At"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "status",
+     "recipient_count"
+    ],
+    "title": "BroadcastTargetResponse"
+   },
+   "BroadcastListResponse": {
+    "properties": {
+     "items": {
+      "items": {
+       "$ref": "#/components/schemas/BroadcastResponse"
+      },
+      "type": "array",
+      "title": "Items"
+     },
+     "total": {
+      "type": "integer",
+      "title": "Total"
+     }
+    },
+    "type": "object",
+    "required": [
+     "items",
+     "total"
+    ],
+    "title": "BroadcastListResponse"
+   },
+   "BroadcastCreateRequest": {
+    "properties": {
+     "selection": {
+      "$ref": "#/components/schemas/BroadcastSelection"
+     },
+     "message": {
+      "$ref": "#/components/schemas/GroupMessageSendRequest"
+     },
+     "idempotency_key": {
+      "type": "string",
+      "maxLength": 64,
+      "minLength": 8,
+      "title": "Idempotency Key"
+     }
+    },
+    "type": "object",
+    "required": [
+     "selection",
+     "message",
+     "idempotency_key"
+    ],
+    "title": "BroadcastCreateRequest"
+   },
+   "BroadcastSelection": {
+    "properties": {
+     "mode": {
+      "type": "string",
+      "enum": [
+       "all",
+       "labels",
+       "groups"
+      ],
+      "title": "Mode"
+     },
+     "label_names": {
+      "anyOf": [
+       {
+        "items": {
+         "type": "string"
+        },
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Label Names"
+     },
+     "group_ids": {
+      "anyOf": [
+       {
+        "items": {
+         "type": "string",
+         "format": "uuid"
+        },
+        "type": "array",
+        "maxItems": 10000
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Group Ids"
+     }
+    },
+    "type": "object",
+    "required": [
+     "mode"
+    ],
+    "title": "BroadcastSelection"
+   },
+   "BroadcastPreviewResponse": {
+    "properties": {
+     "total_groups": {
+      "type": "integer",
+      "title": "Total Groups"
+     },
+     "sendable_groups": {
+      "type": "integer",
+      "title": "Sendable Groups"
+     },
+     "billable_recipients": {
+      "type": "integer",
+      "title": "Billable Recipients"
+     },
+     "skipped": {
+      "items": {
+       "$ref": "#/components/schemas/BroadcastSkippedItem"
+      },
+      "type": "array",
+      "title": "Skipped"
+     },
+     "skipped_counts": {
+      "additionalProperties": {
+       "type": "integer"
+      },
+      "type": "object",
+      "title": "Skipped Counts"
+     },
+     "quota": {
+      "$ref": "#/components/schemas/BroadcastQuota"
+     },
+     "dry_run": {
+      "type": "boolean",
+      "title": "Dry Run"
+     }
+    },
+    "type": "object",
+    "required": [
+     "total_groups",
+     "sendable_groups",
+     "billable_recipients",
+     "skipped",
+     "skipped_counts",
+     "quota",
+     "dry_run"
+    ],
+    "title": "BroadcastPreviewResponse"
+   },
+   "BroadcastQuota": {
+    "properties": {
+     "sufficient": {
+      "type": "boolean",
+      "title": "Sufficient"
+     },
+     "remaining": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Remaining"
+     },
+     "needed": {
+      "type": "integer",
+      "title": "Needed",
+      "default": 0
+     }
+    },
+    "type": "object",
+    "required": [
+     "sufficient"
+    ],
+    "title": "BroadcastQuota"
+   },
+   "BroadcastSkippedItem": {
+    "properties": {
+     "group_id": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "uuid"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Group Id"
+     },
+     "subject": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Subject"
+     },
+     "reason": {
+      "type": "string",
+      "title": "Reason"
+     }
+    },
+    "type": "object",
+    "required": [
+     "reason"
+    ],
+    "title": "BroadcastSkippedItem"
+   },
+   "BroadcastPreviewRequest": {
+    "properties": {
+     "selection": {
+      "$ref": "#/components/schemas/BroadcastSelection"
+     },
+     "message": {
+      "$ref": "#/components/schemas/GroupMessageSendRequest"
+     }
+    },
+    "type": "object",
+    "required": [
+     "selection",
+     "message"
+    ],
+    "title": "BroadcastPreviewRequest"
+   },
+   "GroupLabelSummary": {
+    "properties": {
+     "name": {
+      "type": "string",
+      "title": "Name"
+     },
+     "group_count": {
+      "type": "integer",
+      "title": "Group Count"
+     }
+    },
+    "type": "object",
+    "required": [
+     "name",
+     "group_count"
+    ],
+    "title": "GroupLabelSummary"
+   },
+   "GroupCreateRequest": {
+    "properties": {
+     "instance_id": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "uuid"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Instance Id"
+     },
+     "subject": {
+      "type": "string",
+      "maxLength": 128,
+      "minLength": 1,
+      "title": "Subject"
+     },
+     "description": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 2048
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Description"
+     },
+     "ai_enabled": {
+      "type": "boolean",
+      "title": "Ai Enabled",
+      "default": false
+     }
+    },
+    "type": "object",
+    "required": [
+     "subject"
+    ],
+    "title": "GroupCreateRequest"
+   },
+   "GroupListResponse": {
+    "properties": {
+     "groups": {
+      "items": {
+       "$ref": "#/components/schemas/GroupResponse"
+      },
+      "type": "array",
+      "title": "Groups"
+     },
+     "total": {
+      "type": "integer",
+      "title": "Total"
+     },
+     "eligibility": {
+      "anyOf": [
+       {
+        "type": "object"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Eligibility"
+     }
+    },
+    "type": "object",
+    "required": [
+     "groups",
+     "total"
+    ],
+    "title": "GroupListResponse"
    }
   },
   "securitySchemes": {
