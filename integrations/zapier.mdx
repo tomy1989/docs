@@ -1,0 +1,81 @@
+---
+title: 'Zapier'
+description: 'Start Zaps from incoming WhatsApp messages and send messages or templates from thousands of apps'
+icon: 'bolt'
+---
+
+The MegaSend app for Zapier connects your WhatsApp numbers to the other tools you
+use. A new WhatsApp message can start a Zap, and any Zap can send a WhatsApp
+message or an approved template.
+
+<Frame caption="Zapier, Make and WordPress on the Integrations page of the dashboard">
+  <img src="/images/integrations-hub.webp" alt="The MegaSend Integrations page showing cards for Shopify, Zapier, Make and WordPress, each with Connect and Setup guide buttons" />
+</Frame>
+
+## What the app can do
+
+| Type | Name | What it does |
+| --- | --- | --- |
+| Trigger | **New WhatsApp Message Received** | Starts a Zap when a message arrives on the WhatsApp instance you pick. |
+| Action | **Send WhatsApp Text Message** | Sends a free-form text message. Works inside the [24-hour window](/guides/24-hour-window). |
+| Action | **Send Template Message** | Sends an approved template. The template's variables appear as fields in the Zap editor. |
+| Search | **Find WhatsApp Instance** | Looks up one of your connected numbers. |
+
+## Connect
+
+<Steps>
+  <Step title="Open the app">
+    In the [MegaSend dashboard](https://app.megasend.io), open **Integrations** and
+    click **Connect** on the Zapier card.
+
+    <Note>
+    The MegaSend app is in Zapier's marketplace review and is not searchable in
+    Zapier yet. The Connect button opens it through an invite link, which works
+    the same way.
+    </Note>
+  </Step>
+  <Step title="Create an access token">
+    On the same card, click **Get API token**, then generate a token and copy it.
+    You can revoke it at any time from **API Tokens**.
+  </Step>
+  <Step title="Sign in from Zapier">
+    Add a MegaSend step to a Zap. When Zapier asks for an account, paste the
+    token. Zapier checks it and lists your WhatsApp instances.
+  </Step>
+  <Step title="Build the Zap">
+    Pick the trigger or action, choose the WhatsApp instance, and map your fields.
+    Use **Test step** to send yourself a message before turning the Zap on.
+  </Step>
+</Steps>
+
+## Without the app: Webhooks by Zapier
+
+If you cannot use the app, a **Webhooks by Zapier** step does the same work with
+plain HTTP requests. The **Setup guide** button on the Zapier card shows the same
+requests inside the dashboard.
+
+- **Send a message**: a Custom Request to `POST https://api.megasend.co.il/messages/send`
+  with the header `X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN` and a JSON body as in
+  [Send Messages](/messages/send).
+- **React to new messages**: poll `GET https://api.megasend.co.il/messages/incoming`
+  with the same header and your `instance_id`, as in
+  [Incoming Messages](/messages/incoming).
+
+```bash
+curl -X POST "https://api.megasend.co.il/messages/send" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "instance_id": "YOUR_INSTANCE_ID",
+    "recipient": "+972501234567",
+    "message_type": "text",
+    "text": "Thanks for your order! We will update you here."
+  }'
+```
+
+## Troubleshooting
+
+- **"Invalid token" when connecting**: the token was revoked or copied with
+  extra spaces. Generate a new one and paste it again.
+- **The message is not delivered**: outside the 24-hour window WhatsApp only
+  accepts templates. Use **Send Template Message** instead.

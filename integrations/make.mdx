@@ -1,0 +1,71 @@
+---
+title: 'Make'
+description: 'Send WhatsApp messages and react to incoming ones from Make scenarios'
+icon: 'diagram-project'
+---
+
+Make (formerly Integromat) can send WhatsApp messages through MegaSend and react
+to the messages your customers send, as part of any scenario.
+
+## Connect with the MegaSend app
+
+<Steps>
+  <Step title="Open the app">
+    In the [MegaSend dashboard](https://app.megasend.io), open **Integrations** and
+    click **Connect** on the Make card. This opens the MegaSend app in Make.
+
+    <Note>
+    The MegaSend app is waiting for Make's marketplace approval, so it is not
+    listed in Make's app search yet. The Connect button installs it through a
+    private invitation, which works the same way.
+    </Note>
+  </Step>
+  <Step title="Create an access token">
+    On the same card, click **Get API token**, then generate a token and copy it.
+  </Step>
+  <Step title="Add the connection in Make">
+    Add a MegaSend module to your scenario, choose **Create a connection**, and
+    paste the token.
+  </Step>
+</Steps>
+
+## Without the app: the HTTP module
+
+If the invitation does not work for your Make account, use Make's built-in
+**HTTP > Make a request** module. The **Setup guide** button on the Make card
+shows the same steps inside the dashboard.
+
+<Frame caption="The Make setup guide in the dashboard">
+  <img src="/images/make-setup-guide.webp" alt="The Connect Make guide in the MegaSend dashboard, listing the steps to create a token, add an HTTP module, and the send and validate endpoints" />
+</Frame>
+
+1. Create an access token as above.
+2. Check the token with a GET request to `https://api.megasend.co.il/make/validate-connection`
+   and the header `X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN`. A working token returns
+   `connection_valid: true` with your account details.
+3. To send a message, make a POST request to `https://api.megasend.co.il/messages/send`
+   with the same header and a JSON body:
+
+```bash
+curl -X POST "https://api.megasend.co.il/messages/send" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "instance_id": "YOUR_INSTANCE_ID",
+    "recipient": "+972501234567",
+    "message_type": "text",
+    "text": "Your appointment is confirmed for tomorrow at 10:00."
+  }'
+```
+
+```bash
+curl -X GET "https://api.megasend.co.il/make/validate-connection" \
+  -H "X-MEGASEND-AUTH: YOUR_ACCESS_TOKEN"
+```
+
+To start a scenario when a customer writes to you, either poll
+[incoming messages](/messages/incoming) on a schedule, or point a
+[webhook](/webhooks/setup) at a Make **Custom webhook** trigger.
+
+Templates, media and buttons use the same send endpoint. See
+[Send Messages](/messages/send) for every message type.

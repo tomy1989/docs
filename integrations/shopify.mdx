@@ -11,10 +11,10 @@ The Shopify integration links your Shopify store to your MegaSend account. Once 
 The store is connected through the MegaSend app for Shopify, not through an API call:
 
 1. Install the MegaSend app from the Shopify App Store on your store. The app handles the Shopify authorization flow for you.
-2. Inside the app, paste a MegaSend access token (create one in the [MegaSend dashboard](https://app.megasend.co.il)).
+2. Inside the app, paste a MegaSend access token (create one in the [MegaSend dashboard](https://app.megasend.io)).
 3. The app verifies the token against the MegaSend API and saves it with your shop. From that point on, MegaSend recognizes the store on any account that holds that token.
 
-Because the link is made through your access token, the same store is visible to all features described on this page: catalog sync, contact context, campaign analytics, and the AI chatbot. The [dashboard](https://app.megasend.co.il) is the usual place to connect the store and monitor the integration.
+Because the link is made through your access token, the same store is visible to all features described on this page: catalog sync, contact context, campaign analytics, and the AI chatbot. The [dashboard](https://app.megasend.io) is the usual place to connect the store and monitor the integration.
 
 <Note>
 The verification endpoint below is what the Shopify app calls during setup. You normally never call it yourself, but it is useful for checking that a token is valid and seeing which instances it exposes to the store.

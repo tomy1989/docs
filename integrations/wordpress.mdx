@@ -1,0 +1,53 @@
+---
+title: 'WordPress & WooCommerce'
+description: 'Send WhatsApp order updates and recover abandoned carts from your WooCommerce store'
+icon: 'wordpress'
+---
+
+The **MegaSend for WooCommerce** plugin sends WhatsApp messages from your store:
+order confirmations, shipping and status updates, and abandoned-cart reminders,
+using your approved WhatsApp templates.
+
+The plugin is published in the
+[WordPress.org plugin directory](https://wordpress.org/plugins/megasend-for-woocommerce/).
+Install it from there so your store receives updates automatically.
+
+<Frame caption="The WordPress setup guide in the dashboard">
+  <img src="/images/wordpress-setup-guide.webp" alt="The Connect WordPress guide in the MegaSend dashboard with four steps and an Install plugin button" />
+</Frame>
+
+## Install and connect
+
+<Steps>
+  <Step title="Install the plugin">
+    In WordPress, go to **Plugins > Add New**, search for
+    `MegaSend for WooCommerce` and click **Install Now**.
+  </Step>
+  <Step title="Activate it">
+    Click **Activate**. A **MegaSend** item appears in the WordPress admin menu.
+  </Step>
+  <Step title="Create an access token">
+    In the [MegaSend dashboard](https://app.megasend.io), open **Integrations**,
+    click **Get API token** on the WordPress card, generate a token and copy it.
+  </Step>
+  <Step title="Connect the store">
+    Open **MegaSend** in the WordPress admin menu, paste the token and validate
+    it. Then pick your WhatsApp instance and turn on the order statuses you want
+    to send messages for.
+  </Step>
+</Steps>
+
+Once the plugin has talked to MegaSend, a **WordPress** item appears in your
+dashboard sidebar.
+
+## Requirements
+
+- WordPress 6.2 or newer, PHP 8.1 or newer, and WooCommerce 8.0 or newer.
+- A connected WhatsApp instance with approved templates for the messages you
+  want to send. See [Create Templates](/templates/create).
+
+<Note>
+Install the plugin only from WordPress.org. Older copies distributed as a zip
+file under the name "megasend-whatsapp" are no longer supported and do not
+receive updates.
+</Note>

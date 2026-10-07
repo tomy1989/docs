@@ -76,7 +76,7 @@ print(f"Unsubscribe code: {result['unsubscribe_code']}")
 {
   "success": true,
   "unsubscribe_code": "abc123def456ghi789xyz",
-  "unsubscribe_url": "https://app.megasend.co.il/api/whatsapp-cloud-api/unsubscribe/abc123def456ghi789xyz",
+  "unsubscribe_url": "https://app.megasend.io/api/whatsapp-cloud-api/unsubscribe/abc123def456ghi789xyz",
   "contact_id": "550e8400-e29b-41d4-a716-446655440000",
   "contact_created": false,
   "message": "Unsubscribe code created successfully"
@@ -157,15 +157,15 @@ The public unsubscribe endpoint that customers use directly in their browser. Th
 <CodeGroup>
 
 ```bash cURL
-curl -X GET "https://app.megasend.co.il/api/whatsapp-cloud-api/unsubscribe/abc123def456ghi789xyz"
+curl -X GET "https://app.megasend.io/api/whatsapp-cloud-api/unsubscribe/abc123def456ghi789xyz"
 ```
 
 ```javascript Browser
 // Direct browser navigation — this is the URL embedded in WhatsApp messages
-window.location.href = 'https://app.megasend.co.il/api/whatsapp-cloud-api/unsubscribe/abc123def456ghi789xyz';
+window.location.href = 'https://app.megasend.io/api/whatsapp-cloud-api/unsubscribe/abc123def456ghi789xyz';
 
 // Or fetch the HTML content
-const response = await fetch('https://app.megasend.co.il/api/whatsapp-cloud-api/unsubscribe/abc123def456ghi789xyz');
+const response = await fetch('https://app.megasend.io/api/whatsapp-cloud-api/unsubscribe/abc123def456ghi789xyz');
 const htmlContent = await response.text();
 ```
 
@@ -174,7 +174,7 @@ import requests
 
 # This returns HTML content, not JSON
 response = requests.get(
-    'https://app.megasend.co.il/api/whatsapp-cloud-api/unsubscribe/abc123def456ghi789xyz'
+    'https://app.megasend.io/api/whatsapp-cloud-api/unsubscribe/abc123def456ghi789xyz'
 )
 
 html_content = response.text
