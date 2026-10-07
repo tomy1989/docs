@@ -168,6 +168,9 @@
             "icon": "puzzle-piece",
             "pages": [
               "integrations/mcp",
+              "integrations/zapier",
+              "integrations/make",
+              "integrations/wordpress",
               "calendar/calendly",
               "calendar/google-calendar",
               "calendar/ai-booking",
